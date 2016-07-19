@@ -1,0 +1,2 @@
+- standardize rest of files
+- create own client/server protocol for websocket
