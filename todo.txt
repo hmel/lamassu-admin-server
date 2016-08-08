@@ -1,2 +1,2 @@
-- standardize rest of files
-- create own client/server protocol for websocket
+- give up on fancy auto-forms, hard code forms for each plugin
+- need to be able to elide secrets, so we need to know which fields are secret
