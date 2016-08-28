@@ -1,7 +1,15 @@
+'use strict'
+
 const express = require('express')
 const app = express()
+const https = require('https')
+const http = require('http')
 require('express-ws')(app)
+var bodyParser = require('body-parser')
 const accounts = require('./accounts')
+const fs = require('fs')
+
+app.use(bodyParser.json())
 
 app.use(function (req, res, next) {
   res.header('Access-Control-Allow-Origin', '*')
@@ -13,27 +21,95 @@ app.get('/totem', (req, res) => {
   return res.send('<the totem>')
 })
 
-app.get('/initial', (req, res) => {
-  // TODO: pull from plugins
-  const config = {
-    global: {
-      global: {
-        plugins: [{
-          code: 'twilio',
-          display: 'Twilio',
-          fields: [{
-            code: 'accountSid',
-            display: 'Account SID',
-            type: 'string',
-            secret: false,
-            required: true
-          }]
-        }]
+let account = {
+  code: 'twilio',
+  display: 'Twilio',
+  fieldSet: {
+    fields: [
+      {
+        code: 'accountSid',
+        display: 'Account SID',
+        secret: false,
+        required: true,
+        value: {
+          fieldType: 'string',
+          value: '123xx'
+        },
+        status: {
+          code: 'error',
+          error: 'No such account'
+        }
+      },
+      {
+        code: 'accountPass',
+        display: 'Account Password',
+        secret: true,
+        required: true,
+        value: {
+          fieldType: 'password'
+        },
+        status: {
+          code: 'idle'
+        }
       }
-    }
+    ]
+  }
+}
+
+app.get('/account/:account', (req, res) => {
+  return res.json(account)
+})
+
+app.post('/account', (req, res) => {
+  console.log('DEBUG1: %j', req.body)
+  res.json(account)
+})
+
+app.get('/config', function (req, res) {
+  const config = {
+    code: 'main',
+    display: 'Main',
+    crypto: 'BTC',
+    cryptoConfigs: [
+      {
+        crypto: 'BTC',
+        machineConfigs: [
+          {
+            machine: '01',
+            fieldSet: {
+              fields: [
+                {
+                  code: 'cash-in-commission',
+                  display: 'Cash In Commission',
+                  secret: false,
+                  required: false,
+                  value: {
+                    fieldType: 'percentage',
+                    value: 15
+                  },
+                  status: {
+                    code: 'idle'
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    cryptos: [
+      {
+        crypto: 'global',
+        display: 'ALL'
+      },
+      {
+        crypto: 'BTC',
+        display: 'Bitcoin'
+      }
+    ]
   }
 
-  return res.json({config: config})
+  return res.json(config)
 })
 
 app.get('/accounts/account/:account', function (req, res) {
@@ -42,9 +118,19 @@ app.get('/accounts/account/:account', function (req, res) {
     .catch(logError)
 })
 
-app.listen(8093, function () {
-  console.log('lamassu-admin-server listening on port 8093')
+app.get('/test', (req, res) => {
+  console.log('DEBUG2')
+  console.dir(req)
+  res.json('success')
 })
+
+const options = {
+  key: fs.readFileSync('./lamassu.key'),
+  cert: fs.readFileSync('./lamassu.crt')
+}
+
+http.createServer(app).listen(8093)
+https.createServer(options, app).listen(8094)
 
 app.ws('/echo', function (ws, req) {
   ws.on('message', function (msg) {
