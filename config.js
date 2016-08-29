@@ -85,33 +85,41 @@ function buildGroup (group, coins, globalConfig, machineRows) {
     const entries = []
 
     if (globalEntries) {
-      const coinEntries = globalEntries.filter(r => r.crypto === coin)
+      const coinFields = globalEntries.filter(r => r.crypto === coin).map(r => r.entries)
+      console.log('DEBUG5')
       entries.push({
         machine: 'global',
-        entries: coinEntries
+        fieldSet: {
+          fields: coinFields
+        }
       })
     }
 
     if (machineEntries) {
       machineEntries.forEach(machine => {
-        const coinEntries = machine.entries.filter(r => r.crypto === coin)
+        const coinFields = machine.entries.filter(r => r.crypto === coin).map(r => r.entries)
         entries.push({
           machine: machine.machine,
-          entries: coinEntries
+          fieldSet: {
+            fields: coinFields
+          }
         })
       })
     }
 
     return {
       crypto: coin,
-      machines: entries
+      machineConfigs: entries
     }
   })
 }
 
-function fetchConfig () {
-  return fetchSchema()
-  .then(schema => {
+function fetchConfigGroup (code) {
+  return Promise.all([fetchSchema(), fetchData()])
+  .then(arr => {
+    const schema = arr[0]
+    const data = arr[1]
+
     console.log('DEBUG3')
     return db.one('select data from user_config where type=$1', ['global'])
     .then(row => {
@@ -122,20 +130,30 @@ function fetchConfig () {
 
       return db.any('select device_id, data from machine_configs')
       .then(machineRows => {
-        return schema.map(group => {
-          const cryptos = buildGroup(group, coins, globalConfig, machineRows)
-          return {
-            group: group.group,
-            cryptoScope: group.cryptoScope,
-            machineScope: group.machineScope,
-            cryptos: cryptos
-          }
-        })
+        const group = schema.filter(r => r.group.code === code)[0]
+        if (!group) return null
+
+        const cryptos = buildGroup(group, coins, globalConfig, machineRows)
+        return {
+          group: group.group,
+          cryptoScope: group.cryptoScope,
+          machineScope: group.machineScope,
+          cryptoConfigs: cryptos,
+          data: data
+        }
       })
     })
   })
 }
 
-fetchConfig().then(pp).then(() => process.exit())
+function fetchData () {
+  return Promise.resolve({
+    currencies: [{code: 'USD', display: 'US Dollar'}],
+    languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
+    plugins: [{code: 'bitpay', display: 'Bitpay'}]
+  })
+}
 
-module.exports = { fetchConfig: fetchConfig }
+fetchConfigGroup('commissions').then(pp).then(() => process.exit()).catch(err => console.log(err.stack))
+
+module.exports = { fetchConfigGroup: fetchConfigGroup }

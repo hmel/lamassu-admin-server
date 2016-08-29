@@ -7,6 +7,7 @@ const http = require('http')
 require('express-ws')(app)
 var bodyParser = require('body-parser')
 const accounts = require('./accounts')
+const config = require('./config')
 const fs = require('fs')
 
 app.use(bodyParser.json())
@@ -66,50 +67,7 @@ app.post('/account', (req, res) => {
 })
 
 app.get('/config', function (req, res) {
-  const config = {
-    code: 'main',
-    display: 'Main',
-    crypto: 'BTC',
-    cryptoConfigs: [
-      {
-        crypto: 'BTC',
-        machineConfigs: [
-          {
-            machine: '01',
-            fieldSet: {
-              fields: [
-                {
-                  code: 'cash-in-commission',
-                  display: 'Cash In Commission',
-                  secret: false,
-                  required: false,
-                  value: {
-                    fieldType: 'percentage',
-                    value: 15
-                  },
-                  status: {
-                    code: 'idle'
-                  }
-                }
-              ]
-            }
-          }
-        ]
-      }
-    ],
-    cryptos: [
-      {
-        crypto: 'global',
-        display: 'ALL'
-      },
-      {
-        crypto: 'BTC',
-        display: 'Bitcoin'
-      }
-    ]
-  }
-
-  return res.json(config)
+  return config.fetchConfig().then(c => res.json(c))
 })
 
 app.get('/accounts/account/:account', function (req, res) {
