@@ -66,8 +66,8 @@ app.post('/account', (req, res) => {
   res.json(account)
 })
 
-app.get('/config', function (req, res) {
-  return config.fetchConfig().then(c => res.json(c))
+app.get('/config/:config', function (req, res) {
+  return config.fetchConfigGroup(req.params.config).then(c => res.json(c))
 })
 
 app.get('/accounts/account/:account', function (req, res) {

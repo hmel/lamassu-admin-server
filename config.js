@@ -1,6 +1,5 @@
 'use strict'
 
-const R = require('ramda')
 const pify = require('pify')
 const fs = pify(require('fs'))
 const path = require('path')
@@ -18,8 +17,17 @@ function buildMachine (group, coins, config) {
 
   if (group.cryptoScope === 'both' || group.cryptoScope === 'global') {
     const global = config.global
-    const globalEntries = group.entries.map(entry =>
-      R.assoc('value', global[entry.code] || null, entry))
+    pp(group.entries)
+    const globalEntries = group.entries.map(entry => ({
+      code: entry.code,
+      display: entry.display,
+      value: {
+        fieldType: entry.fieldType,
+        value: global[entry.code] || null
+      },
+      status: {code: 'idle'}
+    }))
+
     entries.push({
       crypto: 'global',
       entries: globalEntries
@@ -30,8 +38,15 @@ function buildMachine (group, coins, config) {
     const cryptoEntries = coins.map(coin => {
       const coinConfig = config[coin]
 
-      const groupEntries = group.entries.map(entry =>
-        R.assoc('value', coinConfig && coinConfig[entry.code] ? coinConfig[entry.code] : null, entry))
+      const groupEntries = group.entries.map(entry => ({
+        code: entry.code,
+        display: entry.display,
+        value: {
+          fieldType: entry.fieldType,
+          value: coinConfig && coinConfig[entry.code] ? coinConfig[entry.code] : null
+        },
+        status: {code: 'idle'}
+      }))
 
       return {
         crypto: coin,
@@ -85,25 +100,31 @@ function buildGroup (group, coins, globalConfig, machineRows) {
     const entries = []
 
     if (globalEntries) {
-      const coinFields = globalEntries.filter(r => r.crypto === coin).map(r => r.entries)
-      console.log('DEBUG5')
-      entries.push({
-        machine: 'global',
-        fieldSet: {
-          fields: coinFields
-        }
-      })
-    }
-
-    if (machineEntries) {
-      machineEntries.forEach(machine => {
-        const coinFields = machine.entries.filter(r => r.crypto === coin).map(r => r.entries)
+      const cryptoEntries = globalEntries.filter(r => r.crypto === coin)[0]
+      if (cryptoEntries) {
+        const coinFields = cryptoEntries.entries
+        console.log('DEBUG5')
         entries.push({
-          machine: machine.machine,
+          machine: 'global',
           fieldSet: {
             fields: coinFields
           }
         })
+      }
+    }
+
+    if (machineEntries) {
+      machineEntries.forEach(machine => {
+        const cryptoEntries = machine.entries.filter(r => r.crypto === coin)[0]
+        if (cryptoEntries) {
+          const coinFields = cryptoEntries.entries
+          entries.push({
+            machine: machine.machine,
+            fieldSet: {
+              fields: coinFields
+            }
+          })
+        }
       })
     }
 
@@ -150,10 +171,10 @@ function fetchData () {
   return Promise.resolve({
     currencies: [{code: 'USD', display: 'US Dollar'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
-    plugins: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}]
+    accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}]
   })
 }
 
-fetchConfigGroup('commissions').then(pp).then(() => process.exit()).catch(err => console.log(err.stack))
+// fetchConfigGroup('commissions').then(pp).then(() => process.exit()).catch(err => console.log(err.stack))
 
 module.exports = { fetchConfigGroup: fetchConfigGroup }
