@@ -16,22 +16,22 @@ function fetchSchema () {
 function buildMachine (group, coins, config) {
   const entries = []
 
-  if (group.crypto === 'both' || group.crypto === 'global') {
+  if (group.cryptoScope === 'both' || group.cryptoScope === 'global') {
     const global = config.global
     const globalEntries = group.entries.map(entry =>
-      R.assoc('value', global[entry.code], entry))
+      R.assoc('value', global[entry.code] || null, entry))
     entries.push({
       crypto: 'global',
       entries: globalEntries
     })
   }
 
-  if (group.crypto === 'both' || group.crypto === 'specific') {
+  if (group.cryptoScope === 'both' || group.cryptoScope === 'specific') {
     const cryptoEntries = coins.map(coin => {
       const coinConfig = config[coin]
 
       const groupEntries = group.entries.map(entry =>
-        R.assoc('value', coinConfig ? coinConfig[entry.code] : null, entry))
+        R.assoc('value', coinConfig && coinConfig[entry.code] ? coinConfig[entry.code] : null, entry))
 
       return {
         crypto: coin,
@@ -63,15 +63,23 @@ function pp (o) {
 function buildGroup (group, coins, globalConfig, machineRows) {
   let globalEntries, machineEntries
 
-  if (group.machines === 'both' || group.machines === 'global') {
+  if (group.machineScope === 'both' || group.machineScope === 'global') {
     globalEntries = buildMachine(group, coins, globalConfig)
   }
 
-  if (group.machines === 'both' || group.machines === 'specific') {
+  if (group.machineScope === 'both' || group.machineScope === 'specific') {
     machineEntries = buildSpecificMachine(group, coins, machineRows)
   }
 
-  const coinsPlusGlobal = ['global'].concat(coins)
+  const coinsPlusGlobal = []
+
+  if (group.cryptoScope === 'both' || group.cryptoScope === 'global') {
+    coinsPlusGlobal.push('global')
+  }
+
+  if (group.cryptoScope === 'both' || group.cryptoScope === 'specific') {
+    Array.prototype.push.apply(coinsPlusGlobal, coins)
+  }
 
   return coinsPlusGlobal.map(coin => {
     const entries = []
@@ -114,37 +122,20 @@ function fetchConfig () {
 
       return db.any('select device_id, data from machine_configs')
       .then(machineRows => {
-        const config = buildGroup(schema[0], coins, globalConfig, machineRows)
-        pp(config)
-      })
-
-      /*
-      const cryptos = R.keys(globalConfig)
-      const config = {}
-
-      cryptos.forEach(c => {
-        config[c] = {global: globalConfig[c]}
-      })
-
-      return db.any('select device_id, data from machine_configs')
-      .then(rows => {
-        rows.forEach(machineRow => {
-          const cryptos = R.keys(machineRow)
-          const deviceId = machineRow.device_id
-          cryptos.forEach(c => {
-            config[c][deviceId] = machineRow.data[c]
-          })
-
-          return config
+        return schema.map(group => {
+          const cryptos = buildGroup(group, coins, globalConfig, machineRows)
+          return {
+            group: group.group,
+            cryptoScope: group.cryptoScope,
+            machineScope: group.machineScope,
+            cryptos: cryptos
+          }
         })
       })
-      */
     })
   })
-  .catch(e => console.log(e.stack))
 }
 
-fetchConfig()
-.then(() => process.exit())
+fetchConfig().then(pp).then(() => process.exit())
 
 module.exports = { fetchConfig: fetchConfig }
