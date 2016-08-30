@@ -13,70 +13,6 @@ function fetchSchema () {
   .then(JSON.parse)
 }
 
-function buildMachine (group, coins, config) {
-  const entries = []
-
-  if (group.cryptoScope === 'both' || group.cryptoScope === 'global') {
-    const global = config.global
-    pp(group.entries)
-
-    const globalEntries = group.entries
-    .filter(entry => !R.isNil(global[entry.code]))
-    .map(entry => ({
-      code: entry.code,
-      display: entry.display,
-      value: {
-        fieldType: entry.fieldType,
-        value: global[entry.code]
-      },
-      status: {code: 'idle'}
-    }))
-
-    entries.push({
-      crypto: 'global',
-      entries: globalEntries
-    })
-  }
-
-  if (group.cryptoScope === 'both' || group.cryptoScope === 'specific') {
-    const cryptoEntries = coins.map(coin => {
-      const coinConfig = config[coin]
-
-      const groupEntries = group.entries
-      .filter(entry => coinConfig && !R.isNil(coinConfig[entry.code]))
-      .map(entry => ({
-        code: entry.code,
-        display: entry.display,
-        value: {
-          fieldType: entry.fieldType,
-          value: coinConfig[entry.code]
-        },
-        status: {code: 'idle'}
-      }))
-
-      return {
-        crypto: coin,
-        entries: groupEntries
-      }
-    })
-
-    Array.prototype.push.apply(entries, cryptoEntries)
-  }
-
-  return entries
-}
-
-function buildSpecificMachine (group, coins, machineRows) {
-  return machineRows.map(row => {
-    const machineConfig = row.data
-    const entries = buildMachine(group, coins, machineConfig)
-    return {
-      machine: row.device_id,
-      entries: entries
-    }
-  })
-}
-
 function pp (o) {
   console.log(require('util').inspect(o, {depth: null, colors: true}))
 }
@@ -142,34 +78,22 @@ function buildGroup (group, coins, globalConfig, machineRows) {
 }
 
 function fetchConfigGroup (code) {
-  return Promise.all([fetchSchema(), fetchData()])
+  const dbPromise = db.one('select data from user_config where type=$1', ['config'])
+  return Promise.all([fetchSchema(), fetchData(), dbPromise])
   .then(arr => {
     const schema = arr[0]
     const data = arr[1]
+    const config = arr[2]
+    const groupSchema = schema.filter(r => r.code === code)[0]
+    const groupConfig = config.filter(r => r.code === code)[0] || []
 
-    console.log('DEBUG3')
-    return db.one('select data from user_config where type=$1', ['global'])
-    .then(row => {
-      console.log('DEBUG4')
-      const globalConfig = row.data
-      const coins = ['BTC']
-      console.log('DEBUG2')
+    if (!groupSchema) throw new Error('No such group schema: ' + code)
 
-      return db.any('select device_id, data from machine_configs')
-      .then(machineRows => {
-        const group = schema.filter(r => r.group.code === code)[0]
-        if (!group) return null
-
-        const cryptos = buildGroup(group, coins, globalConfig, machineRows)
-        return {
-          group: group.group,
-          cryptoScope: group.cryptoScope,
-          machineScope: group.machineScope,
-          cryptoConfigs: cryptos,
-          data: data
-        }
-      })
-    })
+    return {
+      schema: groupSchema,
+      values: groupConfig,
+      data: data
+    }
   })
 }
 
@@ -195,6 +119,8 @@ function updateGroup (oldGroup, newGroup) {
           machine: machineConfig.machine,
           fieldSet: { fields: []}
         }
+
+        const updatedField = updatedMachineConfig.fieldSet.fields.filter(r => r.code === field.code) ||
       }
     })
   })

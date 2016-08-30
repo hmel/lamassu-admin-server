@@ -1,15 +1,17 @@
 const x = {
-  code: 'commissions',
-  display: 'Commissions',
-  cryptoScope: 'both',
-  machineScope: 'both',
-  fieldSet: [
-    {
-      code: 'cashIn',
-      display: 'Cash in',
-      fieldType: 'percentage'
-    }
-  ],
+  schema: {
+    code: 'commissions',
+    display: 'Commissions',
+    cryptoScope: 'both',
+    machineScope: 'both',
+    entries: [
+      {
+        code: 'cashIn',
+        display: 'Cash in',
+        fieldType: 'percentage'
+      }
+    ]
+  },
   values: [
     {
       code: 'cashIn',
