@@ -182,6 +182,36 @@ function fetchData () {
   })
 }
 
+function updateGroup (oldGroup, newGroup) {
+  newGroup.cryptoConfigs.forEach(cryptoConfig => {
+    cryptoConfig.machineConfigs.forEach(machineConfig => {
+      machineConfig.fieldSet.fields.forEach(field => {
+        const updatedCryptoConfig = oldGroup.cryptoConfigs.filter(r => r.cryptoCode === cryptoConfig.cryptoCode)[0] || {
+          cryptoCode: cryptoCode.cryptoCode,
+          machineConfigs = []
+        }
+
+        const updatedMachineConfig = updatedCryptoConfig.machineConfigs.filter(r => r.machine === machineConfig.machine) || {
+          machine: machineConfig.machine,
+          fieldSet: { fields: []}
+        }
+      }
+    })
+  })
+}
+
+function saveConfigGroup (group) {
+  const groupCode = group.code
+  fetchConfigGroup(groupCode)
+  .then(oldGroup => {
+    updatedGroup = updateGroup(oldGroup, group)
+    return saveGroup(updatedGroup)
+  })
+  .then(() => fetchConfigGroup(groupCode))
+}
 // fetchConfigGroup('commissions').then(pp).then(() => process.exit()).catch(err => console.log(err.stack))
 
-module.exports = { fetchConfigGroup: fetchConfigGroup }
+module.exports = {
+  fetchConfigGroup: fetchConfigGroup,
+  saveConfigGroup: saveConfigGroup
+}

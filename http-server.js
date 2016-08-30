@@ -66,8 +66,16 @@ app.post('/account', (req, res) => {
   res.json(account)
 })
 
-app.get('/config/:config', function (req, res) {
-  return config.fetchConfigGroup(req.params.config).then(c => res.json(c))
+app.get('/config/:config', (req, res) =>
+  config.fetchConfigGroup(req.params.config).then(c => res.json(c)))
+
+function pp (o) {
+  console.log(require('util').inspect(o, {depth: null, colors: true}))
+}
+
+app.post('/config', (req, res) => {
+  config.saveConfigGroup(req.body)
+  .then(c => res.json(c))
 })
 
 app.get('/accounts/account/:account', function (req, res) {
