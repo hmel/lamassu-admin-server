@@ -171,7 +171,8 @@ function fetchData () {
   return Promise.resolve({
     currencies: [{code: 'USD', display: 'US Dollar'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
-    accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}]
+    accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}],
+    machines: []
   })
 }
 
