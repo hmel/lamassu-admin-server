@@ -3,6 +3,7 @@
 const pify = require('pify')
 const fs = pify(require('fs'))
 const path = require('path')
+const R = require('ramda')
 const db = require('./db')
 
 function fetchSchema () {
@@ -18,12 +19,15 @@ function buildMachine (group, coins, config) {
   if (group.cryptoScope === 'both' || group.cryptoScope === 'global') {
     const global = config.global
     pp(group.entries)
-    const globalEntries = group.entries.map(entry => ({
+
+    const globalEntries = group.entries
+    .filter(entry => !R.isNil(global[entry.code]))
+    .map(entry => ({
       code: entry.code,
       display: entry.display,
       value: {
         fieldType: entry.fieldType,
-        value: global[entry.code] || null
+        value: global[entry.code]
       },
       status: {code: 'idle'}
     }))
@@ -38,12 +42,14 @@ function buildMachine (group, coins, config) {
     const cryptoEntries = coins.map(coin => {
       const coinConfig = config[coin]
 
-      const groupEntries = group.entries.map(entry => ({
+      const groupEntries = group.entries
+      .filter(entry => coinConfig && !R.isNil(coinConfig[entry.code]))
+      .map(entry => ({
         code: entry.code,
         display: entry.display,
         value: {
           fieldType: entry.fieldType,
-          value: coinConfig && coinConfig[entry.code] ? coinConfig[entry.code] : null
+          value: coinConfig[entry.code]
         },
         status: {code: 'idle'}
       }))
