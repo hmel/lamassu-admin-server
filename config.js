@@ -48,7 +48,7 @@ function fetchData () {
     cryptos: [{code: 'BTC', display: 'Bitcoin'}, {code: 'ETH', display: 'Ethereum'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
     accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}],
-    machines: []
+    machines: ['blue-toad']
   })
 }
 
