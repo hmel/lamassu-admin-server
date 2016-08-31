@@ -45,10 +45,10 @@ function fetchConfigGroup (code) {
 function fetchData () {
   return Promise.resolve({
     currencies: [{code: 'USD', display: 'US Dollar'}],
-    cryptos: [{code: 'BTC', display: 'Bitcoin'}, {code: 'ETH', display: 'Ethereum'}],
+    cryptos: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
     accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}],
-    machines: ['blue-toad']
+    machines: [{machine: '123-34-234', display: 'Blue toad'}]
   })
 }
 
