@@ -3,6 +3,7 @@
 const pify = require('pify')
 const fs = pify(require('fs'))
 const path = require('path')
+const R = require('ramda')
 const db = require('./db')
 
 function fetchSchema () {
@@ -76,15 +77,22 @@ function saveConfigGroup (group) {
     if (!existingConfigGroup) config.groups.push(configGroup)
 
     group.values.forEach(value => {
-      const existingValue = configGroup.values
-      .find(r => r.code === value.code && r.crypto === value.crypto && r.machine === value.machine)
+      const existingValueIndex = configGroup.values
+      .findIndex(r => r.code === value.code && r.crypto === value.crypto && r.machine === value.machine)
+
+      const existingValue = configGroup.values[existingValueIndex]
 
       if (existingValue) {
+        if (R.isNil(value.fieldValue)) {
+          configGroup.values.splice(existingValueIndex, 1)
+          return
+        }
+
         existingValue.fieldValue = value.fieldValue
         return
       }
 
-      configGroup.values.push(value)
+      if (!R.isNil(value.fieldValue)) configGroup.values.push(value)
     })
 
     console.log('DEBUG3')
