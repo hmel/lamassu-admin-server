@@ -78,9 +78,13 @@ function saveConfigGroup (group) {
 
     group.values.forEach(value => {
       const existingValueIndex = configGroup.values
-      .findIndex(r => r.code === value.code && r.crypto === value.crypto && r.machine === value.machine)
+      .findIndex(r => r.fieldLocator.code === value.fieldLocator.code &&
+        r.fieldLocator.fieldScope.crypto === value.fieldLocator.fieldScope.crypto &&
+        r.fieldLocator.fieldScope.machine === value.fieldLocator.fieldScope.machine
+      )
 
-      const existingValue = configGroup.values[existingValueIndex]
+      const existingValue = existingValueIndex > -1 &&
+        configGroup.values[existingValueIndex]
 
       if (existingValue) {
         if (R.isNil(value.fieldValue)) {
