@@ -44,7 +44,7 @@ function fetchConfigGroup (code) {
 
 function fetchData () {
   return Promise.resolve({
-    currencies: [{code: 'USD', display: 'US Dollar'}],
+    currencies: [{code: 'USD', display: 'US Dollar'}, {code: 'ILS', display: 'New Israeli Sheqel'}],
     cryptos: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
     accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}],
@@ -56,9 +56,11 @@ function dbSaveConfig (config) {
   return db.none('update user_config set data=$1 where type=$2', [config, 'config'])
 }
 
-function saveConfigGroup (group) {
+function saveConfigGroup (results) {
   console.log('DEBUG1')
-  pp(group)
+  pp(results)
+
+  const groupCode = results.groupCode
 
   return dbFetchConfig()
   .then(config => {
@@ -68,15 +70,15 @@ function saveConfigGroup (group) {
       .then(dbFetchConfig)
   })
   .then(config => {
-    const existingConfigGroup = config.groups.filter(r => r.code === group.code)[0]
+    const existingConfigGroup = config.groups.filter(r => r.code === groupCode)[0]
     const configGroup = existingConfigGroup || {
-      code: group.code,
+      code: groupCode,
       values: []
     }
 
     if (!existingConfigGroup) config.groups.push(configGroup)
 
-    group.values.forEach(value => {
+    results.values.forEach(value => {
       const existingValueIndex = configGroup.values
       .findIndex(r => r.fieldLocator.code === value.fieldLocator.code &&
         r.fieldLocator.fieldScope.crypto === value.fieldLocator.fieldScope.crypto &&
@@ -87,6 +89,7 @@ function saveConfigGroup (group) {
         configGroup.values[existingValueIndex]
 
       if (existingValue) {
+        // Delete value record
         if (R.isNil(value.fieldValue)) {
           configGroup.values.splice(existingValueIndex, 1)
           return
@@ -103,7 +106,7 @@ function saveConfigGroup (group) {
     pp(configGroup.values)
 
     return dbSaveConfig(config)
-    .then(() => fetchConfigGroup(group.code))
+    .then(() => fetchConfigGroup(groupCode))
   })
   .catch(e => console.log(e.stack))
 }
