@@ -5,6 +5,7 @@ const fs = pify(require('fs'))
 const path = require('path')
 const R = require('ramda')
 const db = require('./db')
+const currencies = require('./currencies.json')
 
 function fetchSchema () {
   const schemaPath = path.resolve(__dirname, '..', 'lamassu-server', 'lamassu-schema.json')
@@ -42,12 +43,25 @@ function fetchConfigGroup (code) {
   })
 }
 
+function massageCurrencies (currencies) {
+  const convert = r => ({
+    code: r['Alphabetic Code'],
+    display: r['Currency']
+  })
+  const top5Codes = ['USD', 'EUR', 'GBP', 'CAD', 'AUD']
+  const mapped = R.map(convert, currencies)
+  const codeToRec = code => R.find(R.propEq('code', code), mapped)
+  const top5 = R.map(codeToRec, top5Codes)
+  const raw = R.uniqBy(R.prop('code'), R.concat(top5, mapped))
+  return raw.filter(r => r.code[0] !== 'X' && r.display.indexOf('(') === -1)
+}
+
 function fetchData () {
   return Promise.resolve({
-    currencies: [{code: 'USD', display: 'US Dollar'}, {code: 'ILS', display: 'New Israeli Sheqel'}],
+    currencies: massageCurrencies(currencies),
     cryptos: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
-    accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker'}],
+    accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker', cryptos: ['BTC']}],
     machines: [{machine: '123-34-234', display: 'Blue toad'}]
   })
 }
