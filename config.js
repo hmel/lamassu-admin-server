@@ -61,7 +61,12 @@ function fetchData () {
     currencies: massageCurrencies(currencies),
     cryptos: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
     languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
-    accounts: [{code: 'bitpay', display: 'Bitpay', class: 'ticker', cryptos: ['BTC']}],
+    accounts: [
+      {code: 'bitpay', display: 'Bitpay', class: 'ticker', cryptos: ['BTC']},
+      {code: 'kraken', display: 'Kraken', class: 'ticker', cryptos: ['BTC', 'ETH']},
+      {code: 'bitstamp', display: 'Bitstamp', class: 'ticker', cryptos: ['BTC']},
+      {code: 'coinbase', display: 'Coinbase', class: 'ticker', cryptos: ['BTC', 'ETH']}
+    ],
     machines: [{machine: '123-34-234', display: 'Blue toad'}]
   })
 }
