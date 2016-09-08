@@ -6,6 +6,7 @@ const path = require('path')
 const R = require('ramda')
 const db = require('./db')
 const currencies = require('./currencies.json')
+const languageRec = require('./languages.json')
 
 function fetchSchema () {
   const schemaPath = path.resolve(__dirname, '..', 'lamassu-server', 'lamassu-schema.json')
@@ -56,11 +57,25 @@ function massageCurrencies (currencies) {
   return raw.filter(r => r.code[0] !== 'X' && r.display.indexOf('(') === -1)
 }
 
+const mapLanguage = lang => {
+  const arr = lang.split('-')
+  const code = arr[0]
+  const country = arr[1]
+  const langNameArr = languageRec.lang[code]
+  if (!langNameArr) return null
+  const langName = langNameArr[0]
+  if (!country) return {code: lang, display: langName}
+  return {code: lang, display: `${langName} [${country}]`}
+}
+
+const supportedLanguages = languageRec.supported
+const languages = supportedLanguages.map(mapLanguage).filter(r => r)
+
 function fetchData () {
   return Promise.resolve({
     currencies: massageCurrencies(currencies),
     cryptos: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
-    languages: [{code: 'en-US', display: 'English [US]'}, {code: 'he', display: 'Hebrew'}],
+    languages: languages,
     accounts: [
       {code: 'bitpay', display: 'Bitpay', class: 'ticker', cryptos: ['BTC']},
       {code: 'kraken', display: 'Kraken', class: 'ticker', cryptos: ['BTC', 'ETH']},
