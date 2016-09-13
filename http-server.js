@@ -58,7 +58,8 @@ let account = {
 }
 
 app.get('/account/:account', (req, res) => {
-  return res.json(account)
+  accounts.getAccount(req.params.account)
+  .then(account => res.json(account))
 })
 
 app.post('/account', (req, res) => {
