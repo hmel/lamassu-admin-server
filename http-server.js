@@ -22,41 +22,6 @@ app.get('/totem', (req, res) => {
   return res.send('<the totem>')
 })
 
-let account = {
-  code: 'twilio',
-  display: 'Twilio',
-  fieldSet: {
-    fields: [
-      {
-        code: 'accountSid',
-        display: 'Account SID',
-        secret: false,
-        required: true,
-        value: {
-          fieldType: 'string',
-          value: '123xx'
-        },
-        status: {
-          code: 'error',
-          error: 'No such account'
-        }
-      },
-      {
-        code: 'accountPass',
-        display: 'Account Password',
-        secret: true,
-        required: true,
-        value: {
-          fieldType: 'password'
-        },
-        status: {
-          code: 'idle'
-        }
-      }
-    ]
-  }
-}
-
 app.get('/account/:account', (req, res) => {
   accounts.getAccount(req.params.account)
   .then(account => res.json(account))
@@ -64,7 +29,9 @@ app.get('/account/:account', (req, res) => {
 
 app.post('/account', (req, res) => {
   console.log('DEBUG1: %j', req.body)
-  res.json(account)
+
+  accounts.updateAccount(req.body)
+  .then(account => res.json(account))
 })
 
 app.get('/config/:config', (req, res) =>
