@@ -74,13 +74,16 @@ const languages = supportedLanguages.map(mapLanguage).filter(r => r)
 function fetchData () {
   return Promise.resolve({
     currencies: massageCurrencies(currencies),
-    cryptos: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
+    cryptoCurrencies: [{crypto: 'BTC', display: 'Bitcoin'}, {crypto: 'ETH', display: 'Ethereum'}],
     languages: languages,
     accounts: [
       {code: 'bitpay', display: 'Bitpay', class: 'ticker', cryptos: ['BTC']},
       {code: 'kraken', display: 'Kraken', class: 'ticker', cryptos: ['BTC', 'ETH']},
       {code: 'bitstamp', display: 'Bitstamp', class: 'ticker', cryptos: ['BTC']},
-      {code: 'coinbase', display: 'Coinbase', class: 'ticker', cryptos: ['BTC', 'ETH']}
+      {code: 'coinbase', display: 'Coinbase', class: 'ticker', cryptos: ['BTC', 'ETH']},
+      {code: 'bitcoind', display: 'bitcoind', class: 'wallet', cryptos: ['BTC']},
+      {code: 'geth', display: 'geth', class: 'wallet', cryptos: ['ETH']},
+      {code: 'mock-wallet', display: 'Mock wallet', class: 'wallet', cryptos: ['BTC', 'ETH']}
     ],
     machines: [{machine: '123-34-234', display: 'Blue toad'}]
   })

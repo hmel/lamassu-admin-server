@@ -41,7 +41,9 @@ function mergeAccount (oldAccount, newAccount) {
 
 function getAccounts (accountCode) {
   return Promise.all([fetchAccountSchema(accountCode), fetchAccounts()])
-  .then(([schema, accounts]) => {
+  .then(arr => {
+    const schema = arr[0]
+    const accounts = arr[1]
     if (R.isEmpty(accounts)) return [schema]
     const account = R.find(r => r.code === accountCode, accounts)
     const mergedAccount = mergeAccount(schema, account)
