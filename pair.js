@@ -18,11 +18,16 @@ function totem (ipAddress) {
   .then(data => {
     const caHash = crypto.createHash('sha256').update(data).digest()
     const token = crypto.randomBytes(32)
+    const hexToken = token.toString('hex')
     const ip = Buffer.from(ipAddress.split('.').map(s => parseInt(s, 10)))
     const buf = Buffer.concat([ip, caHash, token])
     const sql = 'insert into pairing_tokens (token) values ($1)'
 
-    return db.none(sql, [token.toString('hex')])
+    const caToken = crypto.createHmac('sha256', hexToken)
+    .update('ca-download').digest('hex')
+
+    return db.none(sql, [hexToken])
+    .then(() => db.none(sql, [caToken]))
     .then(() => buf.toString('base64'))
   })
 }
