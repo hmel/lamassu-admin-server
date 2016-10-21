@@ -1,6 +1,5 @@
 'use strict'
 
-const R = require('ramda')
 const db = require('../db')
 
 function pp (o) {
