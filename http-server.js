@@ -5,7 +5,9 @@ const app = express()
 const https = require('https')
 const http = require('http')
 require('express-ws')(app)
-var bodyParser = require('body-parser')
+const bodyParser = require('body-parser')
+const serveStatic = require('serve-static')
+const cookieParser = require('cookie-parser')
 const accounts = require('./accounts')
 const config = require('./config')
 const fs = require('fs')
@@ -71,6 +73,33 @@ app.ws('/echo', function (ws, req) {
     ws.send(msg)
   })
 })
+
+const adminApp = express()
+
+// login security:
+// generate secure url from console with one-time pass
+// on first get, validate, then delete one-time pass
+// set long term token in secure cookie and db
+
+adminApp.use(cookieParser())
+
+adminApp.get('/register/:token', (req, res) => {
+  const cookieOpts = {
+    httpOnly: true,
+    maxAge: 60 * 60 * 1000
+  }
+  const token = req.params.token
+  res.cookie('token', token, cookieOpts)
+  res.status(200).end()
+})
+
+adminApp.get('/cookie', (req, res) => {
+  console.log(req.cookies)
+  res.status(200).end()
+})
+
+adminApp.use(serveStatic('../lamassu-admin-elm/build'))
+adminApp.listen(8083)
 
 function logError (err) {
   // Note: this shouldn't happen
