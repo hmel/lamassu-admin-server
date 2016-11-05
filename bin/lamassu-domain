@@ -1,0 +1,23 @@
+#!/usr/bin/env node
+
+const fs = require('fs')
+const path = require('path')
+
+const configPath = path.resolve(__dirname, '..', 'config.json')
+
+const domain = process.argv[2]
+
+if (!domain) {
+  console.log('Usage: lamassu-domain <domain name>')
+  process.exit(1)
+}
+
+try {
+  fs.writeFileSync(configPath, JSON.stringify({domain}))
+} catch (err) {
+  console.log('Can\'t save config file: %s', err)
+  process.exit(2)
+}
+
+console.log('Successfully configured lamassu-admin-server')
+process.exit(0)

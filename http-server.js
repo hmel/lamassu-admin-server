@@ -57,7 +57,7 @@ const options = {
   cert: fs.readFileSync('./lamassu.crt')
 }
 
-app.use(serveStatic('../lamassu-admin-elm/build'))
+app.use(serveStatic('./public'))
 
 function register (req, res, next) {
   const otp = req.query.otp
