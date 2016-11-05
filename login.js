@@ -21,7 +21,7 @@ function validateOTP (otp) {
 }
 
 function register (otp) {
-  validateOTP(otp)
+  return validateOTP(otp)
   .then(r => {
     if (!r.success) return r
 
