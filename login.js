@@ -1,32 +1,37 @@
 const db = require('./db')
 const crypto = require('crypto')
 
-function generateOTP () {
+function generateOTP (name) {
   const otp = crypto.randomBytes(32).toString('hex')
 
-  const sql = 'insert into one_time_passes (token) values ($1)'
+  const sql = 'insert into one_time_passes (token, name) values ($1, $2)'
 
-  return db.none(sql, [otp])
+  return db.none(sql, [otp, name])
   .then(() => otp)
 }
 
 function validateOTP (otp) {
   const sql = `delete from one_time_passes
     where token=$1
-    returning created < now() - interval '1 hour' as expired`
+    returning name, created < now() - interval '1 hour' as expired`
 
   return db.one(sql, [otp])
-  .then(r => !r.expired)
-  .catch(() => false)
+  .then(r => ({success: !r.expired, expired: r.expired, name: r.name}))
+  .catch(() => ({success: false, expired: false}))
 }
 
-function register () {
-  const token = crypto.randomBytes(32).toString('hex')
+function register (otp) {
+  validateOTP(otp)
+  .then(r => {
+    if (!r.success) return r
 
-  const sql = 'insert into user_tokens (token) values ($1)'
+    const token = crypto.randomBytes(32).toString('hex')
+    const sql = 'insert into user_tokens (token, name) values ($1, $2)'
 
-  return db.none(sql, [token])
-  .then(() => token)
+    return db.none(sql, [token, r.name])
+    .then(() => ({success: true, token: token}))
+  })
+  .catch(() => ({success: false, expired: false}))
 }
 
 function authenticate (token) {
@@ -37,7 +42,6 @@ function authenticate (token) {
 
 module.exports = {
   generateOTP,
-  validateOTP,
   register,
   authenticate
 }
