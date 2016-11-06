@@ -1,21 +1,40 @@
-'use strict'
+#!/usr/bin/env node
 
+const os = require('os')
+const fs = require('fs')
+const path = require('path')
 const express = require('express')
 const app = express()
 const https = require('https')
 const http = require('http')
-require('express-ws')(app)
 const bodyParser = require('body-parser')
 const serveStatic = require('serve-static')
 const cookieParser = require('cookie-parser')
-const accounts = require('./accounts')
-const config = require('./config')
-const login = require('./login')
-const fs = require('fs')
+const argv = require('minimist')(process.argv.slice(2))
+const accounts = require('../lib/accounts')
+const config = require('../lib/config')
+const login = require('../lib/login')
+
+const devMode = argv.dev
+
+let serverConfig
+
+try {
+  const homeConfigPath = path.resolve(os.homedir(), '.lamassu', 'lamassu.json')
+  serverConfig = JSON.parse(fs.readFileSync(homeConfigPath))
+} catch (_) {
+  try {
+    const globalConfigPath = path.resolve('/etc', 'lamassu', 'lamassu.json')
+    serverConfig = JSON.parse(fs.readFileSync(globalConfigPath))
+  } catch (_) {
+    console.log("Couldn't open config file.")
+    process.exit(1)
+  }
+}
 
 app.use(cookieParser())
 app.use(register)
-app.use(authenticate)
+if (!devMode) app.use(authenticate)
 app.use(bodyParser.json())
 
 app.get('/api/totem', (req, res) => {
@@ -37,10 +56,6 @@ app.post('/api/account', (req, res) => {
 app.get('/api/config/:config', (req, res) =>
   config.fetchConfigGroup(req.params.config).then(c => res.json(c)))
 
-function pp (o) {
-  console.log(require('util').inspect(o, {depth: null, colors: true}))
-}
-
 app.post('/api/config', (req, res) => {
   config.saveConfigGroup(req.body)
   .then(c => res.json(c))
@@ -53,8 +68,8 @@ app.get('/api/accounts/account/:account', function (req, res) {
 })
 
 const options = {
-  key: fs.readFileSync('./lamassu.key'),
-  cert: fs.readFileSync('./lamassu.crt')
+  key: fs.readFileSync(serverConfig.keyPath),
+  cert: fs.readFileSync(serverConfig.certPath)
 }
 
 app.use(serveStatic('./public'))
@@ -99,5 +114,13 @@ function logError (err) {
   throw err
 }
 
-http.createServer(app).listen(8093)
-https.createServer(options, app).listen(8094)
+process.on('unhandledRejection', err => {
+  console.log(err.stack)
+  process.exit(1)
+})
+
+if (devMode) {
+  http.createServer(app).listen(8070)
+} else {
+  https.createServer(options, app).listen(443)
+}
