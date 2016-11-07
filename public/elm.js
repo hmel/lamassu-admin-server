@@ -18084,9 +18084,253 @@ var _user$project$Pair$getTotem = _krisajenkins$remotedata$RemoteData$asCmd(
 	_evancz$elm_http$Http$getString('/api/totem'));
 var _user$project$Pair$load = {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _user$project$Pair$getTotem};
 
+var _user$project$MachineTypes$Machine = F2(
+	function (a, b) {
+		return {id: a, name: b};
+	});
+var _user$project$MachineTypes$ResetCashOutBills = F2(
+	function (a, b) {
+		return {ctor: 'ResetCashOutBills', _0: a, _1: b};
+	});
+
+var _user$project$MachinesDecoder$machineDecoder = A3(_elm_lang$core$Json_Decode$object2, _user$project$MachineTypes$Machine, _elm_lang$core$Json_Decode$string, _elm_lang$core$Json_Decode$string);
+var _user$project$MachinesDecoder$machinesDecoder = _elm_lang$core$Json_Decode$list(_user$project$MachinesDecoder$machineDecoder);
+
+var _user$project$MachinesEncoder$encodeAction = function (action) {
+	var _p0 = action;
+	return _elm_lang$core$Json_Encode$object(
+		_elm_lang$core$Native_List.fromArray(
+			[
+				{
+				ctor: '_Tuple2',
+				_0: 'action',
+				_1: _elm_lang$core$Json_Encode$string('resetCashOutBills')
+			},
+				{
+				ctor: '_Tuple2',
+				_0: 'cassettes',
+				_1: _elm_lang$core$Json_Encode$list(
+					_elm_lang$core$Native_List.fromArray(
+						[
+							_elm_lang$core$Json_Encode$int(_p0._0),
+							_elm_lang$core$Json_Encode$int(_p0._1)
+						]))
+			}
+			]));
+};
+
+var _user$project$Machine$rowView = function (machine) {
+	return A2(
+		_elm_lang$html$Html$tr,
+		_elm_lang$core$Native_List.fromArray(
+			[]),
+		_elm_lang$core$Native_List.fromArray(
+			[
+				A2(
+				_elm_lang$html$Html$td,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(machine.name)
+					]))
+			]));
+};
+var _user$project$Machine$view = function (model) {
+	var _p0 = model;
+	switch (_p0.ctor) {
+		case 'NotAsked':
+			return A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[]));
+		case 'Loading':
+			return A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text('Loading...')
+					]));
+		case 'Failure':
+			return A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						_elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(_p0._0))
+					]));
+		default:
+			return A2(
+				_elm_lang$html$Html$div,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Css_Admin$class(
+								_elm_lang$core$Native_List.fromArray(
+									[_user$project$Css_Classes$SectionLabel]))
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A2(
+								_elm_lang$html$Html$div,
+								_elm_lang$core$Native_List.fromArray(
+									[]),
+								_elm_lang$core$Native_List.fromArray(
+									[
+										A2(
+										_elm_lang$html$Html$div,
+										_elm_lang$core$Native_List.fromArray(
+											[
+												_user$project$Css_Admin$class(
+												_elm_lang$core$Native_List.fromArray(
+													[_user$project$Css_Classes$ConfigContainer]))
+											]),
+										_elm_lang$core$Native_List.fromArray(
+											[
+												A2(
+												_elm_lang$html$Html$table,
+												_elm_lang$core$Native_List.fromArray(
+													[
+														_user$project$Css_Admin$class(
+														_elm_lang$core$Native_List.fromArray(
+															[_user$project$Css_Classes$ConfigTable]))
+													]),
+												_elm_lang$core$Native_List.fromArray(
+													[
+														A2(
+														_elm_lang$html$Html$thead,
+														_elm_lang$core$Native_List.fromArray(
+															[]),
+														_elm_lang$core$Native_List.fromArray(
+															[
+																A2(
+																_elm_lang$html$Html$tr,
+																_elm_lang$core$Native_List.fromArray(
+																	[]),
+																_elm_lang$core$Native_List.fromArray(
+																	[
+																		A2(
+																		_elm_lang$html$Html$td,
+																		_elm_lang$core$Native_List.fromArray(
+																			[]),
+																		_elm_lang$core$Native_List.fromArray(
+																			[
+																				_elm_lang$html$Html$text('Machine')
+																			])),
+																		A2(
+																		_elm_lang$html$Html$td,
+																		_elm_lang$core$Native_List.fromArray(
+																			[]),
+																		_elm_lang$core$Native_List.fromArray(
+																			[
+																				_elm_lang$html$Html$text('Top Bill Count')
+																			])),
+																		A2(
+																		_elm_lang$html$Html$td,
+																		_elm_lang$core$Native_List.fromArray(
+																			[]),
+																		_elm_lang$core$Native_List.fromArray(
+																			[
+																				_elm_lang$html$Html$text('Bottom Bill Count')
+																			]))
+																	]))
+															])),
+														A2(
+														_elm_lang$html$Html$tbody,
+														_elm_lang$core$Native_List.fromArray(
+															[]),
+														A2(_elm_lang$core$List$map, _user$project$Machine$rowView, _p0._0))
+													]))
+											]))
+									]))
+							]))
+					]));
+	}
+};
+var _user$project$Machine$update = F2(
+	function (msg, model) {
+		var _p1 = msg;
+		if (_p1.ctor === 'Action') {
+			return A2(
+				_elm_lang$core$Platform_Cmd_ops['!'],
+				model,
+				_elm_lang$core$Native_List.fromArray(
+					[]));
+		} else {
+			return A2(
+				_elm_lang$core$Platform_Cmd_ops['!'],
+				_p1._0,
+				_elm_lang$core$Native_List.fromArray(
+					[]));
+		}
+	});
+var _user$project$Machine$init = _krisajenkins$remotedata$RemoteData$NotAsked;
+var _user$project$Machine$Load = function (a) {
+	return {ctor: 'Load', _0: a};
+};
+var _user$project$Machine$getForm = A2(
+	_elm_lang$core$Platform_Cmd$map,
+	_user$project$Machine$Load,
+	_krisajenkins$remotedata$RemoteData$asCmd(
+		A2(
+			_elm_lang$core$Task$map,
+			function (_) {
+				return _.data;
+			},
+			A3(
+				_lukewestby$elm_http_builder$HttpBuilder$send,
+				_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$MachinesDecoder$machinesDecoder),
+				_lukewestby$elm_http_builder$HttpBuilder$stringReader,
+				_lukewestby$elm_http_builder$HttpBuilder$get('/api/machines')))));
+var _user$project$Machine$load = {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _user$project$Machine$getForm};
+var _user$project$Machine$postForm = function (action) {
+	return A2(
+		_elm_lang$core$Platform_Cmd$map,
+		_user$project$Machine$Load,
+		_krisajenkins$remotedata$RemoteData$asCmd(
+			A2(
+				_elm_lang$core$Task$map,
+				function (_) {
+					return _.data;
+				},
+				A3(
+					_lukewestby$elm_http_builder$HttpBuilder$send,
+					_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$MachinesDecoder$machinesDecoder),
+					_lukewestby$elm_http_builder$HttpBuilder$stringReader,
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+						_user$project$MachinesEncoder$encodeAction(action),
+						A3(
+							_lukewestby$elm_http_builder$HttpBuilder$withHeader,
+							'Content-Type',
+							'application/json',
+							_lukewestby$elm_http_builder$HttpBuilder$post('/api/machines')))))));
+};
+var _user$project$Machine$Action = {ctor: 'Action'};
+
+var _user$project$CoreTypes$machineSubRouteToString = function (machineSubRoute) {
+	var _p0 = machineSubRoute;
+	return 'actions';
+};
+var _user$project$CoreTypes$MachineCat = {ctor: 'MachineCat'};
 var _user$project$CoreTypes$ConfigCat = {ctor: 'ConfigCat'};
 var _user$project$CoreTypes$AccountCat = {ctor: 'AccountCat'};
+var _user$project$CoreTypes$MachineActions = {ctor: 'MachineActions'};
 var _user$project$CoreTypes$NotFoundRoute = {ctor: 'NotFoundRoute'};
+var _user$project$CoreTypes$MachineRoute = function (a) {
+	return {ctor: 'MachineRoute', _0: a};
+};
 var _user$project$CoreTypes$ConfigRoute = F2(
 	function (a, b) {
 		return {ctor: 'ConfigRoute', _0: a, _1: b};
@@ -18099,6 +18343,9 @@ var _user$project$CoreTypes$NewRoute = F2(
 	function (a, b) {
 		return {ctor: 'NewRoute', _0: a, _1: b};
 	});
+var _user$project$CoreTypes$MachineMsg = function (a) {
+	return {ctor: 'MachineMsg', _0: a};
+};
 var _user$project$CoreTypes$ConfigMsg = function (a) {
 	return {ctor: 'ConfigMsg', _0: a};
 };
@@ -18133,12 +18380,17 @@ var _user$project$NavBar$routeToUrl = function (route) {
 				A2(_elm_lang$core$Basics_ops['++'], 'config/', _p0._0),
 				_elm_lang$core$Native_List.fromArray(
 					[_p0._1]));
+		case 'MachineRoute':
+			return A2(
+				_elm_lang$core$Basics_ops['++'],
+				'machine/',
+				_user$project$CoreTypes$machineSubRouteToString(_p0._0));
 		default:
 			return _elm_lang$core$Native_Utils.crashCase(
 				'NavBar',
 				{
-					start: {line: 22, column: 5},
-					end: {line: 33, column: 45}
+					start: {line: 29, column: 5},
+					end: {line: 43, column: 45}
 				},
 				_p0)('Need unknown route');
 	}
@@ -18160,12 +18412,14 @@ var _user$project$NavBar$activeRoute = F2(
 					return _elm_lang$core$Native_Utils.eq(
 						linkRoute,
 						A2(_user$project$CoreTypes$ConfigRoute, _p3._0, _elm_lang$core$Maybe$Nothing));
+				case 'MachineRoute':
+					return _elm_lang$core$Native_Utils.eq(linkRoute, route);
 				default:
 					return _elm_lang$core$Native_Utils.crashCase(
 						'NavBar',
 						{
-							start: {line: 40, column: 13},
-							end: {line: 51, column: 53}
+							start: {line: 50, column: 13},
+							end: {line: 64, column: 53}
 						},
 						_p3)('Need NotFoundRoute');
 			}
@@ -18295,6 +18549,22 @@ var _user$project$NavBar$view = F2(
 				]),
 			_elm_lang$core$Native_List.fromArray(
 				[
+					A2(
+					ll,
+					{
+						ctor: '_Tuple3',
+						_0: 'Machines',
+						_1: _user$project$CoreTypes$MachineCat,
+						_2: _user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions)
+					},
+					_elm_lang$core$Native_List.fromArray(
+						[
+							{
+							ctor: '_Tuple2',
+							_0: 'Actions',
+							_1: _user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions)
+						}
+						])),
 					l(
 					{ctor: '_Tuple2', _0: 'Pairing', _1: _user$project$CoreTypes$PairRoute}),
 					A2(
@@ -18368,11 +18638,11 @@ var _user$project$Main$subscriptions = function (model) {
 var _user$project$Main$urlUpdate = F2(
 	function (_p0, model) {
 		var _p1 = _p0;
-		var _p7 = _p1._0;
+		var _p8 = _p1._0;
 		var pagedModel = _elm_lang$core$Native_Utils.update(
 			model,
-			{route: _p7});
-		var _p2 = A2(_elm_lang$core$Debug$log, 'DEBUG25', _p7);
+			{route: _p8});
+		var _p2 = A2(_elm_lang$core$Debug$log, 'DEBUG25', _p8);
 		switch (_p2.ctor) {
 			case 'PairRoute':
 				var _p3 = _user$project$Pair$load;
@@ -18419,19 +18689,35 @@ var _user$project$Main$urlUpdate = F2(
 						[
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$ConfigMsg, cmd)
 						]));
+			case 'MachineRoute':
+				var _p6 = _user$project$Machine$load;
+				var machineModel = _p6._0;
+				var cmd = _p6._1;
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						pagedModel,
+						{
+							category: _elm_lang$core$Maybe$Just(_user$project$CoreTypes$MachineCat),
+							machine: machineModel
+						}),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$MachineMsg, cmd)
+						]));
 			default:
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 197, column: 9},
-						end: {line: 220, column: 49}
+						start: {line: 211, column: 9},
+						end: {line: 242, column: 49}
 					},
 					_p2)('Need to create 404');
 		}
 	});
 var _user$project$Main$content = function (model) {
-	var _p8 = A2(_elm_lang$core$Debug$log, 'DEBUG20', model.route);
-	switch (_p8.ctor) {
+	var _p9 = A2(_elm_lang$core$Debug$log, 'DEBUG20', model.route);
+	switch (_p9.ctor) {
 		case 'PairRoute':
 			return A2(
 				_elm_lang$html$Html_App$map,
@@ -18447,6 +18733,11 @@ var _user$project$Main$content = function (model) {
 				_elm_lang$html$Html_App$map,
 				_user$project$CoreTypes$ConfigMsg,
 				_user$project$Config$view(model.config));
+		case 'MachineRoute':
+			return A2(
+				_elm_lang$html$Html_App$map,
+				_user$project$CoreTypes$MachineMsg,
+				_user$project$Machine$view(model.machine));
 		default:
 			return A2(
 				_elm_lang$html$Html$div,
@@ -18505,14 +18796,14 @@ var _user$project$Main$view = function (model) {
 					]))
 			]));
 };
-var _user$project$Main$init = function (_p9) {
-	var _p10 = _p9;
-	var _p12 = _p10._0;
-	var _p11 = _p10._1;
-	var model = {route: _p12, address: _p11, category: _elm_lang$core$Maybe$Nothing, account: _user$project$Account$init, pair: _user$project$Pair$init, config: _user$project$Config$init, err: _elm_lang$core$Maybe$Nothing};
+var _user$project$Main$init = function (_p10) {
+	var _p11 = _p10;
+	var _p13 = _p11._0;
+	var _p12 = _p11._1;
+	var model = {route: _p13, address: _p12, category: _elm_lang$core$Maybe$Nothing, account: _user$project$Account$init, pair: _user$project$Pair$init, config: _user$project$Config$init, machine: _user$project$Machine$init, err: _elm_lang$core$Maybe$Nothing};
 	return A2(
 		_user$project$Main$urlUpdate,
-		{ctor: '_Tuple2', _0: _p12, _1: _p11},
+		{ctor: '_Tuple2', _0: _p13, _1: _p12},
 		model);
 };
 var _user$project$Main$routes = function () {
@@ -18557,7 +18848,14 @@ var _user$project$Main$routes = function () {
 				A2(
 					_evancz$url_parser$UrlParser_ops['</>'],
 					_evancz$url_parser$UrlParser$s('config'),
-					_evancz$url_parser$UrlParser$string))
+					_evancz$url_parser$UrlParser$string)),
+				A2(
+				_evancz$url_parser$UrlParser$format,
+				_user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions),
+				A2(
+					_evancz$url_parser$UrlParser_ops['</>'],
+					_evancz$url_parser$UrlParser$s('machine'),
+					_evancz$url_parser$UrlParser$s('actions')))
 			]));
 }();
 var _user$project$Main$hopConfig = {hash: true, basePath: ''};
@@ -18570,24 +18868,24 @@ var _user$project$Main$urlParser = function () {
 	};
 	var resolver = A2(_sporto$hop$Hop$makeResolver, _user$project$Main$hopConfig, parse);
 	return _elm_lang$navigation$Navigation$makeParser(
-		function (_p13) {
+		function (_p14) {
 			return resolver(
 				function (_) {
 					return _.href;
-				}(_p13));
+				}(_p14));
 		});
 }();
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p14 = msg;
-		switch (_p14.ctor) {
+		var _p15 = msg;
+		switch (_p15.ctor) {
 			case 'PairMsg':
-				var _p15 = A2(
+				var _p16 = A2(
 					_user$project$Pair$update,
-					A2(_elm_lang$core$Debug$log, 'DEBUG22', _p14._0),
+					A2(_elm_lang$core$Debug$log, 'DEBUG22', _p15._0),
 					model.pair);
-				var pairModel = _p15._0;
-				var cmd = _p15._1;
+				var pairModel = _p16._0;
+				var cmd = _p16._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -18598,9 +18896,9 @@ var _user$project$Main$update = F2(
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$PairMsg, cmd)
 						]));
 			case 'AccountMsg':
-				var _p16 = A2(_user$project$Account$update, _p14._0, model.account);
-				var accountModel = _p16._0;
-				var cmd = _p16._1;
+				var _p17 = A2(_user$project$Account$update, _p15._0, model.account);
+				var accountModel = _p17._0;
+				var cmd = _p17._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -18611,9 +18909,9 @@ var _user$project$Main$update = F2(
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$AccountMsg, cmd)
 						]));
 			case 'ConfigMsg':
-				var _p17 = A2(_user$project$Config$update, _p14._0, model.config);
-				var configModel = _p17._0;
-				var cmd = _p17._1;
+				var _p18 = A2(_user$project$Config$update, _p15._0, model.config);
+				var configModel = _p18._0;
+				var cmd = _p18._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -18623,20 +18921,33 @@ var _user$project$Main$update = F2(
 						[
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$ConfigMsg, cmd)
 						]));
+			case 'MachineMsg':
+				var _p19 = A2(_user$project$Machine$update, _p15._0, model.machine);
+				var machineModel = _p19._0;
+				var cmd = _p19._1;
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{machine: machineModel}),
+					_elm_lang$core$Native_List.fromArray(
+						[
+							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$MachineMsg, cmd)
+						]));
 			default:
 				var path = _user$project$NavBar$routeToUrl(
-					A2(_elm_lang$core$Debug$log, 'DEBUG27', _p14._1));
+					A2(_elm_lang$core$Debug$log, 'DEBUG27', _p15._1));
 				var command = _elm_lang$navigation$Navigation$newUrl(
 					A2(
 						_sporto$hop$Hop$outputFromPath,
 						_user$project$Main$hopConfig,
 						A2(_elm_lang$core$Debug$log, 'DEBUG26', path)));
-				var _p18 = A2(_elm_lang$core$Debug$log, 'DEBUG28', 'x');
+				var _p20 = A2(_elm_lang$core$Debug$log, 'DEBUG28', 'x');
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{category: _p14._0}),
+						{category: _p15._0}),
 					_elm_lang$core$Native_List.fromArray(
 						[command]));
 		}
@@ -18647,9 +18958,9 @@ var _user$project$Main$main = {
 		_user$project$Main$urlParser,
 		{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, urlUpdate: _user$project$Main$urlUpdate, subscriptions: _user$project$Main$subscriptions})
 };
-var _user$project$Main$Model = F7(
-	function (a, b, c, d, e, f, g) {
-		return {route: a, address: b, category: c, pair: d, account: e, config: f, err: g};
+var _user$project$Main$Model = F8(
+	function (a, b, c, d, e, f, g, h) {
+		return {route: a, address: b, category: c, pair: d, account: e, config: f, machine: g, err: h};
 	});
 
 var Elm = {};
