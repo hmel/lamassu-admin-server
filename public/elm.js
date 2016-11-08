@@ -15021,6 +15021,22 @@ var _user$project$Account$update = F2(
 		}
 	});
 
+var _user$project$AccountsDecoder$accountDecoder = A3(
+	_elm_lang$core$Json_Decode$object2,
+	F2(
+		function (v0, v1) {
+			return {ctor: '_Tuple2', _0: v0, _1: v1};
+		}),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'code', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'display', _elm_lang$core$Json_Decode$string));
+var _user$project$AccountsDecoder$accountsDecoder = A2(
+	_elm_lang$core$Json_Decode$object1,
+	_elm_lang$core$Basics$identity,
+	A2(
+		_elm_lang$core$Json_Decode_ops[':='],
+		'accounts',
+		_elm_lang$core$Json_Decode$list(_user$project$AccountsDecoder$accountDecoder)));
+
 var _user$project$Selectize$rawOnKeyUp = function (tagger) {
 	return A2(
 		_elm_lang$html$Html_Events$on,
@@ -18624,6 +18640,9 @@ var _user$project$CoreTypes$NewRoute = F2(
 	function (a, b) {
 		return {ctor: 'NewRoute', _0: a, _1: b};
 	});
+var _user$project$CoreTypes$LoadAccounts = function (a) {
+	return {ctor: 'LoadAccounts', _0: a};
+};
 var _user$project$CoreTypes$MachineMsg = function (a) {
 	return {ctor: 'MachineMsg', _0: a};
 };
@@ -18852,22 +18871,6 @@ var _user$project$NavBar$view = F2(
 					ll,
 					{
 						ctor: '_Tuple3',
-						_0: 'Accounts',
-						_1: _user$project$CoreTypes$AccountCat,
-						_2: _user$project$CoreTypes$AccountRoute('twilio')
-					},
-					_elm_lang$core$Native_List.fromArray(
-						[
-							{
-							ctor: '_Tuple2',
-							_0: 'Twilio',
-							_1: _user$project$CoreTypes$AccountRoute('twilio')
-						}
-						])),
-					A2(
-					ll,
-					{
-						ctor: '_Tuple3',
 						_0: 'Configuration',
 						_1: _user$project$CoreTypes$ConfigCat,
 						_2: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
@@ -18908,6 +18911,22 @@ var _user$project$NavBar$view = F2(
 							ctor: '_Tuple2',
 							_0: 'Compliance',
 							_1: A2(_user$project$CoreTypes$ConfigRoute, 'compliance', _elm_lang$core$Maybe$Nothing)
+						}
+						])),
+					A2(
+					ll,
+					{
+						ctor: '_Tuple3',
+						_0: 'Accounts',
+						_1: _user$project$CoreTypes$AccountCat,
+						_2: _user$project$CoreTypes$AccountRoute('twilio')
+					},
+					_elm_lang$core$Native_List.fromArray(
+						[
+							{
+							ctor: '_Tuple2',
+							_0: 'Twilio',
+							_1: _user$project$CoreTypes$AccountRoute('twilio')
 						}
 						]))
 				]));
@@ -18985,8 +19004,8 @@ var _user$project$Main$urlUpdate = F2(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Main',
 					{
-						start: {line: 211, column: 9},
-						end: {line: 238, column: 49}
+						start: {line: 230, column: 9},
+						end: {line: 257, column: 49}
 					},
 					_p2)('Need to create 404');
 		}
@@ -19072,15 +19091,51 @@ var _user$project$Main$view = function (model) {
 					]))
 			]));
 };
-var _user$project$Main$init = function (_p9) {
-	var _p10 = _p9;
-	var _p12 = _p10._0;
-	var _p11 = _p10._1;
-	var model = {route: _p12, address: _p11, category: _elm_lang$core$Maybe$Nothing, account: _user$project$Account$init, pair: _user$project$Pair$init, config: _user$project$Config$init, machine: _user$project$Machine$init, err: _elm_lang$core$Maybe$Nothing};
-	return A2(
+var _user$project$Main$getAccounts = A3(
+	_elm_lang$core$Task$perform,
+	function (_p9) {
+		return _user$project$CoreTypes$LoadAccounts(
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	},
+	_user$project$CoreTypes$LoadAccounts,
+	A2(
+		_elm_lang$core$Task$map,
+		function (_) {
+			return _.data;
+		},
+		A3(
+			_lukewestby$elm_http_builder$HttpBuilder$send,
+			_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$AccountsDecoder$accountsDecoder),
+			_lukewestby$elm_http_builder$HttpBuilder$stringReader,
+			_lukewestby$elm_http_builder$HttpBuilder$get('/api/accounts'))));
+var _user$project$Main$init = function (_p10) {
+	var _p11 = _p10;
+	var _p14 = _p11._0;
+	var _p13 = _p11._1;
+	var model = {
+		route: _p14,
+		address: _p13,
+		category: _elm_lang$core$Maybe$Nothing,
+		account: _user$project$Account$init,
+		pair: _user$project$Pair$init,
+		config: _user$project$Config$init,
+		machine: _user$project$Machine$init,
+		accounts: _elm_lang$core$Native_List.fromArray(
+			[]),
+		err: _elm_lang$core$Maybe$Nothing
+	};
+	var _p12 = A2(
 		_user$project$Main$urlUpdate,
-		{ctor: '_Tuple2', _0: _p12, _1: _p11},
+		{ctor: '_Tuple2', _0: _p14, _1: _p13},
 		model);
+	var newModel = _p12._0;
+	var newCmd = _p12._1;
+	return A2(
+		_elm_lang$core$Platform_Cmd_ops['!'],
+		newModel,
+		_elm_lang$core$Native_List.fromArray(
+			[newCmd, _user$project$Main$getAccounts]));
 };
 var _user$project$Main$routes = function () {
 	var nonEmptyStringParser = function (str) {
@@ -19144,24 +19199,24 @@ var _user$project$Main$urlParser = function () {
 	};
 	var resolver = A2(_sporto$hop$Hop$makeResolver, _user$project$Main$hopConfig, parse);
 	return _elm_lang$navigation$Navigation$makeParser(
-		function (_p13) {
+		function (_p15) {
 			return resolver(
 				function (_) {
 					return _.href;
-				}(_p13));
+				}(_p15));
 		});
 }();
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p14 = msg;
-		switch (_p14.ctor) {
+		var _p16 = msg;
+		switch (_p16.ctor) {
 			case 'PairMsg':
-				var _p15 = A2(
+				var _p17 = A2(
 					_user$project$Pair$update,
-					A2(_elm_lang$core$Debug$log, 'DEBUG22', _p14._0),
+					A2(_elm_lang$core$Debug$log, 'DEBUG22', _p16._0),
 					model.pair);
-				var pairModel = _p15._0;
-				var cmd = _p15._1;
+				var pairModel = _p17._0;
+				var cmd = _p17._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -19172,9 +19227,9 @@ var _user$project$Main$update = F2(
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$PairMsg, cmd)
 						]));
 			case 'AccountMsg':
-				var _p16 = A2(_user$project$Account$update, _p14._0, model.account);
-				var accountModel = _p16._0;
-				var cmd = _p16._1;
+				var _p18 = A2(_user$project$Account$update, _p16._0, model.account);
+				var accountModel = _p18._0;
+				var cmd = _p18._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -19185,9 +19240,9 @@ var _user$project$Main$update = F2(
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$AccountMsg, cmd)
 						]));
 			case 'ConfigMsg':
-				var _p17 = A2(_user$project$Config$update, _p14._0, model.config);
-				var configModel = _p17._0;
-				var cmd = _p17._1;
+				var _p19 = A2(_user$project$Config$update, _p16._0, model.config);
+				var configModel = _p19._0;
+				var cmd = _p19._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -19195,12 +19250,13 @@ var _user$project$Main$update = F2(
 						{config: configModel}),
 					_elm_lang$core$Native_List.fromArray(
 						[
-							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$ConfigMsg, cmd)
+							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$ConfigMsg, cmd),
+							_user$project$Main$getAccounts
 						]));
 			case 'MachineMsg':
-				var _p18 = A2(_user$project$Machine$update, _p14._0, model.machine);
-				var machineModel = _p18._0;
-				var cmd = _p18._1;
+				var _p20 = A2(_user$project$Machine$update, _p16._0, model.machine);
+				var machineModel = _p20._0;
+				var cmd = _p20._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -19210,20 +19266,30 @@ var _user$project$Main$update = F2(
 						[
 							A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$MachineMsg, cmd)
 						]));
+			case 'LoadAccounts':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{
+							accounts: A2(_elm_lang$core$Debug$log, 'DEBUG55', _p16._0)
+						}),
+					_elm_lang$core$Native_List.fromArray(
+						[]));
 			default:
 				var path = _user$project$NavBar$routeToUrl(
-					A2(_elm_lang$core$Debug$log, 'DEBUG27', _p14._1));
+					A2(_elm_lang$core$Debug$log, 'DEBUG27', _p16._1));
 				var command = _elm_lang$navigation$Navigation$newUrl(
 					A2(
 						_sporto$hop$Hop$outputFromPath,
 						_user$project$Main$hopConfig,
 						A2(_elm_lang$core$Debug$log, 'DEBUG26', path)));
-				var _p19 = A2(_elm_lang$core$Debug$log, 'DEBUG28', 'x');
+				var _p21 = A2(_elm_lang$core$Debug$log, 'DEBUG28', 'x');
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
-						{category: _p14._0}),
+						{category: _p16._0}),
 					_elm_lang$core$Native_List.fromArray(
 						[command]));
 		}
@@ -19234,9 +19300,9 @@ var _user$project$Main$main = {
 		_user$project$Main$urlParser,
 		{init: _user$project$Main$init, view: _user$project$Main$view, update: _user$project$Main$update, urlUpdate: _user$project$Main$urlUpdate, subscriptions: _user$project$Main$subscriptions})
 };
-var _user$project$Main$Model = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {route: a, address: b, category: c, pair: d, account: e, config: f, machine: g, err: h};
+var _user$project$Main$Model = F9(
+	function (a, b, c, d, e, f, g, h, i) {
+		return {route: a, address: b, category: c, pair: d, account: e, config: f, machine: g, accounts: h, err: i};
 	});
 
 var Elm = {};

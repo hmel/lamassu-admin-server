@@ -60,6 +60,12 @@ app.get('/api/totem', (req, res) => {
   .then(totem => res.send(totem))
 })
 
+app.get('/api/accounts', (req, res) => {
+  accounts.selectedAccounts()
+  .then(accounts => { console.log('%j', accounts); return accounts })
+  .then(accounts => res.json({accounts: accounts}))
+})
+
 app.get('/api/account/:account', (req, res) => {
   accounts.getAccount(req.params.account)
   .then(account => res.json(account))
@@ -97,6 +103,12 @@ app.post('/api/machines', (req, res) => {
   .then(() => machines.getMachines())
   .then(r => res.send({machines: r}))
   .then(() => dbNotify())
+})
+
+app.use((err, req, res, next) => {
+  console.log(err)
+  console.log('DEBUG33')
+  res.status(500).send(err.message)
 })
 
 const options = {
