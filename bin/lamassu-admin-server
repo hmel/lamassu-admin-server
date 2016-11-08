@@ -11,7 +11,10 @@ const bodyParser = require('body-parser')
 const serveStatic = require('serve-static')
 const cookieParser = require('cookie-parser')
 const argv = require('minimist')(process.argv.slice(2))
+const got = require('got')
+
 const accounts = require('../lib/accounts')
+const machines = require('../lib/machines')
 const config = require('../lib/config')
 const login = require('../lib/login')
 
@@ -30,6 +33,10 @@ try {
     console.log("Couldn't open config file.")
     process.exit(1)
   }
+}
+
+function dbNotify () {
+  return got.post('http://localhost:3030/dbChange')
 }
 
 app.use(cookieParser())
@@ -51,6 +58,7 @@ app.post('/api/account', (req, res) => {
 
   accounts.updateAccount(req.body)
   .then(account => res.json(account))
+  .then(() => dbNotify())
 })
 
 app.get('/api/config/:config', (req, res) =>
@@ -59,12 +67,24 @@ app.get('/api/config/:config', (req, res) =>
 app.post('/api/config', (req, res) => {
   config.saveConfigGroup(req.body)
   .then(c => res.json(c))
+  .then(() => dbNotify())
 })
 
-app.get('/api/accounts/account/:account', function (req, res) {
+app.get('/api/accounts/account/:account', (req, res) => {
   accounts.getAccount(req.params.account)
-    .then(r => res.send(r))
-    .catch(logError)
+  .then(r => res.send(r))
+})
+
+app.get('/api/machines', (req, res) => {
+  machines.getMachines()
+  .then(r => res.send({machines: r}))
+})
+
+app.post('/api/machines', (req, res) => {
+  machines.setMachine(req.body)
+  .then(() => machines.getMachines())
+  .then(r => res.send({machines: r}))
+  .then(() => dbNotify())
 })
 
 const options = {
@@ -106,12 +126,6 @@ function authenticate (req, res, next) {
     if (!success) return res.status(401).send('Authentication failed')
     next()
   })
-}
-
-function logError (err) {
-  // Note: this shouldn't happen
-  console.log(err.stack)
-  throw err
 }
 
 process.on('unhandledRejection', err => {

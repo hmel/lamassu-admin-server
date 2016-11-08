@@ -14712,6 +14712,7 @@ var _user$project$Css_Admin$className = function ($class) {
 	return A2(_rtfeldman$elm_css_util$Css_Helpers$identifierToString, _user$project$Css_Admin$name, $class);
 };
 
+var _user$project$Css_Classes$TableButton = {ctor: 'TableButton'};
 var _user$project$Css_Classes$FocusedComponent = {ctor: 'FocusedComponent'};
 var _user$project$Css_Classes$Component = {ctor: 'Component'};
 var _user$project$Css_Classes$BasicInput = {ctor: 'BasicInput'};
@@ -16799,8 +16800,8 @@ var _user$project$Config$updateSelectize = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 867, column: 17},
-							end: {line: 872, column: 56}
+							start: {line: 866, column: 17},
+							end: {line: 871, column: 56}
 						},
 						_p0)('Shouldn\'t be here');
 				}
@@ -17006,8 +17007,8 @@ var _user$project$Config$languageSelectizeView = F6(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 427, column: 21},
-							end: {line: 432, column: 60}
+							start: {line: 426, column: 21},
+							end: {line: 431, column: 60}
 						},
 						_p7)('Shouldn\'t be here');
 				}
@@ -17049,8 +17050,8 @@ var _user$project$Config$cryptoCurrencySelectizeView = F6(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 381, column: 21},
-							end: {line: 386, column: 60}
+							start: {line: 380, column: 21},
+							end: {line: 385, column: 60}
 						},
 						_p10)('Shouldn\'t be here');
 				}
@@ -17179,8 +17180,8 @@ var _user$project$Config$fieldHolderToList = function (fieldHolder) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 150, column: 21},
-							end: {line: 158, column: 58}
+							start: {line: 149, column: 21},
+							end: {line: 157, column: 58}
 						},
 						_p17)('Not a list type');
 			}
@@ -17406,8 +17407,8 @@ var _user$project$Config$selectizeView = F5(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Config',
 					{
-						start: {line: 468, column: 9},
-						end: {line: 510, column: 52}
+						start: {line: 467, column: 9},
+						end: {line: 509, column: 52}
 					},
 					_p25)('Not a Selectize field');
 		}
@@ -18084,20 +18085,34 @@ var _user$project$Pair$getTotem = _krisajenkins$remotedata$RemoteData$asCmd(
 	_evancz$elm_http$Http$getString('/api/totem'));
 var _user$project$Pair$load = {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _user$project$Pair$getTotem};
 
-var _user$project$MachineTypes$Machine = F2(
-	function (a, b) {
-		return {id: a, name: b};
+var _user$project$MachineTypes$Machine = F6(
+	function (a, b, c, d, e, f) {
+		return {deviceId: a, name: b, cashbox: c, cassette1: d, cassette2: e, paired: f};
 	});
-var _user$project$MachineTypes$ResetCashOutBills = F2(
-	function (a, b) {
-		return {ctor: 'ResetCashOutBills', _0: a, _1: b};
-	});
+var _user$project$MachineTypes$ResetCashOutBills = function (a) {
+	return {ctor: 'ResetCashOutBills', _0: a};
+};
 
-var _user$project$MachinesDecoder$machineDecoder = A3(_elm_lang$core$Json_Decode$object2, _user$project$MachineTypes$Machine, _elm_lang$core$Json_Decode$string, _elm_lang$core$Json_Decode$string);
-var _user$project$MachinesDecoder$machinesDecoder = _elm_lang$core$Json_Decode$list(_user$project$MachinesDecoder$machineDecoder);
+var _user$project$MachinesDecoder$machineDecoder = A7(
+	_elm_lang$core$Json_Decode$object6,
+	_user$project$MachineTypes$Machine,
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'deviceId', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'name', _elm_lang$core$Json_Decode$string),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'cashbox', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'cassette1', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'cassette2', _elm_lang$core$Json_Decode$int),
+	A2(_elm_lang$core$Json_Decode_ops[':='], 'paired', _elm_lang$core$Json_Decode$bool));
+var _user$project$MachinesDecoder$machinesDecoder = A2(
+	_elm_lang$core$Json_Decode$object1,
+	_elm_lang$core$Basics$identity,
+	A2(
+		_elm_lang$core$Json_Decode_ops[':='],
+		'machines',
+		_elm_lang$core$Json_Decode$list(_user$project$MachinesDecoder$machineDecoder)));
 
 var _user$project$MachinesEncoder$encodeAction = function (action) {
 	var _p0 = action;
+	var _p1 = _p0._0;
 	return _elm_lang$core$Json_Encode$object(
 		_elm_lang$core$Native_List.fromArray(
 			[
@@ -18108,17 +18123,164 @@ var _user$project$MachinesEncoder$encodeAction = function (action) {
 			},
 				{
 				ctor: '_Tuple2',
+				_0: 'deviceId',
+				_1: _elm_lang$core$Json_Encode$string(_p1.deviceId)
+			},
+				{
+				ctor: '_Tuple2',
 				_0: 'cassettes',
 				_1: _elm_lang$core$Json_Encode$list(
 					_elm_lang$core$Native_List.fromArray(
 						[
-							_elm_lang$core$Json_Encode$int(_p0._0),
-							_elm_lang$core$Json_Encode$int(_p0._1)
+							_elm_lang$core$Json_Encode$int(_p1.cassette1),
+							_elm_lang$core$Json_Encode$int(_p1.cassette2)
 						]))
 			}
 			]));
 };
 
+var _user$project$Machine$updateMachine = F2(
+	function (machine, oldMachine) {
+		return _elm_lang$core$Native_Utils.eq(machine.deviceId, oldMachine.deviceId) ? machine : oldMachine;
+	});
+var _user$project$Machine$updateCassette = F4(
+	function (machine, position, str, machines) {
+		var countResult = _elm_lang$core$String$toInt(str);
+		var updatedMachine = function () {
+			var _p0 = countResult;
+			if (_p0.ctor === 'Ok') {
+				var _p2 = _p0._0;
+				var _p1 = position;
+				if (_p1.ctor === 'Top') {
+					return _elm_lang$core$Native_Utils.update(
+						machine,
+						{cassette1: _p2});
+				} else {
+					return _elm_lang$core$Native_Utils.update(
+						machine,
+						{cassette2: _p2});
+				}
+			} else {
+				return machine;
+			}
+		}();
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			A2(
+				_elm_lang$core$List$map,
+				_user$project$Machine$updateMachine(updatedMachine),
+				machines),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _user$project$Machine$init = _krisajenkins$remotedata$RemoteData$NotAsked;
+var _user$project$Machine$SubmitResetBills = function (a) {
+	return {ctor: 'SubmitResetBills', _0: a};
+};
+var _user$project$Machine$InputCassette = F3(
+	function (a, b, c) {
+		return {ctor: 'InputCassette', _0: a, _1: b, _2: c};
+	});
+var _user$project$Machine$inputCassetteView = F3(
+	function (machine, position, count) {
+		return A2(
+			_elm_lang$html$Html$input,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_user$project$Css_Admin$class(
+					_elm_lang$core$Native_List.fromArray(
+						[_user$project$Css_Classes$BasicInput])),
+					_elm_lang$html$Html_Events$onInput(
+					A2(_user$project$Machine$InputCassette, machine, position)),
+					_elm_lang$html$Html_Attributes$defaultValue(
+					_elm_lang$core$Basics$toString(count))
+				]),
+			_elm_lang$core$Native_List.fromArray(
+				[]));
+	});
+var _user$project$Machine$Load = function (a) {
+	return {ctor: 'Load', _0: a};
+};
+var _user$project$Machine$getForm = A2(
+	_elm_lang$core$Platform_Cmd$map,
+	_user$project$Machine$Load,
+	_krisajenkins$remotedata$RemoteData$asCmd(
+		A2(
+			_elm_lang$core$Task$map,
+			function (_) {
+				return _.data;
+			},
+			A3(
+				_lukewestby$elm_http_builder$HttpBuilder$send,
+				_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$MachinesDecoder$machinesDecoder),
+				_lukewestby$elm_http_builder$HttpBuilder$stringReader,
+				_lukewestby$elm_http_builder$HttpBuilder$get('/api/machines')))));
+var _user$project$Machine$load = {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _user$project$Machine$getForm};
+var _user$project$Machine$postForm = function (action) {
+	return A2(
+		_elm_lang$core$Platform_Cmd$map,
+		_user$project$Machine$Load,
+		_krisajenkins$remotedata$RemoteData$asCmd(
+			A2(
+				_elm_lang$core$Task$map,
+				function (_) {
+					return _.data;
+				},
+				A3(
+					_lukewestby$elm_http_builder$HttpBuilder$send,
+					_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$MachinesDecoder$machinesDecoder),
+					_lukewestby$elm_http_builder$HttpBuilder$stringReader,
+					A2(
+						_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+						_user$project$MachinesEncoder$encodeAction(action),
+						A3(
+							_lukewestby$elm_http_builder$HttpBuilder$withHeader,
+							'Content-Type',
+							'application/json',
+							_lukewestby$elm_http_builder$HttpBuilder$post('/api/machines')))))));
+};
+var _user$project$Machine$updateSubmitCassette = F2(
+	function (machine, machines) {
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			machines,
+			_elm_lang$core$Native_List.fromArray(
+				[
+					_user$project$Machine$postForm(
+					_user$project$MachineTypes$ResetCashOutBills(machine))
+				]));
+	});
+var _user$project$Machine$update = F2(
+	function (msg, model) {
+		var _p3 = msg;
+		switch (_p3.ctor) {
+			case 'Action':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					model,
+					_elm_lang$core$Native_List.fromArray(
+						[]));
+			case 'Load':
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_p3._0,
+					_elm_lang$core$Native_List.fromArray(
+						[]));
+			case 'InputCassette':
+				return A2(
+					_krisajenkins$remotedata$RemoteData$update,
+					A3(_user$project$Machine$updateCassette, _p3._0, _p3._1, _p3._2),
+					model);
+			default:
+				return A2(
+					_krisajenkins$remotedata$RemoteData$update,
+					_user$project$Machine$updateSubmitCassette(_p3._0),
+					model);
+		}
+	});
+var _user$project$Machine$Action = {ctor: 'Action'};
+var _user$project$Machine$Bottom = {ctor: 'Bottom'};
+var _user$project$Machine$Top = {ctor: 'Top'};
 var _user$project$Machine$rowView = function (machine) {
 	return A2(
 		_elm_lang$html$Html$tr,
@@ -18133,12 +18295,77 @@ var _user$project$Machine$rowView = function (machine) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html$text(machine.name)
+					])),
+				A2(
+				_elm_lang$html$Html$td,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Css_Admin$classList(
+								_elm_lang$core$Native_List.fromArray(
+									[
+										{ctor: '_Tuple2', _0: _user$project$Css_Classes$Component, _1: true},
+										{ctor: '_Tuple2', _0: _user$project$Css_Classes$FocusedComponent, _1: false}
+									]))
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A3(_user$project$Machine$inputCassetteView, machine, _user$project$Machine$Top, machine.cassette1)
+							]))
+					])),
+				A2(
+				_elm_lang$html$Html$td,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$div,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Css_Admin$classList(
+								_elm_lang$core$Native_List.fromArray(
+									[
+										{ctor: '_Tuple2', _0: _user$project$Css_Classes$Component, _1: true},
+										{ctor: '_Tuple2', _0: _user$project$Css_Classes$FocusedComponent, _1: false}
+									]))
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								A3(_user$project$Machine$inputCassetteView, machine, _user$project$Machine$Bottom, machine.cassette2)
+							]))
+					])),
+				A2(
+				_elm_lang$html$Html$td,
+				_elm_lang$core$Native_List.fromArray(
+					[]),
+				_elm_lang$core$Native_List.fromArray(
+					[
+						A2(
+						_elm_lang$html$Html$button,
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_user$project$Css_Admin$class(
+								_elm_lang$core$Native_List.fromArray(
+									[_user$project$Css_Classes$TableButton])),
+								_elm_lang$html$Html_Events$onClick(
+								_user$project$Machine$SubmitResetBills(machine))
+							]),
+						_elm_lang$core$Native_List.fromArray(
+							[
+								_elm_lang$html$Html$text('Reset Bills')
+							]))
 					]))
 			]));
 };
 var _user$project$Machine$view = function (model) {
-	var _p0 = model;
-	switch (_p0.ctor) {
+	var _p4 = model;
+	switch (_p4.ctor) {
 		case 'NotAsked':
 			return A2(
 				_elm_lang$html$Html$div,
@@ -18163,7 +18390,7 @@ var _user$project$Machine$view = function (model) {
 				_elm_lang$core$Native_List.fromArray(
 					[
 						_elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(_p0._0))
+						_elm_lang$core$Basics$toString(_p4._0))
 					]));
 		default:
 			return A2(
@@ -18225,9 +18452,7 @@ var _user$project$Machine$view = function (model) {
 																		_elm_lang$core$Native_List.fromArray(
 																			[]),
 																		_elm_lang$core$Native_List.fromArray(
-																			[
-																				_elm_lang$html$Html$text('Machine')
-																			])),
+																			[])),
 																		A2(
 																		_elm_lang$html$Html$td,
 																		_elm_lang$core$Native_List.fromArray(
@@ -18250,7 +18475,7 @@ var _user$project$Machine$view = function (model) {
 														_elm_lang$html$Html$tbody,
 														_elm_lang$core$Native_List.fromArray(
 															[]),
-														A2(_elm_lang$core$List$map, _user$project$Machine$rowView, _p0._0))
+														A2(_elm_lang$core$List$map, _user$project$Machine$rowView, _p4._0))
 													]))
 											]))
 									]))
@@ -18258,66 +18483,6 @@ var _user$project$Machine$view = function (model) {
 					]));
 	}
 };
-var _user$project$Machine$update = F2(
-	function (msg, model) {
-		var _p1 = msg;
-		if (_p1.ctor === 'Action') {
-			return A2(
-				_elm_lang$core$Platform_Cmd_ops['!'],
-				model,
-				_elm_lang$core$Native_List.fromArray(
-					[]));
-		} else {
-			return A2(
-				_elm_lang$core$Platform_Cmd_ops['!'],
-				_p1._0,
-				_elm_lang$core$Native_List.fromArray(
-					[]));
-		}
-	});
-var _user$project$Machine$init = _krisajenkins$remotedata$RemoteData$NotAsked;
-var _user$project$Machine$Load = function (a) {
-	return {ctor: 'Load', _0: a};
-};
-var _user$project$Machine$getForm = A2(
-	_elm_lang$core$Platform_Cmd$map,
-	_user$project$Machine$Load,
-	_krisajenkins$remotedata$RemoteData$asCmd(
-		A2(
-			_elm_lang$core$Task$map,
-			function (_) {
-				return _.data;
-			},
-			A3(
-				_lukewestby$elm_http_builder$HttpBuilder$send,
-				_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$MachinesDecoder$machinesDecoder),
-				_lukewestby$elm_http_builder$HttpBuilder$stringReader,
-				_lukewestby$elm_http_builder$HttpBuilder$get('/api/machines')))));
-var _user$project$Machine$load = {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _user$project$Machine$getForm};
-var _user$project$Machine$postForm = function (action) {
-	return A2(
-		_elm_lang$core$Platform_Cmd$map,
-		_user$project$Machine$Load,
-		_krisajenkins$remotedata$RemoteData$asCmd(
-			A2(
-				_elm_lang$core$Task$map,
-				function (_) {
-					return _.data;
-				},
-				A3(
-					_lukewestby$elm_http_builder$HttpBuilder$send,
-					_lukewestby$elm_http_builder$HttpBuilder$jsonReader(_user$project$MachinesDecoder$machinesDecoder),
-					_lukewestby$elm_http_builder$HttpBuilder$stringReader,
-					A2(
-						_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-						_user$project$MachinesEncoder$encodeAction(action),
-						A3(
-							_lukewestby$elm_http_builder$HttpBuilder$withHeader,
-							'Content-Type',
-							'application/json',
-							_lukewestby$elm_http_builder$HttpBuilder$post('/api/machines')))))));
-};
-var _user$project$Machine$Action = {ctor: 'Action'};
 
 var _user$project$CoreTypes$machineSubRouteToString = function (machineSubRoute) {
 	var _p0 = machineSubRoute;
