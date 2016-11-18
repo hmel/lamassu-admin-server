@@ -31,5 +31,8 @@
     "pify": "^2.3.0",
     "ramda": "^0.21.0",
     "serve-static": "^1.11.1"
+  },
+  "devDependencies": {
+    "morgan": "^1.7.0"
   }
 }
