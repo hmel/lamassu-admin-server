@@ -14297,76 +14297,6 @@ var _lukewestby$elm_http_builder$HttpBuilder$withQueryParams = function (queryPa
 		});
 };
 
-var _rluiten$stringdistance$StringDistance$maxl = F2(
-	function (xs, ys) {
-		return (_elm_lang$core$Native_Utils.cmp(
-			_elm_lang$core$List$length(xs),
-			_elm_lang$core$List$length(ys)) > 0) ? xs : ys;
-	});
-var _rluiten$stringdistance$StringDistance$lcsLimit_ = F4(
-	function (offset, maxLookAhead, xs_, ys_) {
-		if (_elm_lang$core$Native_Utils.cmp(offset, maxLookAhead) > 0) {
-			return {ctor: '[]'};
-		} else {
-			var _p0 = {ctor: '_Tuple2', _0: xs_, _1: ys_};
-			if (((_p0.ctor === '_Tuple2') && (_p0._0.ctor === '::')) && (_p0._1.ctor === '::')) {
-				var _p3 = _p0._1._1;
-				var _p2 = _p0._0._1;
-				var _p1 = _p0._0._0;
-				return _elm_lang$core$Native_Utils.eq(_p1, _p0._1._0) ? {
-					ctor: '::',
-					_0: _p1,
-					_1: A4(_rluiten$stringdistance$StringDistance$lcsLimit_, 0, maxLookAhead, _p2, _p3)
-				} : A2(
-					_rluiten$stringdistance$StringDistance$maxl,
-					A4(_rluiten$stringdistance$StringDistance$lcsLimit_, offset + 1, maxLookAhead, xs_, _p3),
-					A4(_rluiten$stringdistance$StringDistance$lcsLimit_, offset + 1, maxLookAhead, _p2, ys_));
-			} else {
-				return {ctor: '[]'};
-			}
-		}
-	});
-var _rluiten$stringdistance$StringDistance$lcsLimit = _rluiten$stringdistance$StringDistance$lcsLimit_(0);
-var _rluiten$stringdistance$StringDistance$lcs = F2(
-	function (xs_, ys_) {
-		var _p4 = {ctor: '_Tuple2', _0: xs_, _1: ys_};
-		if (((_p4.ctor === '_Tuple2') && (_p4._0.ctor === '::')) && (_p4._1.ctor === '::')) {
-			var _p7 = _p4._1._1;
-			var _p6 = _p4._0._1;
-			var _p5 = _p4._0._0;
-			return _elm_lang$core$Native_Utils.eq(_p5, _p4._1._0) ? {
-				ctor: '::',
-				_0: _p5,
-				_1: A2(_rluiten$stringdistance$StringDistance$lcs, _p6, _p7)
-			} : A2(
-				_rluiten$stringdistance$StringDistance$maxl,
-				A2(_rluiten$stringdistance$StringDistance$lcs, xs_, _p7),
-				A2(_rluiten$stringdistance$StringDistance$lcs, _p6, ys_));
-		} else {
-			return {ctor: '[]'};
-		}
-	});
-var _rluiten$stringdistance$StringDistance$sift3Distance = F2(
-	function (s1, s2) {
-		var lcs_ = _rluiten$stringdistance$StringDistance$lcsLimit(5);
-		var s2Len = _elm_lang$core$String$length(s2);
-		var s1Len = _elm_lang$core$String$length(s1);
-		if (_elm_lang$core$Native_Utils.eq(s1Len, 0)) {
-			return _elm_lang$core$Basics$toFloat(s2Len);
-		} else {
-			if (_elm_lang$core$Native_Utils.eq(s2Len, 0)) {
-				return _elm_lang$core$Basics$toFloat(s1Len);
-			} else {
-				var common = A2(
-					lcs_,
-					_elm_lang$core$String$toList(s1),
-					_elm_lang$core$String$toList(s2));
-				return (_elm_lang$core$Basics$toFloat(s1Len + s2Len) / 2) - _elm_lang$core$Basics$toFloat(
-					_elm_lang$core$List$length(common));
-			}
-		}
-	});
-
 var _rtfeldman$elm_css_util$Css_Helpers$toCssIdentifier = function (identifier) {
 	return A4(
 		_elm_lang$core$Regex$replace,
@@ -18928,6 +18858,342 @@ var _rtfeldman$elm_css_helpers$Html_CssHelpers$Namespace = F4(
 		return {$class: a, classList: b, id: c, name: d};
 	});
 
+var _tripokey$elm_fuzzy$Fuzzy$dissect = F2(
+	function (separators, strings) {
+		dissect:
+		while (true) {
+			var _p0 = separators;
+			if (_p0.ctor === '[]') {
+				return strings;
+			} else {
+				var _p4 = _p0._0;
+				var dissectEntry = function (entry) {
+					var separatorLength = _elm_lang$core$String$length(_p4);
+					var slice = F2(
+						function (index, _p1) {
+							var _p2 = _p1;
+							var _p3 = _p2._0;
+							var separatorSlice = {
+								ctor: '::',
+								_0: A3(_elm_lang$core$String$slice, index, index + separatorLength, entry),
+								_1: {ctor: '[]'}
+							};
+							var precedingSlice = _elm_lang$core$Native_Utils.eq(_p3, index) ? {ctor: '[]'} : {
+								ctor: '::',
+								_0: A3(_elm_lang$core$String$slice, _p3, index, entry),
+								_1: {ctor: '[]'}
+							};
+							return {
+								ctor: '_Tuple2',
+								_0: index + separatorLength,
+								_1: A2(
+									_elm_lang$core$Basics_ops['++'],
+									_p2._1,
+									A2(_elm_lang$core$Basics_ops['++'], precedingSlice, separatorSlice))
+							};
+						});
+					var indexes = A2(_elm_lang$core$String$indexes, _p4, entry);
+					var result = A3(
+						_elm_lang$core$List$foldl,
+						slice,
+						{
+							ctor: '_Tuple2',
+							_0: 0,
+							_1: {ctor: '[]'}
+						},
+						indexes);
+					var first = _elm_lang$core$Tuple$second(result);
+					var lastIndex = _elm_lang$core$Tuple$first(result);
+					var entryLength = _elm_lang$core$String$length(entry);
+					var last = _elm_lang$core$Native_Utils.eq(lastIndex, entryLength) ? {ctor: '[]'} : {
+						ctor: '::',
+						_0: A3(_elm_lang$core$String$slice, lastIndex, entryLength, entry),
+						_1: {ctor: '[]'}
+					};
+					return A2(_elm_lang$core$Basics_ops['++'], first, last);
+				};
+				var dissected = A3(
+					_elm_lang$core$List$foldl,
+					F2(
+						function (e, s) {
+							return A2(
+								_elm_lang$core$Basics_ops['++'],
+								s,
+								dissectEntry(e));
+						}),
+					{ctor: '[]'},
+					strings);
+				var _v2 = _p0._1,
+					_v3 = dissected;
+				separators = _v2;
+				strings = _v3;
+				continue dissect;
+			}
+		}
+	});
+var _tripokey$elm_fuzzy$Fuzzy$quickSort = function (entries) {
+	var _p5 = entries;
+	if (_p5.ctor === '[]') {
+		return {
+			ctor: '_Tuple2',
+			_0: 0,
+			_1: {ctor: '[]'}
+		};
+	} else {
+		var _p6 = _p5._0;
+		var partition = A2(
+			_elm_lang$core$List$partition,
+			function (e) {
+				return _elm_lang$core$Native_Utils.cmp(e, _p6) < 0;
+			},
+			_p5._1);
+		var smaller = _tripokey$elm_fuzzy$Fuzzy$quickSort(
+			_elm_lang$core$Tuple$first(partition));
+		var penalty = _elm_lang$core$List$isEmpty(
+			_elm_lang$core$Tuple$second(smaller)) ? 0 : 1;
+		var larger = _tripokey$elm_fuzzy$Fuzzy$quickSort(
+			_elm_lang$core$Tuple$second(partition));
+		return {
+			ctor: '_Tuple2',
+			_0: (_elm_lang$core$Tuple$first(smaller) + penalty) + _elm_lang$core$Tuple$first(larger),
+			_1: A2(
+				_elm_lang$core$Basics_ops['++'],
+				_elm_lang$core$Tuple$second(smaller),
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					{
+						ctor: '::',
+						_0: _p6,
+						_1: {ctor: '[]'}
+					},
+					_elm_lang$core$Tuple$second(larger)))
+		};
+	}
+};
+var _tripokey$elm_fuzzy$Fuzzy$initialModel = {ctor: '[]'};
+var _tripokey$elm_fuzzy$Fuzzy$Match = F4(
+	function (a, b, c, d) {
+		return {score: a, offset: b, length: c, keys: d};
+	});
+var _tripokey$elm_fuzzy$Fuzzy$distance = F3(
+	function (config, needle, hay) {
+		var accumulate = F2(
+			function (c, indexList) {
+				var indexes = A2(
+					_elm_lang$core$String$indexes,
+					_elm_lang$core$String$fromChar(c),
+					hay);
+				var hayIndex = _elm_lang$core$List$head(
+					A2(
+						_elm_lang$core$List$filter,
+						function (e) {
+							return !A2(_elm_lang$core$List$member, e, indexList);
+						},
+						indexes));
+				var _p7 = hayIndex;
+				if (_p7.ctor === 'Just') {
+					return A2(
+						_elm_lang$core$Basics_ops['++'],
+						indexList,
+						{
+							ctor: '::',
+							_0: _p7._0,
+							_1: {ctor: '[]'}
+						});
+				} else {
+					return indexList;
+				}
+			});
+		var accumulated = A3(_elm_lang$core$String$foldl, accumulate, _tripokey$elm_fuzzy$Fuzzy$initialModel, needle);
+		var sorted = _tripokey$elm_fuzzy$Fuzzy$quickSort(accumulated);
+		var mPenalty = _elm_lang$core$Tuple$first(sorted) * config.movePenalty;
+		var hPenalty = (_elm_lang$core$String$length(hay) - _elm_lang$core$List$length(accumulated)) * config.addPenalty;
+		var nPenalty = (_elm_lang$core$String$length(needle) - _elm_lang$core$List$length(accumulated)) * config.removePenalty;
+		return A4(
+			_tripokey$elm_fuzzy$Fuzzy$Match,
+			(mPenalty + hPenalty) + nPenalty,
+			0,
+			_elm_lang$core$String$length(hay),
+			_elm_lang$core$Tuple$second(sorted));
+	});
+var _tripokey$elm_fuzzy$Fuzzy$Result = F2(
+	function (a, b) {
+		return {score: a, matches: b};
+	});
+var _tripokey$elm_fuzzy$Fuzzy$ConfigModel = F3(
+	function (a, b, c) {
+		return {addPenalty: a, movePenalty: b, removePenalty: c};
+	});
+var _tripokey$elm_fuzzy$Fuzzy$defaultConfig = A3(_tripokey$elm_fuzzy$Fuzzy$ConfigModel, 1, 100, 1000);
+var _tripokey$elm_fuzzy$Fuzzy$match = F4(
+	function (configs, separators, needle, hay) {
+		var initialResult = A2(
+			_tripokey$elm_fuzzy$Fuzzy$Result,
+			0,
+			{ctor: '[]'});
+		var reduceHays = F3(
+			function (ns, c, hs) {
+				var padHays = F2(
+					function (ns, hs) {
+						return A2(
+							_elm_lang$core$Basics_ops['++'],
+							hs,
+							A2(
+								_elm_lang$core$List$repeat,
+								ns - _elm_lang$core$List$length(hs),
+								''));
+					});
+				var reduceRight = F3(
+					function (ns, c, hs) {
+						return A2(
+							_elm_lang$core$List$take,
+							_elm_lang$core$List$length(hs) - ((ns - c) - 1),
+							hs);
+					});
+				var reduceLeft = F3(
+					function (ns, c, hs) {
+						return {
+							ctor: '_Tuple2',
+							_0: A3(
+								_elm_lang$core$List$foldl,
+								F2(
+									function (e, sum) {
+										return _elm_lang$core$String$length(e) + sum;
+									}),
+								0,
+								A2(_elm_lang$core$List$take, c, hs)),
+							_1: A2(_elm_lang$core$List$drop, c, hs)
+						};
+					});
+				return A3(
+					reduceLeft,
+					ns,
+					c,
+					A3(
+						reduceRight,
+						ns,
+						c,
+						A2(padHays, ns, hs)));
+			});
+		var hays = A2(
+			_tripokey$elm_fuzzy$Fuzzy$dissect,
+			separators,
+			{
+				ctor: '::',
+				_0: hay,
+				_1: {ctor: '[]'}
+			});
+		var needles = A2(
+			_tripokey$elm_fuzzy$Fuzzy$dissect,
+			separators,
+			{
+				ctor: '::',
+				_0: needle,
+				_1: {ctor: '[]'}
+			});
+		var accumulateConfig = F2(
+			function (c, sum) {
+				var _p8 = c;
+				switch (_p8.ctor) {
+					case 'AddPenalty':
+						return _elm_lang$core$Native_Utils.update(
+							sum,
+							{addPenalty: _p8._0});
+					case 'RemovePenalty':
+						return _elm_lang$core$Native_Utils.update(
+							sum,
+							{removePenalty: _p8._0});
+					default:
+						return _elm_lang$core$Native_Utils.update(
+							sum,
+							{movePenalty: _p8._0});
+				}
+			});
+		var config = A3(_elm_lang$core$List$foldl, accumulateConfig, _tripokey$elm_fuzzy$Fuzzy$defaultConfig, configs);
+		var minScore = F2(
+			function (n, _p9) {
+				var _p10 = _p9;
+				var _p15 = _p10._0;
+				var accumulateMatch = F2(
+					function (e, _p11) {
+						var _p12 = _p11;
+						var _p14 = _p12._1;
+						var _p13 = _p12._0;
+						var newOffset = _p14 + _elm_lang$core$String$length(e);
+						var eDistance = A3(_tripokey$elm_fuzzy$Fuzzy$distance, config, n, e);
+						var newMatch = (_elm_lang$core$Native_Utils.cmp(eDistance.score, _p13.score) < 0) ? _elm_lang$core$Native_Utils.update(
+							eDistance,
+							{offset: _p14}) : _p13;
+						return {ctor: '_Tuple2', _0: newMatch, _1: newOffset};
+					});
+				var initialPenalty = ((_elm_lang$core$String$length(n) * config.removePenalty) + (_elm_lang$core$String$length(n) * config.movePenalty)) + (_elm_lang$core$String$length(hay) * config.addPenalty);
+				var initialMatch = A4(
+					_tripokey$elm_fuzzy$Fuzzy$Match,
+					initialPenalty,
+					_p15,
+					0,
+					{ctor: '[]'});
+				return _elm_lang$core$Tuple$first(
+					A3(
+						_elm_lang$core$List$foldl,
+						accumulateMatch,
+						{ctor: '_Tuple2', _0: initialMatch, _1: _p15},
+						_p10._1));
+			});
+		var accumulateResult = F2(
+			function (n, _p16) {
+				var _p17 = _p16;
+				var _p19 = _p17._0;
+				var _p18 = _p17._1;
+				var matchResult = A2(
+					minScore,
+					n,
+					A3(
+						reduceHays,
+						_elm_lang$core$List$length(needles),
+						_p18,
+						hays));
+				var newResult = _elm_lang$core$Native_Utils.update(
+					_p19,
+					{
+						score: matchResult.score + _p19.score,
+						matches: A2(
+							_elm_lang$core$Basics_ops['++'],
+							_p19.matches,
+							{
+								ctor: '::',
+								_0: matchResult,
+								_1: {ctor: '[]'}
+							})
+					});
+				return {ctor: '_Tuple2', _0: newResult, _1: _p18 + 1};
+			});
+		return _elm_lang$core$Tuple$first(
+			A3(
+				_elm_lang$core$List$foldl,
+				accumulateResult,
+				{ctor: '_Tuple2', _0: initialResult, _1: 0},
+				needles));
+	});
+var _tripokey$elm_fuzzy$Fuzzy$MovePenalty = function (a) {
+	return {ctor: 'MovePenalty', _0: a};
+};
+var _tripokey$elm_fuzzy$Fuzzy$movePenalty = function (penalty) {
+	return _tripokey$elm_fuzzy$Fuzzy$MovePenalty(penalty);
+};
+var _tripokey$elm_fuzzy$Fuzzy$RemovePenalty = function (a) {
+	return {ctor: 'RemovePenalty', _0: a};
+};
+var _tripokey$elm_fuzzy$Fuzzy$removePenalty = function (penalty) {
+	return _tripokey$elm_fuzzy$Fuzzy$RemovePenalty(penalty);
+};
+var _tripokey$elm_fuzzy$Fuzzy$AddPenalty = function (a) {
+	return {ctor: 'AddPenalty', _0: a};
+};
+var _tripokey$elm_fuzzy$Fuzzy$addPenalty = function (penalty) {
+	return _tripokey$elm_fuzzy$Fuzzy$AddPenalty(penalty);
+};
+
 var _user$project$FieldSetTypes$Field = F6(
 	function (a, b, c, d, e, f) {
 		return {code: a, display: b, secret: c, required: d, value: e, loadedValue: f};
@@ -21519,10 +21785,22 @@ var _user$project$SelectizeHelper$SpecificConfig = F4(
 		return {selectedDisplay: a, optionDisplay: b, maxItems: c, match: d};
 	});
 
+var _user$project$FuzzyMatch$clean = function (s) {
+	return _elm_lang$core$String$toLower(
+		_elm_lang$core$String$trim(s));
+};
 var _user$project$FuzzyMatch$score = F2(
 	function (needle, hay) {
 		var match = function (keyword) {
-			return A2(_rluiten$stringdistance$StringDistance$sift3Distance, needle, keyword);
+			return function (_) {
+				return _.score;
+			}(
+				A4(
+					_tripokey$elm_fuzzy$Fuzzy$match,
+					{ctor: '[]'},
+					{ctor: '[]'},
+					needle,
+					keyword));
 		};
 		var score = A2(
 			_elm_lang$core$Maybe$withDefault,
@@ -21533,18 +21811,21 @@ var _user$project$FuzzyMatch$score = F2(
 					match,
 					A2(
 						_elm_lang$core$Basics_ops['++'],
-						A2(_elm_lang$core$String$split, ' ', hay.display),
+						A2(
+							_elm_lang$core$String$split,
+							' ',
+							_user$project$FuzzyMatch$clean(hay.display)),
 						{
 							ctor: '::',
-							_0: hay.code,
-							_1: {ctor: '[]'}
+							_0: _user$project$FuzzyMatch$clean(hay.code),
+							_1: {
+								ctor: '::',
+								_0: _user$project$FuzzyMatch$clean(hay.display),
+								_1: {ctor: '[]'}
+							}
 						}))));
 		return {ctor: '_Tuple2', _0: score, _1: hay};
 	});
-var _user$project$FuzzyMatch$clean = function (s) {
-	return _elm_lang$core$String$toLower(
-		_elm_lang$core$String$trim(s));
-};
 var _user$project$FuzzyMatch$match = F2(
 	function (rawString, list) {
 		var s = _user$project$FuzzyMatch$clean(rawString);
@@ -21552,12 +21833,23 @@ var _user$project$FuzzyMatch$match = F2(
 			_elm_lang$core$List$map,
 			_elm_lang$core$Tuple$second,
 			A2(
-				_elm_lang$core$List$sortBy,
-				_elm_lang$core$Tuple$first,
+				_elm_lang$core$List$filter,
+				function (_p0) {
+					return A2(
+						F2(
+							function (x, y) {
+								return _elm_lang$core$Native_Utils.cmp(x, y) > 0;
+							}),
+						1100,
+						_elm_lang$core$Tuple$first(_p0));
+				},
 				A2(
-					_elm_lang$core$List$map,
-					_user$project$FuzzyMatch$score(s),
-					list)));
+					_elm_lang$core$List$sortBy,
+					_elm_lang$core$Tuple$first,
+					A2(
+						_elm_lang$core$List$map,
+						_user$project$FuzzyMatch$score(s),
+						list))));
 	});
 var _user$project$FuzzyMatch$DisplayRec = F2(
 	function (a, b) {
