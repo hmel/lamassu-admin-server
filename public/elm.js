@@ -6165,6 +6165,172 @@ var _elm_lang$core$Time$subMap = F2(
 	});
 _elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
 
+var _elm_community$maybe_extra$Maybe_Extra$filter = F2(
+	function (f, m) {
+		var _p0 = A2(_elm_lang$core$Maybe$map, f, m);
+		if ((_p0.ctor === 'Just') && (_p0._0 === true)) {
+			return m;
+		} else {
+			return _elm_lang$core$Maybe$Nothing;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$traverseArray = function (f) {
+	var step = F2(
+		function (e, acc) {
+			var _p1 = f(e);
+			if (_p1.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					_elm_lang$core$Array$push(_p1._0),
+					acc);
+			}
+		});
+	return A2(
+		_elm_lang$core$Array$foldl,
+		step,
+		_elm_lang$core$Maybe$Just(_elm_lang$core$Array$empty));
+};
+var _elm_community$maybe_extra$Maybe_Extra$combineArray = _elm_community$maybe_extra$Maybe_Extra$traverseArray(_elm_lang$core$Basics$identity);
+var _elm_community$maybe_extra$Maybe_Extra$traverse = function (f) {
+	var step = F2(
+		function (e, acc) {
+			var _p2 = f(e);
+			if (_p2.ctor === 'Nothing') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				return A2(
+					_elm_lang$core$Maybe$map,
+					F2(
+						function (x, y) {
+							return {ctor: '::', _0: x, _1: y};
+						})(_p2._0),
+					acc);
+			}
+		});
+	return A2(
+		_elm_lang$core$List$foldr,
+		step,
+		_elm_lang$core$Maybe$Just(
+			{ctor: '[]'}));
+};
+var _elm_community$maybe_extra$Maybe_Extra$combine = _elm_community$maybe_extra$Maybe_Extra$traverse(_elm_lang$core$Basics$identity);
+var _elm_community$maybe_extra$Maybe_Extra$maybeToArray = function (m) {
+	var _p3 = m;
+	if (_p3.ctor === 'Nothing') {
+		return _elm_lang$core$Array$empty;
+	} else {
+		return A2(_elm_lang$core$Array$repeat, 1, _p3._0);
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$maybeToList = function (m) {
+	var _p4 = m;
+	if (_p4.ctor === 'Nothing') {
+		return {ctor: '[]'};
+	} else {
+		return {
+			ctor: '::',
+			_0: _p4._0,
+			_1: {ctor: '[]'}
+		};
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$orElse = F2(
+	function (ma, mb) {
+		var _p5 = mb;
+		if (_p5.ctor === 'Nothing') {
+			return ma;
+		} else {
+			return mb;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$orElseLazy = F2(
+	function (fma, mb) {
+		var _p6 = mb;
+		if (_p6.ctor === 'Nothing') {
+			return fma(
+				{ctor: '_Tuple0'});
+		} else {
+			return mb;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$orLazy = F2(
+	function (ma, fmb) {
+		var _p7 = ma;
+		if (_p7.ctor === 'Nothing') {
+			return fmb(
+				{ctor: '_Tuple0'});
+		} else {
+			return ma;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$or = F2(
+	function (ma, mb) {
+		var _p8 = ma;
+		if (_p8.ctor === 'Nothing') {
+			return mb;
+		} else {
+			return ma;
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$prev = _elm_lang$core$Maybe$map2(_elm_lang$core$Basics$always);
+var _elm_community$maybe_extra$Maybe_Extra$next = _elm_lang$core$Maybe$map2(
+	_elm_lang$core$Basics$flip(_elm_lang$core$Basics$always));
+var _elm_community$maybe_extra$Maybe_Extra$andMap = _elm_lang$core$Maybe$map2(
+	F2(
+		function (x, y) {
+			return y(x);
+		}));
+var _elm_community$maybe_extra$Maybe_Extra$unpack = F3(
+	function (d, f, m) {
+		var _p9 = m;
+		if (_p9.ctor === 'Nothing') {
+			return d(
+				{ctor: '_Tuple0'});
+		} else {
+			return f(_p9._0);
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$unwrap = F3(
+	function (d, f, m) {
+		var _p10 = m;
+		if (_p10.ctor === 'Nothing') {
+			return d;
+		} else {
+			return f(_p10._0);
+		}
+	});
+var _elm_community$maybe_extra$Maybe_Extra$isJust = function (m) {
+	var _p11 = m;
+	if (_p11.ctor === 'Nothing') {
+		return false;
+	} else {
+		return true;
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$isNothing = function (m) {
+	var _p12 = m;
+	if (_p12.ctor === 'Nothing') {
+		return true;
+	} else {
+		return false;
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra$join = function (mx) {
+	var _p13 = mx;
+	if (_p13.ctor === 'Just') {
+		return _p13._0;
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _elm_community$maybe_extra$Maybe_Extra_ops = _elm_community$maybe_extra$Maybe_Extra_ops || {};
+_elm_community$maybe_extra$Maybe_Extra_ops['?'] = F2(
+	function (mx, x) {
+		return A2(_elm_lang$core$Maybe$withDefault, x, mx);
+	});
+
 //import Maybe, Native.List //
 
 var _elm_lang$core$Native_Regex = function() {
@@ -21871,8 +22037,8 @@ var _user$project$Config$updateSelectize = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 862, column: 17},
-							end: {line: 867, column: 56}
+							start: {line: 861, column: 17},
+							end: {line: 866, column: 56}
 						},
 						_p0)('Shouldn\'t be here');
 				}
@@ -22081,8 +22247,8 @@ var _user$project$Config$languageSelectizeView = F6(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 417, column: 21},
-							end: {line: 422, column: 60}
+							start: {line: 418, column: 21},
+							end: {line: 423, column: 60}
 						},
 						_p7)('Shouldn\'t be here');
 				}
@@ -22123,8 +22289,8 @@ var _user$project$Config$cryptoCurrencySelectizeView = F6(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 371, column: 21},
-							end: {line: 376, column: 60}
+							start: {line: 372, column: 21},
+							end: {line: 377, column: 60}
 						},
 						_p10)('Shouldn\'t be here');
 				}
@@ -22251,8 +22417,8 @@ var _user$project$Config$fieldHolderToList = function (fieldHolder) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 140, column: 21},
-							end: {line: 148, column: 58}
+							start: {line: 141, column: 21},
+							end: {line: 149, column: 58}
 						},
 						_p17)('Not a list type');
 			}
@@ -22482,8 +22648,8 @@ var _user$project$Config$selectizeView = F5(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Config',
 					{
-						start: {line: 458, column: 9},
-						end: {line: 500, column: 52}
+						start: {line: 459, column: 9},
+						end: {line: 501, column: 52}
 					},
 					_p25)('Not a Selectize field');
 		}
@@ -22612,7 +22778,6 @@ var _user$project$Config$fieldComponent = F2(
 				return _elm_lang$core$Maybe$Nothing;
 			}
 		}();
-		var maybeFallbackFieldValue = maybeSpecific;
 		var instances = model.fieldInstances;
 		var fieldLocator = fieldInstance.fieldLocator;
 		var fieldScope = fieldLocator.fieldScope;
@@ -22623,6 +22788,13 @@ var _user$project$Config$fieldComponent = F2(
 		var maybeGlobal = A2(pick, _user$project$ConfigTypes$GlobalCrypto, _user$project$ConfigTypes$GlobalMachine);
 		var maybeGlobalCrypto = A2(pick, _user$project$ConfigTypes$GlobalCrypto, fieldScope.machine);
 		var maybeGlobalMachine = A2(pick, fieldScope.crypto, _user$project$ConfigTypes$GlobalMachine);
+		var maybeFallbackFieldValue = A2(
+			_elm_community$maybe_extra$Maybe_Extra$or,
+			maybeGlobal,
+			A2(
+				_elm_community$maybe_extra$Maybe_Extra$or,
+				maybeGlobalCrypto,
+				A2(_elm_community$maybe_extra$Maybe_Extra$or, maybeGlobalMachine, maybeSpecific)));
 		return A4(_user$project$Config$fieldInput, model, fieldInstance, maybeSpecific, maybeFallbackFieldValue);
 	});
 var _user$project$Config$cellView = F2(
@@ -23189,45 +23361,80 @@ var _user$project$Pair$view = function (model) {
 				{
 					ctor: '::',
 					_0: A2(
-						_elm_lang$html$Html$div,
+						_elm_lang$html$Html$h1,
 						{ctor: '[]'},
 						{
 							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$input,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Events$onInput(_user$project$Pair$InputName),
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$placeholder('Coffee shop, 43 Elm St.'),
-										_1: {ctor: '[]'}
-									}
-								},
-								{ctor: '[]'}),
-							_1: {
+							_0: _elm_lang$html$Html$text('Pair a new Lamassu cryptomat'),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
+							{ctor: '[]'},
+							{
 								ctor: '::',
 								_0: A2(
-									_elm_lang$html$Html$button,
+									_elm_lang$html$Html$label,
+									{ctor: '[]'},
 									{
 										ctor: '::',
-										_0: _elm_lang$html$Html_Events$onClick(_user$project$Pair$SubmitName),
+										_0: _elm_lang$html$Html$text('Cryptomat name'),
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$disabled(
-												_elm_lang$core$String$isEmpty(model.name)),
-											_1: {ctor: '[]'}
+											_0: A2(
+												_elm_lang$html$Html$input,
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html_Events$onInput(_user$project$Pair$InputName),
+													_1: {
+														ctor: '::',
+														_0: _elm_lang$html$Html_Attributes$placeholder('Coffee shop, 43 Elm St.'),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$size(50),
+															_1: {
+																ctor: '::',
+																_0: _elm_lang$html$Html_Attributes$style(
+																	{
+																		ctor: '::',
+																		_0: {ctor: '_Tuple2', _0: 'margin-left', _1: '1em'},
+																		_1: {ctor: '[]'}
+																	}),
+																_1: {ctor: '[]'}
+															}
+														}
+													}
+												},
+												{ctor: '[]'}),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$button,
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html_Events$onClick(_user$project$Pair$SubmitName),
+														_1: {
+															ctor: '::',
+															_0: _elm_lang$html$Html_Attributes$disabled(
+																_elm_lang$core$String$isEmpty(model.name)),
+															_1: {ctor: '[]'}
+														}
+													},
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html$text('Pair'),
+														_1: {ctor: '[]'}
+													}),
+												_1: {ctor: '[]'}
+											}
 										}
-									},
-									{
-										ctor: '::',
-										_0: _elm_lang$html$Html$text('Pair'),
-										_1: {ctor: '[]'}
 									}),
 								_1: {ctor: '[]'}
-							}
-						}),
-					_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					}
 				});
 		case 'Loading':
 			return A2(
@@ -24364,7 +24571,11 @@ var _user$project$Main$parseRoute = _evancz$url_parser$UrlParser$oneOf(
 								_evancz$url_parser$UrlParser_ops['</>'],
 								_evancz$url_parser$UrlParser$s('machine'),
 								_evancz$url_parser$UrlParser$s('actions'))),
-						_1: {ctor: '[]'}
+						_1: {
+							ctor: '::',
+							_0: A2(_evancz$url_parser$UrlParser$map, _user$project$CoreTypes$PairRoute, _evancz$url_parser$UrlParser$top),
+							_1: {ctor: '[]'}
+						}
 					}
 				}
 			}
