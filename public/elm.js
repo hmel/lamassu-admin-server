@@ -21749,10 +21749,11 @@ var _user$project$Css_Selectize$component = _rtfeldman$elm_css$Css$mixin(
 																					_0: _rtfeldman$elm_css$Css$color(_user$project$Css_Colors$white),
 																					_1: {
 																						ctor: '::',
-																						_0: A2(
-																							_rtfeldman$elm_css$Css$padding2,
-																							_rtfeldman$elm_css$Css$px(3),
-																							_rtfeldman$elm_css$Css$px(4)),
+																						_0: A3(
+																							_rtfeldman$elm_css$Css$padding3,
+																							_rtfeldman$elm_css$Css$px(4),
+																							_rtfeldman$elm_css$Css$px(4),
+																							_rtfeldman$elm_css$Css$px(3)),
 																						_1: {
 																							ctor: '::',
 																							_0: A2(
@@ -21764,7 +21765,7 @@ var _user$project$Css_Selectize$component = _rtfeldman$elm_css$Css$mixin(
 																								_0: _rtfeldman$elm_css$Css$fontFamilies(
 																									{
 																										ctor: '::',
-																										_0: 'Inconsolata',
+																										_0: 'Fira Code',
 																										_1: {ctor: '[]'}
 																									}),
 																								_1: {
@@ -21773,7 +21774,7 @@ var _user$project$Css_Selectize$component = _rtfeldman$elm_css$Css$mixin(
 																										_rtfeldman$elm_css$Css$pct(70)),
 																									_1: {
 																										ctor: '::',
-																										_0: _rtfeldman$elm_css$Css$fontWeight(_rtfeldman$elm_css$Css$bold),
+																										_0: _rtfeldman$elm_css$Css$fontWeight(_rtfeldman$elm_css$Css$normal),
 																										_1: {
 																											ctor: '::',
 																											_0: _rtfeldman$elm_css$Css$borderRadius(
@@ -23929,6 +23930,78 @@ var _user$project$Machine$rowView = function (machine) {
 			}
 		});
 };
+var _user$project$Machine$tableView = function (machines) {
+	return _elm_lang$core$List$isEmpty(machines) ? A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text('No paired machines.'),
+			_1: {ctor: '[]'}
+		}) : A2(
+		_elm_lang$html$Html$table,
+		{
+			ctor: '::',
+			_0: _user$project$Css_Admin$class(
+				{
+					ctor: '::',
+					_0: _user$project$Css_Classes$ConfigTable,
+					_1: {ctor: '[]'}
+				}),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$thead,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$tr,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{ctor: '[]'},
+								{ctor: '[]'}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{ctor: '[]'},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text('Top Bill Count'),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$td,
+										{ctor: '[]'},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('Bottom Bill Count'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tbody,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, _user$project$Machine$rowView, machines)),
+				_1: {ctor: '[]'}
+			}
+		});
+};
 var _user$project$Machine$view = function (model) {
 	var _p4 = model;
 	switch (_p4.ctor) {
@@ -23995,69 +24068,7 @@ var _user$project$Machine$view = function (model) {
 										},
 										{
 											ctor: '::',
-											_0: A2(
-												_elm_lang$html$Html$table,
-												{
-													ctor: '::',
-													_0: _user$project$Css_Admin$class(
-														{
-															ctor: '::',
-															_0: _user$project$Css_Classes$ConfigTable,
-															_1: {ctor: '[]'}
-														}),
-													_1: {ctor: '[]'}
-												},
-												{
-													ctor: '::',
-													_0: A2(
-														_elm_lang$html$Html$thead,
-														{ctor: '[]'},
-														{
-															ctor: '::',
-															_0: A2(
-																_elm_lang$html$Html$tr,
-																{ctor: '[]'},
-																{
-																	ctor: '::',
-																	_0: A2(
-																		_elm_lang$html$Html$td,
-																		{ctor: '[]'},
-																		{ctor: '[]'}),
-																	_1: {
-																		ctor: '::',
-																		_0: A2(
-																			_elm_lang$html$Html$td,
-																			{ctor: '[]'},
-																			{
-																				ctor: '::',
-																				_0: _elm_lang$html$Html$text('Top Bill Count'),
-																				_1: {ctor: '[]'}
-																			}),
-																		_1: {
-																			ctor: '::',
-																			_0: A2(
-																				_elm_lang$html$Html$td,
-																				{ctor: '[]'},
-																				{
-																					ctor: '::',
-																					_0: _elm_lang$html$Html$text('Bottom Bill Count'),
-																					_1: {ctor: '[]'}
-																				}),
-																			_1: {ctor: '[]'}
-																		}
-																	}
-																}),
-															_1: {ctor: '[]'}
-														}),
-													_1: {
-														ctor: '::',
-														_0: A2(
-															_elm_lang$html$Html$tbody,
-															{ctor: '[]'},
-															A2(_elm_lang$core$List$map, _user$project$Machine$rowView, _p4._0)),
-														_1: {ctor: '[]'}
-													}
-												}),
+											_0: _user$project$Machine$tableView(_p4._0),
 											_1: {ctor: '[]'}
 										}),
 									_1: {ctor: '[]'}
@@ -24392,45 +24403,48 @@ var _user$project$NavBar$view = function (route) {
 				}),
 			_1: {
 				ctor: '::',
-				_0: l(
-					{ctor: '_Tuple2', _0: 'Pairing', _1: _user$project$CoreTypes$PairRoute}),
-				_1: {
-					ctor: '::',
-					_0: A2(
-						ll,
-						{
-							ctor: '_Tuple3',
-							_0: 'Configuration',
-							_1: _user$project$CoreTypes$ConfigCat,
-							_2: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
+				_0: A2(
+					ll,
+					{
+						ctor: '_Tuple3',
+						_0: 'Configuration',
+						_1: _user$project$CoreTypes$ConfigCat,
+						_2: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
+					},
+					{
+						ctor: '::',
+						_0: {
+							ctor: '_Tuple2',
+							_0: 'Commissions',
+							_1: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
 						},
-						{
+						_1: {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'Commissions',
-								_1: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
+								_0: 'Limits',
+								_1: A2(_user$project$CoreTypes$ConfigRoute, 'limits', _elm_lang$core$Maybe$Nothing)
 							},
 							_1: {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'Limits',
-									_1: A2(_user$project$CoreTypes$ConfigRoute, 'limits', _elm_lang$core$Maybe$Nothing)
+									_0: 'Currencies',
+									_1: A2(_user$project$CoreTypes$ConfigRoute, 'currencies', _elm_lang$core$Maybe$Nothing)
 								},
 								_1: {
 									ctor: '::',
 									_0: {
 										ctor: '_Tuple2',
-										_0: 'Currencies',
-										_1: A2(_user$project$CoreTypes$ConfigRoute, 'currencies', _elm_lang$core$Maybe$Nothing)
+										_0: 'Crypto services',
+										_1: A2(_user$project$CoreTypes$ConfigRoute, 'cryptoServices', _elm_lang$core$Maybe$Nothing)
 									},
 									_1: {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: 'Crypto services',
-											_1: A2(_user$project$CoreTypes$ConfigRoute, 'cryptoServices', _elm_lang$core$Maybe$Nothing)
+											_0: 'Extra services',
+											_1: A2(_user$project$CoreTypes$ConfigRoute, 'extraServices', _elm_lang$core$Maybe$Nothing)
 										},
 										_1: {
 											ctor: '::',
@@ -24460,26 +24474,31 @@ var _user$project$NavBar$view = function (route) {
 									}
 								}
 							}
+						}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						ll,
+						{
+							ctor: '_Tuple3',
+							_0: 'Accounts',
+							_1: _user$project$CoreTypes$AccountCat,
+							_2: _user$project$CoreTypes$AccountRoute('twilio')
+						},
+						{
+							ctor: '::',
+							_0: {
+								ctor: '_Tuple2',
+								_0: 'Twilio',
+								_1: _user$project$CoreTypes$AccountRoute('twilio')
+							},
+							_1: {ctor: '[]'}
 						}),
 					_1: {
 						ctor: '::',
-						_0: A2(
-							ll,
-							{
-								ctor: '_Tuple3',
-								_0: 'Accounts',
-								_1: _user$project$CoreTypes$AccountCat,
-								_2: _user$project$CoreTypes$AccountRoute('twilio')
-							},
-							{
-								ctor: '::',
-								_0: {
-									ctor: '_Tuple2',
-									_0: 'Twilio',
-									_1: _user$project$CoreTypes$AccountRoute('twilio')
-								},
-								_1: {ctor: '[]'}
-							}),
+						_0: l(
+							{ctor: '_Tuple2', _0: 'Pairing', _1: _user$project$CoreTypes$PairRoute}),
 						_1: {ctor: '[]'}
 					}
 				}
