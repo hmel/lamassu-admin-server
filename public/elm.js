@@ -24484,16 +24484,32 @@ var _user$project$NavBar$view = function (route) {
 							ctor: '_Tuple3',
 							_0: 'Accounts',
 							_1: _user$project$CoreTypes$AccountCat,
-							_2: _user$project$CoreTypes$AccountRoute('twilio')
+							_2: _user$project$CoreTypes$AccountRoute('bitgo')
 						},
 						{
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'Twilio',
-								_1: _user$project$CoreTypes$AccountRoute('twilio')
+								_0: 'BitGo',
+								_1: _user$project$CoreTypes$AccountRoute('bitgo')
 							},
-							_1: {ctor: '[]'}
+							_1: {
+								ctor: '::',
+								_0: {
+									ctor: '_Tuple2',
+									_0: 'Twilio',
+									_1: _user$project$CoreTypes$AccountRoute('twilio')
+								},
+								_1: {
+									ctor: '::',
+									_0: {
+										ctor: '_Tuple2',
+										_0: 'Mailjet',
+										_1: _user$project$CoreTypes$AccountRoute('mailjet')
+									},
+									_1: {ctor: '[]'}
+								}
+							}
 						}),
 					_1: {
 						ctor: '::',
