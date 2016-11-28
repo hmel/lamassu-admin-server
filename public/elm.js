@@ -20730,7 +20730,7 @@ var _user$project$ConfigTypes$fieldValueToString = function (fieldValue) {
 			return _p2._0 ? 'on' : 'off';
 		case 'FieldAccountValue':
 			return _p2._0;
-		case 'FieldCurrencyValue':
+		case 'FieldFiatCurrencyValue':
 			return _p2._0;
 		case 'FieldCryptoCurrencyValue':
 			return _elm_lang$core$Native_Utils.crashCase(
@@ -20891,7 +20891,7 @@ var _user$project$ConfigTypes$SelectizeComponent = function (a) {
 var _user$project$ConfigTypes$InputBoxComponent = {ctor: 'InputBoxComponent'};
 var _user$project$ConfigTypes$FieldLanguageType = {ctor: 'FieldLanguageType'};
 var _user$project$ConfigTypes$FieldCryptoCurrencyType = {ctor: 'FieldCryptoCurrencyType'};
-var _user$project$ConfigTypes$FieldCurrencyType = {ctor: 'FieldCurrencyType'};
+var _user$project$ConfigTypes$FieldFiatCurrencyType = {ctor: 'FieldFiatCurrencyType'};
 var _user$project$ConfigTypes$FieldAccountType = {ctor: 'FieldAccountType'};
 var _user$project$ConfigTypes$FieldOnOffType = {ctor: 'FieldOnOffType'};
 var _user$project$ConfigTypes$FieldIntegerType = {ctor: 'FieldIntegerType'};
@@ -20903,8 +20903,8 @@ var _user$project$ConfigTypes$FieldLanguageValue = function (a) {
 var _user$project$ConfigTypes$FieldCryptoCurrencyValue = function (a) {
 	return {ctor: 'FieldCryptoCurrencyValue', _0: a};
 };
-var _user$project$ConfigTypes$FieldCurrencyValue = function (a) {
-	return {ctor: 'FieldCurrencyValue', _0: a};
+var _user$project$ConfigTypes$FieldFiatCurrencyValue = function (a) {
+	return {ctor: 'FieldFiatCurrencyValue', _0: a};
 };
 var _user$project$ConfigTypes$FieldAccountValue = function (a) {
 	return {ctor: 'FieldAccountValue', _0: a};
@@ -20974,10 +20974,10 @@ var _user$project$ConfigTypes$stringToFieldHolder = F2(
 					return _elm_lang$core$Result$Ok(
 						_elm_lang$core$Maybe$Just(
 							_user$project$ConfigTypes$FieldAccountValue(s)));
-				case 'FieldCurrencyType':
+				case 'FieldFiatCurrencyType':
 					return _elm_lang$core$Result$Ok(
 						_elm_lang$core$Maybe$Just(
-							_user$project$ConfigTypes$FieldCurrencyValue(s)));
+							_user$project$ConfigTypes$FieldFiatCurrencyValue(s)));
 				case 'FieldCryptoCurrencyType':
 					return _elm_lang$core$Result$Ok(
 						_elm_lang$core$Maybe$Just(
@@ -21013,8 +21013,8 @@ var _user$project$ConfigDecoder$basicFieldTypeDecoder = function (s) {
 			return _elm_lang$core$Json_Decode$succeed(_user$project$ConfigTypes$FieldOnOffType);
 		case 'account':
 			return _elm_lang$core$Json_Decode$succeed(_user$project$ConfigTypes$FieldAccountType);
-		case 'currency':
-			return _elm_lang$core$Json_Decode$succeed(_user$project$ConfigTypes$FieldCurrencyType);
+		case 'fiatCurrency':
+			return _elm_lang$core$Json_Decode$succeed(_user$project$ConfigTypes$FieldFiatCurrencyType);
 		case 'cryptoCurrency':
 			return _elm_lang$core$Json_Decode$succeed(_user$project$ConfigTypes$FieldCryptoCurrencyType);
 		case 'language':
@@ -21193,12 +21193,12 @@ var _user$project$ConfigDecoder$fieldValueTypeDecoder = function (fieldType) {
 		case 'account':
 			return A2(
 				_elm_lang$core$Json_Decode$map,
-				_user$project$ConfigTypes$FieldCurrencyValue,
+				_user$project$ConfigTypes$FieldFiatCurrencyValue,
 				A2(_elm_lang$core$Json_Decode$field, 'value', _elm_lang$core$Json_Decode$string));
-		case 'currency':
+		case 'fiatCurrency':
 			return A2(
 				_elm_lang$core$Json_Decode$map,
-				_user$project$ConfigTypes$FieldCurrencyValue,
+				_user$project$ConfigTypes$FieldFiatCurrencyValue,
 				A2(_elm_lang$core$Json_Decode$field, 'value', _elm_lang$core$Json_Decode$string));
 		case 'cryptoCurrency':
 			return A2(
@@ -21261,8 +21261,8 @@ var _user$project$ConfigEncoder$fieldTypeEncoder = function (fieldType) {
 			return _elm_lang$core$Json_Encode$string('onOff');
 		case 'FieldAccountType':
 			return _elm_lang$core$Json_Encode$string('account');
-		case 'FieldCurrencyType':
-			return _elm_lang$core$Json_Encode$string('currency');
+		case 'FieldFiatCurrencyType':
+			return _elm_lang$core$Json_Encode$string('fiatCurrency');
 		case 'FieldCryptoCurrencyType':
 			return _elm_lang$core$Json_Encode$string('cryptoCurrency');
 		default:
@@ -21390,10 +21390,10 @@ var _user$project$ConfigEncoder$encodeFieldValue = function (maybeFieldValue) {
 					_user$project$ConfigEncoder$encodeFieldValueObject,
 					'account',
 					_elm_lang$core$Json_Encode$string(_p5._0));
-			case 'FieldCurrencyValue':
+			case 'FieldFiatCurrencyValue':
 				return A2(
 					_user$project$ConfigEncoder$encodeFieldValueObject,
-					'currency',
+					'fiatCurrency',
 					_elm_lang$core$Json_Encode$string(_p5._0));
 			case 'FieldCryptoCurrencyValue':
 				return A2(
@@ -22043,8 +22043,8 @@ var _user$project$Config$updateSelectize = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 865, column: 17},
-							end: {line: 870, column: 56}
+							start: {line: 862, column: 17},
+							end: {line: 867, column: 56}
 						},
 						_p0)('Shouldn\'t be here');
 				}
@@ -22114,7 +22114,7 @@ var _user$project$Config$buildFieldComponent = F4(
 				return _user$project$ConfigTypes$SelectizeComponent(_user$project$Selectize$initialSelectize);
 			case 'FieldAccountType':
 				return _user$project$ConfigTypes$SelectizeComponent(_user$project$Selectize$initialSelectize);
-			case 'FieldCurrencyType':
+			case 'FieldFiatCurrencyType':
 				return _user$project$ConfigTypes$SelectizeComponent(_user$project$Selectize$initialSelectize);
 			case 'FieldCryptoCurrencyType':
 				return _user$project$ConfigTypes$SelectizeComponent(_user$project$Selectize$initialSelectize);
@@ -22253,8 +22253,8 @@ var _user$project$Config$languageSelectizeView = F6(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 421, column: 21},
-							end: {line: 426, column: 60}
+							start: {line: 418, column: 21},
+							end: {line: 423, column: 60}
 						},
 						_p7)('Shouldn\'t be here');
 				}
@@ -22295,8 +22295,8 @@ var _user$project$Config$cryptoCurrencySelectizeView = F6(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 375, column: 21},
-							end: {line: 380, column: 60}
+							start: {line: 372, column: 21},
+							end: {line: 377, column: 60}
 						},
 						_p10)('Shouldn\'t be here');
 				}
@@ -22329,7 +22329,7 @@ var _user$project$Config$cryptoCurrencySelectizeView = F6(
 			fallbackIds,
 			selectizeState);
 	});
-var _user$project$Config$currencySelectizeView = F6(
+var _user$project$Config$fiatCurrencySelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
 		var fallbackIds = _user$project$Config$maybeToList(
 			A2(_elm_lang$core$Maybe$map, _user$project$ConfigTypes$fieldValueToString, maybeFallbackFieldValue));
@@ -22423,8 +22423,8 @@ var _user$project$Config$fieldHolderToList = function (fieldHolder) {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 144, column: 21},
-							end: {line: 152, column: 58}
+							start: {line: 141, column: 21},
+							end: {line: 149, column: 58}
 						},
 						_p17)('Not a list type');
 			}
@@ -22643,8 +22643,8 @@ var _user$project$Config$selectizeView = F5(
 		switch (_p25.ctor) {
 			case 'FieldAccountType':
 				return A6(_user$project$Config$accountSelectizeView, model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue);
-			case 'FieldCurrencyType':
-				return A6(_user$project$Config$currencySelectizeView, model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue);
+			case 'FieldFiatCurrencyType':
+				return A6(_user$project$Config$fiatCurrencySelectizeView, model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue);
 			case 'FieldCryptoCurrencyType':
 				return A6(_user$project$Config$cryptoCurrencySelectizeView, model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue);
 			case 'FieldLanguageType':
@@ -22655,8 +22655,8 @@ var _user$project$Config$selectizeView = F5(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Config',
 					{
-						start: {line: 462, column: 9},
-						end: {line: 504, column: 52}
+						start: {line: 459, column: 9},
+						end: {line: 501, column: 52}
 					},
 					_p25)('Not a Selectize field');
 		}
@@ -24890,7 +24890,7 @@ var _user$project$Main$Model = F7(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"FieldSetTypes.FieldValue":{"args":[],"tags":{"FieldString":["String"],"FieldPassword":["Maybe.Maybe String"]}},"Selectize.Status":{"args":[],"tags":{"Editing":[],"Idle":[],"Blurred":[],"Cleared":[],"Initial":[]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"ConfigTypes.ConfigScope":{"args":[],"tags":{"Specific":[],"Both":[],"Global":[]}},"ConfigTypes.FieldType":{"args":[],"tags":{"FieldOnOffType":[],"FieldPercentageType":[],"FieldCurrencyType":[],"FieldLanguageType":[],"FieldCryptoCurrencyType":[],"FieldIntegerType":[],"FieldStringType":[],"FieldAccountType":[]}},"Pair.Msg":{"args":[],"tags":{"SubmitName":[],"Load":["RemoteData.WebData String"],"InputName":["String"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Account.Msg":{"args":[],"tags":{"Load":["Account.Model"],"FieldSetMsg":["FieldSet.Msg"],"Submit":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"RemoteData.RemoteData":{"args":["e","a"],"tags":{"NotAsked":[],"Success":["a"],"Loading":[],"Failure":["e"]}},"ConfigTypes.Crypto":{"args":[],"tags":{"GlobalCrypto":[],"CryptoCode":["String"]}},"FieldSet.Msg":{"args":[],"tags":{"Input":["String","String"]}},"CoreTypes.Msg":{"args":[],"tags":{"ConfigMsg":["Config.Msg"],"LoadAccounts":["List ( String, String )"],"MachineMsg":["Machine.Msg"],"NewUrl":["String"],"UrlChange":["Navigation.Location"],"AccountMsg":["Account.Msg"],"PairMsg":["Pair.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"ConfigTypes.Machine":{"args":[],"tags":{"MachineId":["String"],"GlobalMachine":[]}},"Machine.Msg":{"args":[],"tags":{"Action":[],"Load":["Machine.Model"],"InputCassette":["MachineTypes.Machine","Machine.Position","String"],"SubmitResetBills":["MachineTypes.Machine"]}},"Machine.Position":{"args":[],"tags":{"Bottom":[],"Top":[]}},"Config.Msg":{"args":[],"tags":{"Focus":["ConfigTypes.FieldLocator"],"BlurSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"Remove":["ConfigTypes.FieldLocator","Selectize.State"],"Load":["Config.WebConfigGroup"],"Input":["ConfigTypes.FieldLocator","String"],"Blur":["ConfigTypes.FieldLocator"],"Add":["ConfigTypes.FieldLocator","String","Selectize.State"],"Submit":[],"SelectizeMsg":["ConfigTypes.FieldLocator","Selectize.State"],"FocusSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"HideSaveIndication":[],"CryptoSwitch":["ConfigTypes.Crypto"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String"],"NetworkError":[],"Timeout":[],"BadStatus":["Http.Response String"],"BadPayload":["String","Http.Response String"]}},"ConfigTypes.FieldValue":{"args":[],"tags":{"FieldIntegerValue":["Int"],"FieldCryptoCurrencyValue":["List String"],"FieldStringValue":["String"],"FieldOnOffValue":["Bool"],"FieldAccountValue":["String"],"FieldLanguageValue":["List String"],"FieldCurrencyValue":["String"],"FieldPercentageValue":["Float"]}}},"aliases":{"ConfigTypes.ConfigSchema":{"args":[],"type":"{ code : String , display : String , cryptoScope : ConfigTypes.ConfigScope , machineScope : ConfigTypes.ConfigScope , entries : List ConfigTypes.FieldDescriptor }"},"Machine.Model":{"args":[],"type":"RemoteData.WebData MachineTypes.Machines"},"Selectize.State":{"args":[],"type":"{ boxPosition : Int, status : Selectize.Status, string : String }"},"RemoteData.WebData":{"args":["a"],"type":"RemoteData.RemoteData Http.Error a"},"ConfigTypes.FieldLocator":{"args":[],"type":"{ fieldScope : ConfigTypes.FieldScope , code : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"AccountTypes.Account":{"args":[],"type":"{ code : String , display : String , fields : List FieldSetTypes.Field }"},"Http.Response":{"args":["body"],"type":"{ url : String , status : { code : Int, message : String } , headers : Dict.Dict String String , body : body }"},"MachineTypes.Machine":{"args":[],"type":"{ deviceId : String , name : String , cashbox : Int , cassette1 : Int , cassette2 : Int , paired : Bool }"},"ConfigTypes.ConfigData":{"args":[],"type":"{ cryptoCurrencies : List ConfigTypes.CryptoDisplay , currencies : List ConfigTypes.DisplayRec , languages : List ConfigTypes.DisplayRec , accounts : List ConfigTypes.AccountRec , machines : List ConfigTypes.MachineDisplay }"},"Account.Model":{"args":[],"type":"RemoteData.WebData AccountTypes.Account"},"ConfigTypes.CryptoDisplay":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, display : String }"},"Config.WebConfigGroup":{"args":[],"type":"RemoteData.WebData ConfigTypes.ConfigGroup"},"ConfigTypes.DisplayRec":{"args":[],"type":"{ code : String, display : String }"},"ConfigTypes.FieldScope":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, machine : ConfigTypes.Machine }"},"FieldSetTypes.Field":{"args":[],"type":"{ code : String , display : String , secret : Bool , required : Bool , value : FieldSetTypes.FieldValue , loadedValue : FieldSetTypes.FieldValue }"},"ConfigTypes.ConfigGroup":{"args":[],"type":"{ schema : ConfigTypes.ConfigSchema , values : List ConfigTypes.Field , data : ConfigTypes.ConfigData }"},"ConfigTypes.AccountRec":{"args":[],"type":"{ code : String , display : String , class : String , cryptos : Maybe.Maybe (List ConfigTypes.Crypto) }"},"ConfigTypes.Field":{"args":[],"type":"{ fieldLocator : ConfigTypes.FieldLocator , fieldValue : ConfigTypes.FieldValue }"},"ConfigTypes.MachineDisplay":{"args":[],"type":"{ machine : ConfigTypes.Machine, display : String }"},"MachineTypes.Machines":{"args":[],"type":"List MachineTypes.Machine"},"ConfigTypes.FieldDescriptor":{"args":[],"type":"{ code : String , display : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"Navigation.Location":{"args":[],"type":"{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"}},"message":"CoreTypes.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"FieldSetTypes.FieldValue":{"args":[],"tags":{"FieldString":["String"],"FieldPassword":["Maybe.Maybe String"]}},"Selectize.Status":{"args":[],"tags":{"Editing":[],"Idle":[],"Blurred":[],"Cleared":[],"Initial":[]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"ConfigTypes.ConfigScope":{"args":[],"tags":{"Specific":[],"Both":[],"Global":[]}},"ConfigTypes.FieldType":{"args":[],"tags":{"FieldOnOffType":[],"FieldPercentageType":[],"FieldLanguageType":[],"FieldCryptoCurrencyType":[],"FieldIntegerType":[],"FieldFiatCurrencyType":[],"FieldStringType":[],"FieldAccountType":[]}},"Pair.Msg":{"args":[],"tags":{"SubmitName":[],"Load":["RemoteData.WebData String"],"InputName":["String"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Account.Msg":{"args":[],"tags":{"Load":["Account.Model"],"FieldSetMsg":["FieldSet.Msg"],"Submit":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"RemoteData.RemoteData":{"args":["e","a"],"tags":{"NotAsked":[],"Success":["a"],"Loading":[],"Failure":["e"]}},"ConfigTypes.Crypto":{"args":[],"tags":{"GlobalCrypto":[],"CryptoCode":["String"]}},"FieldSet.Msg":{"args":[],"tags":{"Input":["String","String"]}},"CoreTypes.Msg":{"args":[],"tags":{"ConfigMsg":["Config.Msg"],"LoadAccounts":["List ( String, String )"],"MachineMsg":["Machine.Msg"],"NewUrl":["String"],"UrlChange":["Navigation.Location"],"AccountMsg":["Account.Msg"],"PairMsg":["Pair.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"ConfigTypes.Machine":{"args":[],"tags":{"MachineId":["String"],"GlobalMachine":[]}},"Machine.Msg":{"args":[],"tags":{"Action":[],"Load":["Machine.Model"],"InputCassette":["MachineTypes.Machine","Machine.Position","String"],"SubmitResetBills":["MachineTypes.Machine"]}},"Machine.Position":{"args":[],"tags":{"Bottom":[],"Top":[]}},"Config.Msg":{"args":[],"tags":{"Focus":["ConfigTypes.FieldLocator"],"BlurSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"Remove":["ConfigTypes.FieldLocator","Selectize.State"],"Load":["Config.WebConfigGroup"],"Input":["ConfigTypes.FieldLocator","String"],"Blur":["ConfigTypes.FieldLocator"],"Add":["ConfigTypes.FieldLocator","String","Selectize.State"],"Submit":[],"SelectizeMsg":["ConfigTypes.FieldLocator","Selectize.State"],"FocusSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"HideSaveIndication":[],"CryptoSwitch":["ConfigTypes.Crypto"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String"],"NetworkError":[],"Timeout":[],"BadStatus":["Http.Response String"],"BadPayload":["String","Http.Response String"]}},"ConfigTypes.FieldValue":{"args":[],"tags":{"FieldIntegerValue":["Int"],"FieldCryptoCurrencyValue":["List String"],"FieldFiatCurrencyValue":["String"],"FieldStringValue":["String"],"FieldOnOffValue":["Bool"],"FieldAccountValue":["String"],"FieldLanguageValue":["List String"],"FieldPercentageValue":["Float"]}}},"aliases":{"ConfigTypes.ConfigSchema":{"args":[],"type":"{ code : String , display : String , cryptoScope : ConfigTypes.ConfigScope , machineScope : ConfigTypes.ConfigScope , entries : List ConfigTypes.FieldDescriptor }"},"Machine.Model":{"args":[],"type":"RemoteData.WebData MachineTypes.Machines"},"Selectize.State":{"args":[],"type":"{ boxPosition : Int, status : Selectize.Status, string : String }"},"RemoteData.WebData":{"args":["a"],"type":"RemoteData.RemoteData Http.Error a"},"ConfigTypes.FieldLocator":{"args":[],"type":"{ fieldScope : ConfigTypes.FieldScope , code : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"AccountTypes.Account":{"args":[],"type":"{ code : String , display : String , fields : List FieldSetTypes.Field }"},"Http.Response":{"args":["body"],"type":"{ url : String , status : { code : Int, message : String } , headers : Dict.Dict String String , body : body }"},"MachineTypes.Machine":{"args":[],"type":"{ deviceId : String , name : String , cashbox : Int , cassette1 : Int , cassette2 : Int , paired : Bool }"},"ConfigTypes.ConfigData":{"args":[],"type":"{ cryptoCurrencies : List ConfigTypes.CryptoDisplay , currencies : List ConfigTypes.DisplayRec , languages : List ConfigTypes.DisplayRec , accounts : List ConfigTypes.AccountRec , machines : List ConfigTypes.MachineDisplay }"},"Account.Model":{"args":[],"type":"RemoteData.WebData AccountTypes.Account"},"ConfigTypes.CryptoDisplay":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, display : String }"},"Config.WebConfigGroup":{"args":[],"type":"RemoteData.WebData ConfigTypes.ConfigGroup"},"ConfigTypes.DisplayRec":{"args":[],"type":"{ code : String, display : String }"},"ConfigTypes.FieldScope":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, machine : ConfigTypes.Machine }"},"FieldSetTypes.Field":{"args":[],"type":"{ code : String , display : String , secret : Bool , required : Bool , value : FieldSetTypes.FieldValue , loadedValue : FieldSetTypes.FieldValue }"},"ConfigTypes.ConfigGroup":{"args":[],"type":"{ schema : ConfigTypes.ConfigSchema , values : List ConfigTypes.Field , data : ConfigTypes.ConfigData }"},"ConfigTypes.AccountRec":{"args":[],"type":"{ code : String , display : String , class : String , cryptos : Maybe.Maybe (List ConfigTypes.Crypto) }"},"ConfigTypes.Field":{"args":[],"type":"{ fieldLocator : ConfigTypes.FieldLocator , fieldValue : ConfigTypes.FieldValue }"},"ConfigTypes.MachineDisplay":{"args":[],"type":"{ machine : ConfigTypes.Machine, display : String }"},"MachineTypes.Machines":{"args":[],"type":"List MachineTypes.Machine"},"ConfigTypes.FieldDescriptor":{"args":[],"type":"{ code : String , display : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"Navigation.Location":{"args":[],"type":"{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"}},"message":"CoreTypes.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])
