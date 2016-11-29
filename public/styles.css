@@ -3,6 +3,19 @@ body {
     margin: 0;
 }
 
+p {
+    margin: 0;
+}
+
+.lamassuAdminStatusBar {
+    position: fixed;
+    bottom: 0;
+    padding: 10px 20px;
+    background-color: #5f5f56;
+    color: #ffffff;
+    width: 100%;
+}
+
 .lamassuAdminFormRow {
     margin: 20px 0;
 }
