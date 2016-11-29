@@ -223,7 +223,7 @@ body {
 }
 
 .lamassuAdminConfigTable  input {
-    border: 0;
+    border: 2px solid #f6f6f4;
     border-radius: 3px;
     padding: 6px;
     text-align: right;
@@ -234,6 +234,10 @@ body {
     background-color: inherit;
 }
 
+.lamassuAdminConfigTable  input:invalid {
+    color: #eb6b6e;
+}
+
 .lamassuAdminConfigTable  td {
     padding: 3px 4px;
     text-align: center;
@@ -241,12 +245,11 @@ body {
 }
 
 .lamassuAdminConfigTable  .lamassuAdminComponent {
-    border-radius: 3px;
-    border: 2px solid #f6f6f4;
+    border: 0;
     background-color: #ffffff;
 }
 
-.lamassuAdminConfigTable  .lamassuAdminFocusedComponent {
+.lamassuAdminConfigTable  .lamassuAdminFocusedComponent > input {
     border-top-color: #37e8d7;
 }
 
