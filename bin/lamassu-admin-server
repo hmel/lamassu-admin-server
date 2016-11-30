@@ -108,9 +108,12 @@ app.post('/api/machines', (req, res) => {
   .then(() => dbNotify())
 })
 
-app.get('/api/server', (req, res, next) => {
-  return server.status()
-  .then(r => res.send({server: r}))
+app.get('/api/status', (req, res, next) => {
+  return Promise.all([server.status(), config.validateConfig()])
+  .then(([serverStatus, invalidConfigGroups]) => res.send({
+    server: serverStatus,
+    invalidConfigGroups
+  }))
   .catch(next)
 })
 
