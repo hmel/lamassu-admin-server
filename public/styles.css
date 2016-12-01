@@ -236,7 +236,7 @@ p {
 }
 
 .lamassuAdminConfigTable  input {
-    border: 2px solid #f6f6f4;
+    border: 0;
     border-radius: 3px;
     padding: 6px;
     text-align: right;
@@ -258,11 +258,11 @@ p {
 }
 
 .lamassuAdminConfigTable  .lamassuAdminComponent {
-    border: 0;
+    border-radius: 3px;
     background-color: #ffffff;
 }
 
-.lamassuAdminConfigTable  .lamassuAdminFocusedComponent > input {
+.lamassuAdminConfigTable  .lamassuAdminFocusedComponent {
     border-top-color: #37e8d7;
 }
 

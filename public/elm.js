@@ -24668,15 +24668,15 @@ var _user$project$NavBar$view = function (route) {
 							ctor: '::',
 							_0: {
 								ctor: '_Tuple2',
-								_0: 'Limits',
-								_1: A2(_user$project$CoreTypes$ConfigRoute, 'limits', _elm_lang$core$Maybe$Nothing)
+								_0: 'Machine settings',
+								_1: A2(_user$project$CoreTypes$ConfigRoute, 'machineSettings', _elm_lang$core$Maybe$Nothing)
 							},
 							_1: {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'Currencies',
-									_1: A2(_user$project$CoreTypes$ConfigRoute, 'currencies', _elm_lang$core$Maybe$Nothing)
+									_0: 'Fiat currencies',
+									_1: A2(_user$project$CoreTypes$ConfigRoute, 'fiat', _elm_lang$core$Maybe$Nothing)
 								},
 								_1: {
 									ctor: '::',
@@ -24689,33 +24689,17 @@ var _user$project$NavBar$view = function (route) {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: 'Extra services',
-											_1: A2(_user$project$CoreTypes$ConfigRoute, 'extraServices', _elm_lang$core$Maybe$Nothing)
+											_0: 'Notifications',
+											_1: A2(_user$project$CoreTypes$ConfigRoute, 'notifications', _elm_lang$core$Maybe$Nothing)
 										},
 										_1: {
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'Languages',
-												_1: A2(_user$project$CoreTypes$ConfigRoute, 'languages', _elm_lang$core$Maybe$Nothing)
+												_0: 'Compliance',
+												_1: A2(_user$project$CoreTypes$ConfigRoute, 'compliance', _elm_lang$core$Maybe$Nothing)
 											},
-											_1: {
-												ctor: '::',
-												_0: {
-													ctor: '_Tuple2',
-													_0: 'Notifications',
-													_1: A2(_user$project$CoreTypes$ConfigRoute, 'notifications', _elm_lang$core$Maybe$Nothing)
-												},
-												_1: {
-													ctor: '::',
-													_0: {
-														ctor: '_Tuple2',
-														_0: 'Compliance',
-														_1: A2(_user$project$CoreTypes$ConfigRoute, 'compliance', _elm_lang$core$Maybe$Nothing)
-													},
-													_1: {ctor: '[]'}
-												}
-											}
+											_1: {ctor: '[]'}
 										}
 									}
 								}
@@ -24903,7 +24887,7 @@ var _user$project$Main$getStatus = A2(
 		A2(
 			_lukewestby$elm_http_builder$HttpBuilder$withExpect,
 			_elm_lang$http$Http$expectJson(_user$project$StatusDecoder$statusDecoder),
-			_lukewestby$elm_http_builder$HttpBuilder$get('/api/server/'))));
+			_lukewestby$elm_http_builder$HttpBuilder$get('/api/status/'))));
 var _user$project$Main$getAccounts = A2(
 	_elm_lang$core$Platform_Cmd$map,
 	_user$project$CoreTypes$LoadAccounts,
