@@ -1,6 +1,6 @@
 'use strict'
 
-const db = require('../db')
+const db = require('../lib/db')
 
 function pp (o) {
   console.log(require('util').inspect(o, {depth: null, colors: true}))
