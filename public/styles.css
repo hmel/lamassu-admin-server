@@ -274,6 +274,10 @@ p {
     background-color: #ffffff;
 }
 
+.lamassuAdminConfigTable  .lamassuAdminRequiredComponent {
+    border-top-color: #eb6b6e;
+}
+
 .lamassuAdminConfigTable  .lamassuAdminFocusedComponent {
     border-top-color: #37e8d7;
 }
