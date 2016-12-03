@@ -19679,6 +19679,7 @@ var _user$project$Css_Classes$Fail = {ctor: 'Fail'};
 var _user$project$Css_Classes$TableButton = {ctor: 'TableButton'};
 var _user$project$Css_Classes$FocusedComponent = {ctor: 'FocusedComponent'};
 var _user$project$Css_Classes$Component = {ctor: 'Component'};
+var _user$project$Css_Classes$BasicInputDisabled = {ctor: 'BasicInputDisabled'};
 var _user$project$Css_Classes$BasicInput = {ctor: 'BasicInput'};
 var _user$project$Css_Classes$Active = {ctor: 'Active'};
 var _user$project$Css_Classes$ButtonRow = {ctor: 'ButtonRow'};
@@ -20392,9 +20393,9 @@ var _user$project$Selectize$clean = function (s) {
 	return _elm_lang$core$String$toLower(
 		_elm_lang$core$String$trim(s));
 };
-var _user$project$Selectize$HtmlOptions = F6(
-	function (a, b, c, d, e, f) {
-		return {instructionsForBlank: a, noMatches: b, typeForMore: c, atMaxLength: d, noOptions: e, classes: f};
+var _user$project$Selectize$HtmlOptions = F7(
+	function (a, b, c, d, e, f, g) {
+		return {instructionsForBlank: a, noMatches: b, typeForMore: c, atMaxLength: d, noOptions: e, notAvailable: f, classes: g};
 	});
 var _user$project$Selectize$HtmlClasses = function (a) {
 	return function (b) {
@@ -20445,7 +20446,9 @@ var _user$project$Selectize$Config = function (a) {
 									return function (j) {
 										return function (k) {
 											return function (l) {
-												return {maxItems: a, boxLength: b, toMsg: c, onAdd: d, onRemove: e, onFocus: f, onBlur: g, toId: h, selectedDisplay: i, optionDisplay: j, match: k, htmlOptions: l};
+												return function (m) {
+													return {maxItems: a, boxLength: b, toMsg: c, onAdd: d, onRemove: e, onFocus: f, onBlur: g, toId: h, enabled: i, selectedDisplay: j, optionDisplay: k, match: l, htmlOptions: m};
+												};
 											};
 										};
 									};
@@ -20624,98 +20627,70 @@ var _user$project$Selectize$view = F5(
 					_1: {ctor: '[]'}
 				});
 		} else {
-			var onFocusAtt = A2(_user$project$Selectize$onFocus, config, state);
-			var onBlurAtt = A2(_user$project$Selectize$onBlur, config, state);
-			var onInputAtt = A2(_user$project$Selectize$onInput, config, state);
-			var fallbackItems = A2(
-				_elm_lang$core$List$filterMap,
-				A2(_user$project$Selectize$mapToItem, config.toId, availableItems),
-				fallbackIds);
-			var selectedItems = A2(
-				_elm_lang$core$List$filterMap,
-				A2(_user$project$Selectize$mapToItem, config.toId, availableItems),
-				selectedIds);
-			var remainingItems = A3(_user$project$Selectize$diffItems, config, availableItems, selectedItems);
-			var boxItems = A2(
-				_elm_lang$core$List$take,
-				5,
-				A2(config.match, state.string, remainingItems));
-			var items = A3(_user$project$Selectize$buildItems, selectedItems, availableItems, boxItems);
-			var keyDown = (_elm_lang$core$Native_Utils.cmp(config.maxItems, 1) > 0) ? (_elm_lang$core$String$isEmpty(state.string) ? A3(_user$project$Selectize$onKeyDownNoDelete, config, items, state) : A3(_user$project$Selectize$onKeyDownDelete, config, items, state)) : A3(_user$project$Selectize$onKeyDown, config, items, state);
-			var h = config.htmlOptions;
-			var editInput = function () {
-				var _p9 = state.status;
-				switch (_p9.ctor) {
-					case 'Initial':
-						return (_elm_lang$core$Native_Utils.cmp(
-							_elm_lang$core$List$length(selectedItems),
-							config.maxItems) < 0) ? A2(
-							_elm_lang$html$Html$input,
+			if (!config.enabled) {
+				return A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class(config.htmlOptions.classes.container),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$div,
 							{
 								ctor: '::',
-								_0: onBlurAtt,
-								_1: {
-									ctor: '::',
-									_0: onInputAtt,
-									_1: {ctor: '[]'}
-								}
+								_0: _elm_lang$html$Html_Attributes$class(config.htmlOptions.classes.noOptions),
+								_1: {ctor: '[]'}
 							},
-							{ctor: '[]'}) : A2(
-							_elm_lang$html$Html$input,
 							{
 								ctor: '::',
-								_0: onBlurAtt,
-								_1: {
+								_0: _elm_lang$html$Html$text('N/A'),
+								_1: {ctor: '[]'}
+							}),
+						_1: {ctor: '[]'}
+					});
+			} else {
+				var onFocusAtt = A2(_user$project$Selectize$onFocus, config, state);
+				var onBlurAtt = A2(_user$project$Selectize$onBlur, config, state);
+				var onInputAtt = A2(_user$project$Selectize$onInput, config, state);
+				var fallbackItems = A2(
+					_elm_lang$core$List$filterMap,
+					A2(_user$project$Selectize$mapToItem, config.toId, availableItems),
+					fallbackIds);
+				var selectedItems = A2(
+					_elm_lang$core$List$filterMap,
+					A2(_user$project$Selectize$mapToItem, config.toId, availableItems),
+					selectedIds);
+				var remainingItems = A3(_user$project$Selectize$diffItems, config, availableItems, selectedItems);
+				var boxItems = A2(
+					_elm_lang$core$List$take,
+					5,
+					A2(config.match, state.string, remainingItems));
+				var items = A3(_user$project$Selectize$buildItems, selectedItems, availableItems, boxItems);
+				var keyDown = (_elm_lang$core$Native_Utils.cmp(config.maxItems, 1) > 0) ? (_elm_lang$core$String$isEmpty(state.string) ? A3(_user$project$Selectize$onKeyDownNoDelete, config, items, state) : A3(_user$project$Selectize$onKeyDownDelete, config, items, state)) : A3(_user$project$Selectize$onKeyDown, config, items, state);
+				var h = config.htmlOptions;
+				var editInput = function () {
+					var _p9 = state.status;
+					switch (_p9.ctor) {
+						case 'Initial':
+							return (_elm_lang$core$Native_Utils.cmp(
+								_elm_lang$core$List$length(selectedItems),
+								config.maxItems) < 0) ? A2(
+								_elm_lang$html$Html$input,
+								{
 									ctor: '::',
-									_0: onInputAtt,
+									_0: onBlurAtt,
 									_1: {
 										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$maxlength(0),
+										_0: onInputAtt,
 										_1: {ctor: '[]'}
 									}
-								}
-							},
-							{ctor: '[]'});
-					case 'Idle':
-						return (_elm_lang$core$Native_Utils.cmp(
-							_elm_lang$core$List$length(selectedItems),
-							config.maxItems) < 0) ? A2(
-							_elm_lang$html$Html$input,
-							{
-								ctor: '::',
-								_0: onBlurAtt,
-								_1: {
-									ctor: '::',
-									_0: onInputAtt,
-									_1: {ctor: '[]'}
-								}
-							},
-							{ctor: '[]'}) : A2(
-							_elm_lang$html$Html$input,
-							{
-								ctor: '::',
-								_0: onBlurAtt,
-								_1: {
-									ctor: '::',
-									_0: onInputAtt,
-									_1: {
-										ctor: '::',
-										_0: _elm_lang$html$Html_Attributes$maxlength(0),
-										_1: {ctor: '[]'}
-									}
-								}
-							},
-							{ctor: '[]'});
-					case 'Editing':
-						var actualMaxlength = _elm_lang$core$Native_Utils.eq(
-							_elm_lang$core$List$length(boxItems),
-							0) ? 0 : 524288;
-						return A2(
-							_elm_lang$html$Html$input,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$maxlength(actualMaxlength),
-								_1: {
+								},
+								{ctor: '[]'}) : A2(
+								_elm_lang$html$Html$input,
+								{
 									ctor: '::',
 									_0: onBlurAtt,
 									_1: {
@@ -20723,173 +20698,235 @@ var _user$project$Selectize$view = F5(
 										_0: onInputAtt,
 										_1: {
 											ctor: '::',
-											_0: _elm_lang$html$Html_Attributes$class(h.classes.inputEditing),
+											_0: _elm_lang$html$Html_Attributes$maxlength(0),
 											_1: {ctor: '[]'}
 										}
 									}
-								}
-							},
-							{ctor: '[]'});
-					case 'Cleared':
-						return A2(
-							_elm_lang$html$Html$input,
-							{
-								ctor: '::',
-								_0: A3(_user$project$Selectize$onKeyUp, config, items, state),
-								_1: {
+								},
+								{ctor: '[]'});
+						case 'Idle':
+							return (_elm_lang$core$Native_Utils.cmp(
+								_elm_lang$core$List$length(selectedItems),
+								config.maxItems) < 0) ? A2(
+								_elm_lang$html$Html$input,
+								{
 									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$value(''),
+									_0: onBlurAtt,
+									_1: {
+										ctor: '::',
+										_0: onInputAtt,
+										_1: {ctor: '[]'}
+									}
+								},
+								{ctor: '[]'}) : A2(
+								_elm_lang$html$Html$input,
+								{
+									ctor: '::',
+									_0: onBlurAtt,
+									_1: {
+										ctor: '::',
+										_0: onInputAtt,
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$maxlength(0),
+											_1: {ctor: '[]'}
+										}
+									}
+								},
+								{ctor: '[]'});
+						case 'Editing':
+							var actualMaxlength = _elm_lang$core$Native_Utils.eq(
+								_elm_lang$core$List$length(boxItems),
+								0) ? 0 : 524288;
+							return A2(
+								_elm_lang$html$Html$input,
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html_Attributes$maxlength(actualMaxlength),
 									_1: {
 										ctor: '::',
 										_0: onBlurAtt,
 										_1: {
 											ctor: '::',
 											_0: onInputAtt,
-											_1: {ctor: '[]'}
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$html$Html_Attributes$class(h.classes.inputEditing),
+												_1: {ctor: '[]'}
+											}
 										}
 									}
-								}
-							},
-							{ctor: '[]'});
-					default:
-						return A2(
-							_elm_lang$html$Html$input,
-							{
-								ctor: '::',
-								_0: _elm_lang$html$Html_Attributes$maxlength(0),
-								_1: {
+								},
+								{ctor: '[]'});
+						case 'Cleared':
+							return A2(
+								_elm_lang$html$Html$input,
+								{
 									ctor: '::',
-									_0: onFocusAtt,
+									_0: A3(_user$project$Selectize$onKeyUp, config, items, state),
 									_1: {
 										ctor: '::',
 										_0: _elm_lang$html$Html_Attributes$value(''),
-										_1: {ctor: '[]'}
+										_1: {
+											ctor: '::',
+											_0: onBlurAtt,
+											_1: {
+												ctor: '::',
+												_0: onInputAtt,
+												_1: {ctor: '[]'}
+											}
+										}
 									}
-								}
-							},
-							{ctor: '[]'});
-				}
-			}();
-			return A2(
-				_elm_lang$html$Html$div,
-				{
-					ctor: '::',
-					_0: _elm_lang$html$Html_Attributes$class(h.classes.container),
-					_1: {ctor: '[]'}
-				},
-				{
-					ctor: '::',
-					_0: A2(
-						_elm_lang$html$Html$label,
-						{
-							ctor: '::',
-							_0: _elm_lang$html$Html_Attributes$classList(
+								},
+								{ctor: '[]'});
+						default:
+							return A2(
+								_elm_lang$html$Html$input,
 								{
 									ctor: '::',
-									_0: {
-										ctor: '_Tuple2',
-										_0: h.classes.singleItemContainer,
-										_1: _elm_lang$core$Native_Utils.eq(config.maxItems, 1)
-									},
+									_0: _elm_lang$html$Html_Attributes$maxlength(0),
 									_1: {
+										ctor: '::',
+										_0: onFocusAtt,
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$value(''),
+											_1: {ctor: '[]'}
+										}
+									}
+								},
+								{ctor: '[]'});
+					}
+				}();
+				return A2(
+					_elm_lang$html$Html$div,
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html_Attributes$class(h.classes.container),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$label,
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html_Attributes$classList(
+									{
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: h.classes.multiItemContainer,
-											_1: _elm_lang$core$Native_Utils.cmp(config.maxItems, 1) > 0
+											_0: h.classes.singleItemContainer,
+											_1: _elm_lang$core$Native_Utils.eq(config.maxItems, 1)
 										},
-										_1: {ctor: '[]'}
-									}
-								}),
-							_1: {ctor: '[]'}
-						},
-						{
-							ctor: '::',
-							_0: A2(
-								_elm_lang$html$Html$span,
-								{
-									ctor: '::',
-									_0: _elm_lang$html$Html_Attributes$class(h.classes.selectBox),
-									_1: {
-										ctor: '::',
-										_0: keyDown,
-										_1: {ctor: '[]'}
-									}
-								},
-								{
-									ctor: '::',
-									_0: A2(
-										_elm_lang$html$Html$span,
-										{ctor: '[]'},
-										{
+										_1: {
 											ctor: '::',
-											_0: A4(_user$project$Selectize$itemsView, config, items, fallbackItems, state),
+											_0: {
+												ctor: '_Tuple2',
+												_0: h.classes.multiItemContainer,
+												_1: _elm_lang$core$Native_Utils.cmp(config.maxItems, 1) > 0
+											},
 											_1: {ctor: '[]'}
-										}),
-									_1: {
-										ctor: '::',
-										_0: editInput,
-										_1: {ctor: '[]'}
-									}
-								}),
-							_1: {
-								ctor: '::',
-								_0: A3(_user$project$Selectize$boxView, config, items, state),
+										}
+									}),
 								_1: {ctor: '[]'}
-							}
-						}),
-					_1: {ctor: '[]'}
-				});
+							},
+							{
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$span,
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html_Attributes$class(h.classes.selectBox),
+										_1: {
+											ctor: '::',
+											_0: keyDown,
+											_1: {ctor: '[]'}
+										}
+									},
+									{
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$span,
+											{ctor: '[]'},
+											{
+												ctor: '::',
+												_0: A4(_user$project$Selectize$itemsView, config, items, fallbackItems, state),
+												_1: {ctor: '[]'}
+											}),
+										_1: {
+											ctor: '::',
+											_0: editInput,
+											_1: {ctor: '[]'}
+										}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A3(_user$project$Selectize$boxView, config, items, state),
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {ctor: '[]'}
+					});
+			}
 		}
 	});
 
-var _user$project$ConfigTypes$cryptoToString = function (crypto) {
-	var _p0 = crypto;
-	if (_p0.ctor === 'GlobalCrypto') {
-		return 'global';
+var _user$project$ConfigTypes$fieldHolderToMaybe = function (fieldHolder) {
+	var _p0 = fieldHolder;
+	if (_p0.ctor === 'FieldOk') {
+		return _elm_lang$core$Maybe$Just(_p0._0);
 	} else {
-		return _p0._0;
+		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$ConfigTypes$machineToString = function (machine) {
-	var _p1 = machine;
-	if (_p1.ctor === 'GlobalMachine') {
+var _user$project$ConfigTypes$cryptoToString = function (crypto) {
+	var _p1 = crypto;
+	if (_p1.ctor === 'GlobalCrypto') {
 		return 'global';
 	} else {
 		return _p1._0;
 	}
 };
+var _user$project$ConfigTypes$machineToString = function (machine) {
+	var _p2 = machine;
+	if (_p2.ctor === 'GlobalMachine') {
+		return 'global';
+	} else {
+		return _p2._0;
+	}
+};
 var _user$project$ConfigTypes$fieldValueToString = function (fieldValue) {
-	var _p2 = fieldValue;
-	switch (_p2.ctor) {
+	var _p3 = fieldValue;
+	switch (_p3.ctor) {
 		case 'FieldStringValue':
-			return _p2._0;
+			return _p3._0;
 		case 'FieldPercentageValue':
-			return _elm_lang$core$Basics$toString(_p2._0);
+			return _elm_lang$core$Basics$toString(_p3._0);
 		case 'FieldIntegerValue':
-			return _elm_lang$core$Basics$toString(_p2._0);
+			return _elm_lang$core$Basics$toString(_p3._0);
 		case 'FieldOnOffValue':
-			return _p2._0 ? 'on' : 'off';
+			return _p3._0 ? 'on' : 'off';
 		case 'FieldAccountValue':
-			return _p2._0;
+			return _p3._0;
 		case 'FieldFiatCurrencyValue':
-			return _p2._0;
+			return _p3._0;
 		case 'FieldCryptoCurrencyValue':
 			return _elm_lang$core$Native_Utils.crashCase(
 				'ConfigTypes',
 				{
-					start: {line: 181, column: 5},
-					end: {line: 207, column: 43}
+					start: {line: 183, column: 5},
+					end: {line: 209, column: 43}
 				},
-				_p2)('N/A for cryptoCurrency');
+				_p3)('N/A for cryptoCurrency');
 		default:
 			return _elm_lang$core$Native_Utils.crashCase(
 				'ConfigTypes',
 				{
-					start: {line: 181, column: 5},
-					end: {line: 207, column: 43}
+					start: {line: 183, column: 5},
+					end: {line: 209, column: 43}
 				},
-				_p2)('N/A for language');
+				_p3)('N/A for language');
 	}
 };
 var _user$project$ConfigTypes$accountRecToDisplayRec = function (accountRec) {
@@ -20915,9 +20952,9 @@ var _user$project$ConfigTypes$FieldLocator = F4(
 	function (a, b, c, d) {
 		return {fieldScope: a, code: b, fieldType: c, fieldClass: d};
 	});
-var _user$project$ConfigTypes$FieldInstance = F5(
-	function (a, b, c, d, e) {
-		return {fieldLocator: a, component: b, fieldHolder: c, loadedFieldHolder: d, fieldValidation: e};
+var _user$project$ConfigTypes$FieldInstance = F6(
+	function (a, b, c, d, e, f) {
+		return {fieldLocator: a, component: b, fieldHolder: c, loadedFieldHolder: d, fieldValidation: e, fieldEnabledIf: f};
 	});
 var _user$project$ConfigTypes$ResolvedFieldInstance = F2(
 	function (a, b) {
@@ -20927,9 +20964,9 @@ var _user$project$ConfigTypes$Field = F2(
 	function (a, b) {
 		return {fieldLocator: a, fieldValue: b};
 	});
-var _user$project$ConfigTypes$FieldDescriptor = F5(
-	function (a, b, c, d, e) {
-		return {code: a, display: b, fieldType: c, fieldValidation: d, fieldClass: e};
+var _user$project$ConfigTypes$FieldDescriptor = F6(
+	function (a, b, c, d, e, f) {
+		return {code: a, display: b, fieldType: c, fieldValidation: d, fieldClass: e, fieldEnabledIf: f};
 	});
 var _user$project$ConfigTypes$ConfigSchema = F5(
 	function (a, b, c, d, e) {
@@ -20950,8 +20987,8 @@ var _user$project$ConfigTypes$ConfigData = F5(
 var _user$project$ConfigTypes$GlobalCrypto = {ctor: 'GlobalCrypto'};
 var _user$project$ConfigTypes$globalCryptoDisplay = {crypto: _user$project$ConfigTypes$GlobalCrypto, display: 'Global'};
 var _user$project$ConfigTypes$listCryptos = function (configGroup) {
-	var _p5 = configGroup.schema.cryptoScope;
-	switch (_p5.ctor) {
+	var _p6 = configGroup.schema.cryptoScope;
+	switch (_p6.ctor) {
 		case 'Specific':
 			return configGroup.data.cryptoCurrencies;
 		case 'Global':
@@ -20968,8 +21005,8 @@ var _user$project$ConfigTypes$CryptoCode = function (a) {
 	return {ctor: 'CryptoCode', _0: a};
 };
 var _user$project$ConfigTypes$stringToCrypto = function (string) {
-	var _p6 = string;
-	if (_p6 === 'global') {
+	var _p7 = string;
+	if (_p7 === 'global') {
 		return _user$project$ConfigTypes$GlobalCrypto;
 	} else {
 		return _user$project$ConfigTypes$CryptoCode(string);
@@ -20978,8 +21015,8 @@ var _user$project$ConfigTypes$stringToCrypto = function (string) {
 var _user$project$ConfigTypes$GlobalMachine = {ctor: 'GlobalMachine'};
 var _user$project$ConfigTypes$globalMachineDisplay = {machine: _user$project$ConfigTypes$GlobalMachine, display: 'Global'};
 var _user$project$ConfigTypes$listMachines = function (configGroup) {
-	var _p7 = configGroup.schema.machineScope;
-	switch (_p7.ctor) {
+	var _p8 = configGroup.schema.machineScope;
+	switch (_p8.ctor) {
 		case 'Specific':
 			return configGroup.data.machines;
 		case 'Global':
@@ -21032,11 +21069,11 @@ var _user$project$ConfigTypes$ParsingError = function (a) {
 	return {ctor: 'ParsingError', _0: a};
 };
 var _user$project$ConfigTypes$resultToFieldHolder = function (result) {
-	var _p8 = result;
-	if (_p8.ctor === 'Ok') {
-		return _user$project$ConfigTypes$FieldOk(_p8._0);
+	var _p9 = result;
+	if (_p9.ctor === 'Ok') {
+		return _user$project$ConfigTypes$FieldOk(_p9._0);
 	} else {
-		return _user$project$ConfigTypes$ParsingError(_p8._0);
+		return _user$project$ConfigTypes$ParsingError(_p9._0);
 	}
 };
 var _user$project$ConfigTypes$SelectizeComponent = function (a) {
@@ -21080,8 +21117,8 @@ var _user$project$ConfigTypes$stringToFieldHolder = F2(
 		if (_elm_lang$core$String$isEmpty(s)) {
 			return _user$project$ConfigTypes$FieldEmpty;
 		} else {
-			var _p9 = fieldType;
-			switch (_p9.ctor) {
+			var _p10 = fieldType;
+			switch (_p10.ctor) {
 				case 'FieldStringType':
 					return _user$project$ConfigTypes$FieldOk(
 						_user$project$ConfigTypes$FieldStringValue(s));
@@ -21098,8 +21135,8 @@ var _user$project$ConfigTypes$stringToFieldHolder = F2(
 							_user$project$ConfigTypes$FieldIntegerValue,
 							_elm_lang$core$String$toInt(s)));
 				case 'FieldOnOffType':
-					var _p10 = s;
-					switch (_p10) {
+					var _p11 = s;
+					switch (_p11) {
 						case 'on':
 							return _user$project$ConfigTypes$FieldOk(
 								_user$project$ConfigTypes$FieldOnOffValue(true));
@@ -21292,8 +21329,8 @@ var _user$project$ConfigDecoder$nullOr = function (decoder) {
 			}
 		});
 };
-var _user$project$ConfigDecoder$fieldDescriptorDecoder = A6(
-	_elm_lang$core$Json_Decode$map5,
+var _user$project$ConfigDecoder$fieldDescriptorDecoder = A7(
+	_elm_lang$core$Json_Decode$map6,
 	_user$project$ConfigTypes$FieldDescriptor,
 	A2(_elm_lang$core$Json_Decode$field, 'code', _elm_lang$core$Json_Decode$string),
 	A2(_elm_lang$core$Json_Decode$field, 'display', _elm_lang$core$Json_Decode$string),
@@ -21308,7 +21345,21 @@ var _user$project$ConfigDecoder$fieldDescriptorDecoder = A6(
 	A2(
 		_elm_lang$core$Json_Decode$field,
 		'fieldClass',
-		_user$project$ConfigDecoder$nullOr(_elm_lang$core$Json_Decode$string)));
+		_user$project$ConfigDecoder$nullOr(_elm_lang$core$Json_Decode$string)),
+	_elm_lang$core$Json_Decode$oneOf(
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$core$Json_Decode$field,
+				'enabledIf',
+				_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$string)),
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$core$Json_Decode$succeed(
+					{ctor: '[]'}),
+				_1: {ctor: '[]'}
+			}
+		}));
 var _user$project$ConfigDecoder$configSchemaDecoder = A6(
 	_elm_lang$core$Json_Decode$map5,
 	_user$project$ConfigTypes$ConfigSchema,
@@ -21646,6 +21697,7 @@ var _user$project$Css_Colors$amazonite = _rtfeldman$elm_css$Css$hex('37e8d7');
 var _user$project$Css_Colors$darkCobalt = _rtfeldman$elm_css$Css$hex('042c47');
 var _user$project$Css_Colors$cobalt = _rtfeldman$elm_css$Css$hex('004062');
 
+var _user$project$Css_Selectize$Disabled = {ctor: 'Disabled'};
 var _user$project$Css_Selectize$NoOptions = {ctor: 'NoOptions'};
 var _user$project$Css_Selectize$InfoNoMatches = {ctor: 'InfoNoMatches'};
 var _user$project$Css_Selectize$Info = {ctor: 'Info'};
@@ -22109,15 +22161,16 @@ var _user$project$SelectizeHelper$buildConfig = F2(
 			onFocus: localConfig.onFocus,
 			onBlur: localConfig.onBlur,
 			toId: localConfig.toId,
+			enabled: localConfig.enabled,
 			selectedDisplay: specificConfig.selectedDisplay,
 			optionDisplay: specificConfig.optionDisplay,
 			match: specificConfig.match,
-			htmlOptions: {instructionsForBlank: 'Start typing for options', noMatches: 'No matches', atMaxLength: 'Type backspace to edit', typeForMore: 'Type for more options', noOptions: 'No options', classes: _user$project$Css_Selectize$classes}
+			htmlOptions: {instructionsForBlank: 'Start typing for options', noMatches: 'No matches', atMaxLength: 'Type backspace to edit', typeForMore: 'Type for more options', noOptions: 'No options', notAvailable: 'N/A', classes: _user$project$Css_Selectize$classes}
 		};
 	});
-var _user$project$SelectizeHelper$LocalConfig = F6(
-	function (a, b, c, d, e, f) {
-		return {toMsg: a, onAdd: b, onRemove: c, onFocus: d, onBlur: e, toId: f};
+var _user$project$SelectizeHelper$LocalConfig = F7(
+	function (a, b, c, d, e, f, g) {
+		return {toMsg: a, onAdd: b, onRemove: c, onFocus: d, onBlur: e, toId: f, enabled: g};
 	});
 var _user$project$SelectizeHelper$SpecificConfig = F4(
 	function (a, b, c, d) {
@@ -22215,8 +22268,8 @@ var _user$project$Config$updateSelectize = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 910, column: 17},
-							end: {line: 915, column: 56}
+							start: {line: 994, column: 17},
+							end: {line: 999, column: 56}
 						},
 						_p0)('Shouldn\'t be here');
 				}
@@ -22251,26 +22304,21 @@ var _user$project$Config$fieldInstanceToMaybeFieldValue = function (fieldInstanc
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
-var _user$project$Config$pickFieldInstance = F2(
-	function (fieldLocator, fieldInstances) {
-		var sameLocation = F2(
-			function (targetFieldLocator, fieldInstance) {
-				return _elm_lang$core$Native_Utils.eq(fieldInstance.fieldLocator, targetFieldLocator);
-			});
+var _user$project$Config$pickFieldInstance = F3(
+	function (fieldCode, fieldScope, fieldInstances) {
+		var sameScope = function (fieldInstance) {
+			return _elm_lang$core$Native_Utils.eq(fieldInstance.fieldLocator.code, fieldCode) && _elm_lang$core$Native_Utils.eq(fieldInstance.fieldLocator.fieldScope, fieldScope);
+		};
 		return _elm_lang$core$List$head(
-			A2(
-				_elm_lang$core$List$filter,
-				sameLocation(fieldLocator),
-				fieldInstances));
+			A2(_elm_lang$core$List$filter, sameScope, fieldInstances));
 	});
-var _user$project$Config$pickFieldInstanceValue = F6(
-	function (fieldType, fieldCode, fieldClass, fieldInstances, crypto, machine) {
+var _user$project$Config$pickFieldInstanceValue = F4(
+	function (fieldCode, fieldInstances, crypto, machine) {
 		var fieldScope = {crypto: crypto, machine: machine};
-		var fieldLocator = {fieldScope: fieldScope, code: fieldCode, fieldType: fieldType, fieldClass: fieldClass};
 		return A2(
 			_elm_lang$core$Maybe$andThen,
 			_user$project$Config$fieldInstanceToMaybeFieldValue,
-			A2(_user$project$Config$pickFieldInstance, fieldLocator, fieldInstances));
+			A3(_user$project$Config$pickFieldInstance, fieldCode, fieldScope, fieldInstances));
 	});
 var _user$project$Config$buildFieldComponent = F4(
 	function (configGroup, fieldType, fieldScope, fieldValue) {
@@ -22329,7 +22377,8 @@ var _user$project$Config$initFieldInstance = F3(
 			component: component,
 			fieldHolder: maybeToFieldHolder(maybeValue),
 			loadedFieldHolder: maybeToFieldHolder(maybeValue),
-			fieldValidation: fieldDescriptor.fieldValidation
+			fieldValidation: fieldDescriptor.fieldValidation,
+			fieldEnabledIf: fieldDescriptor.fieldEnabledIf
 		};
 	});
 var _user$project$Config$initFieldInstancesPerEntry = F2(
@@ -22357,10 +22406,20 @@ var _user$project$Config$maybeToList = function (maybe) {
 		};
 	}
 };
-var _user$project$Config$isField = F2(
-	function (fieldCode, field) {
-		return _elm_lang$core$Native_Utils.eq(field.fieldLocator.code, fieldCode);
-	});
+var _user$project$Config$isField = function (fieldValue) {
+	var _p6 = fieldValue;
+	if (_p6.ctor === 'FieldOnOffValue') {
+		return _p6._0;
+	} else {
+		return _elm_lang$core$Native_Utils.crashCase(
+			'Config',
+			{
+				start: {line: 840, column: 5},
+				end: {line: 845, column: 59}
+			},
+			_p6)('Referenced field must be boolean');
+	}
+};
 var _user$project$Config$headerCellView = function (fieldDescriptor) {
 	return A2(
 		_elm_lang$html$Html$td,
@@ -22384,6 +22443,67 @@ var _user$project$Config$headerRowView = F2(
 					{ctor: '[]'}),
 				_1: A2(_elm_lang$core$List$map, _user$project$Config$headerCellView, configGroup.schema.entries)
 			});
+	});
+var _user$project$Config$fieldInstanceToField = function (fieldInstance) {
+	var buildFieldInstance = function (fieldValue) {
+		return {fieldLocator: fieldInstance.fieldLocator, fieldValue: fieldValue};
+	};
+	var maybeFieldValue = _user$project$ConfigTypes$fieldHolderToMaybe(fieldInstance.fieldHolder);
+	return A2(_elm_lang$core$Maybe$map, buildFieldInstance, maybeFieldValue);
+};
+var _user$project$Config$fallbackValue = F3(
+	function (fieldScope, fieldInstances, fieldCode) {
+		var pick = A2(_user$project$Config$pickFieldInstanceValue, fieldCode, fieldInstances);
+		var maybeGlobal = A2(pick, _user$project$ConfigTypes$GlobalCrypto, _user$project$ConfigTypes$GlobalMachine);
+		var maybeGlobalCrypto = A2(pick, _user$project$ConfigTypes$GlobalCrypto, fieldScope.machine);
+		var maybeGlobalMachine = A2(pick, fieldScope.crypto, _user$project$ConfigTypes$GlobalMachine);
+		var maybeSpecific = A2(pick, fieldScope.crypto, fieldScope.machine);
+		return A2(
+			_elm_community$maybe_extra$Maybe_Extra$or,
+			maybeGlobal,
+			A2(
+				_elm_community$maybe_extra$Maybe_Extra$or,
+				maybeGlobalCrypto,
+				A2(_elm_community$maybe_extra$Maybe_Extra$or, maybeGlobalMachine, maybeSpecific)));
+	});
+var _user$project$Config$referenceFields = F3(
+	function (fieldScope, fields, fieldCodes) {
+		var matchesMachine = function (targetMachine) {
+			return _elm_lang$core$Native_Utils.eq(fieldScope.machine, _user$project$ConfigTypes$GlobalMachine) ? true : _elm_lang$core$Native_Utils.eq(fieldScope.machine, targetMachine);
+		};
+		var matchesCrypto = function (targetCrypto) {
+			return _elm_lang$core$Native_Utils.eq(fieldScope.crypto, _user$project$ConfigTypes$GlobalCrypto) ? true : _elm_lang$core$Native_Utils.eq(fieldScope.crypto, targetCrypto);
+		};
+		var filter = function (field) {
+			return A2(_elm_lang$core$List$member, field.fieldLocator.code, fieldCodes) && (matchesCrypto(field.fieldLocator.fieldScope.crypto) && matchesMachine(field.fieldLocator.fieldScope.machine));
+		};
+		return A2(
+			_elm_lang$core$List$map,
+			function (_) {
+				return _.fieldValue;
+			},
+			A2(_elm_lang$core$List$filter, filter, fields));
+	});
+var _user$project$Config$referenceFieldInstances = F3(
+	function (fieldScope, fieldInstances, fieldCodes) {
+		var matchesMachine = function (targetMachine) {
+			return _elm_lang$core$Native_Utils.eq(fieldScope.machine, _user$project$ConfigTypes$GlobalMachine) ? true : _elm_lang$core$Native_Utils.eq(fieldScope.machine, targetMachine);
+		};
+		var matchesCrypto = function (targetCrypto) {
+			return _elm_lang$core$Native_Utils.eq(fieldScope.crypto, _user$project$ConfigTypes$GlobalCrypto) ? true : _elm_lang$core$Native_Utils.eq(fieldScope.crypto, targetCrypto);
+		};
+		var filter = function (fieldInstance) {
+			return A2(_elm_lang$core$List$member, fieldInstance.fieldLocator.code, fieldCodes) && (matchesCrypto(fieldInstance.fieldLocator.fieldScope.crypto) && matchesMachine(fieldInstance.fieldLocator.fieldScope.machine));
+		};
+		return A2(
+			_elm_lang$core$List$filterMap,
+			function (_p8) {
+				return _user$project$ConfigTypes$fieldHolderToMaybe(
+					function (_) {
+						return _.fieldHolder;
+					}(_p8));
+			},
+			A2(_elm_lang$core$List$filter, filter, fieldInstances));
 	});
 var _user$project$Config$onOffSelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
@@ -22421,21 +22541,21 @@ var _user$project$Config$onOffSelectizeView = F6(
 var _user$project$Config$languageSelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
 		var toList = function (maybeValue) {
-			var _p6 = maybeValue;
-			if (_p6.ctor === 'Nothing') {
+			var _p9 = maybeValue;
+			if (_p9.ctor === 'Nothing') {
 				return {ctor: '[]'};
 			} else {
-				var _p7 = _p6._0;
-				if (_p7.ctor === 'FieldLanguageValue') {
-					return _p7._0;
+				var _p10 = _p9._0;
+				if (_p10.ctor === 'FieldLanguageValue') {
+					return _p10._0;
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 461, column: 21},
-							end: {line: 466, column: 60}
+							start: {line: 460, column: 21},
+							end: {line: 465, column: 60}
 						},
-						_p7)('Shouldn\'t be here');
+						_p10)('Shouldn\'t be here');
 				}
 			}
 		};
@@ -22463,21 +22583,21 @@ var _user$project$Config$languageSelectizeView = F6(
 var _user$project$Config$cryptoCurrencySelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
 		var toList = function (maybeValue) {
-			var _p9 = maybeValue;
-			if (_p9.ctor === 'Nothing') {
+			var _p12 = maybeValue;
+			if (_p12.ctor === 'Nothing') {
 				return {ctor: '[]'};
 			} else {
-				var _p10 = _p9._0;
-				if (_p10.ctor === 'FieldCryptoCurrencyValue') {
-					return _p10._0;
+				var _p13 = _p12._0;
+				if (_p13.ctor === 'FieldCryptoCurrencyValue') {
+					return _p13._0;
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 415, column: 21},
-							end: {line: 420, column: 60}
+							start: {line: 414, column: 21},
+							end: {line: 419, column: 60}
 						},
-						_p10)('Shouldn\'t be here');
+						_p13)('Shouldn\'t be here');
 				}
 			}
 		};
@@ -22537,23 +22657,19 @@ var _user$project$Config$accountSelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
 		var fallbackIds = _user$project$Config$maybeToList(
 			A2(_elm_lang$core$Maybe$map, _user$project$ConfigTypes$fieldValueToString, maybeFallbackFieldValue));
-		var _p12 = A2(
-			_elm_lang$core$Debug$log,
-			'DEBUG26',
-			{ctor: '_Tuple2', _0: fieldInstance.fieldLocator.fieldScope.machine, _1: fallbackIds});
 		var selectedIds = _user$project$Config$maybeToList(
 			A2(_elm_lang$core$Maybe$map, _user$project$ConfigTypes$fieldValueToString, maybeFieldValue));
 		var matchAccount = function (accountRec) {
-			var _p13 = fieldInstance.fieldLocator.fieldClass;
-			if (_p13.ctor === 'Nothing') {
+			var _p15 = fieldInstance.fieldLocator.fieldClass;
+			if (_p15.ctor === 'Nothing') {
 				return true;
 			} else {
-				return _elm_lang$core$Native_Utils.eq(accountRec.$class, _p13._0) && function () {
-					var _p14 = accountRec.cryptos;
-					if (_p14.ctor === 'Nothing') {
+				return _elm_lang$core$Native_Utils.eq(accountRec.$class, _p15._0) && function () {
+					var _p16 = accountRec.cryptos;
+					if (_p16.ctor === 'Nothing') {
 						return true;
 					} else {
-						return A2(_elm_lang$core$List$member, model.crypto, _p14._0);
+						return A2(_elm_lang$core$List$member, model.crypto, _p16._0);
 					}
 				}();
 			}
@@ -22581,23 +22697,23 @@ var _user$project$Config$accountSelectizeView = F6(
 			selectizeState);
 	});
 var _user$project$Config$buildValidationAttribute = function (fieldValidator) {
-	var _p15 = fieldValidator;
-	switch (_p15.ctor) {
+	var _p17 = fieldValidator;
+	switch (_p17.ctor) {
 		case 'FieldMin':
 			return _elm_lang$core$Maybe$Just(
 				_elm_lang$html$Html_Attributes$min(
-					_elm_lang$core$Basics$toString(_p15._0)));
+					_elm_lang$core$Basics$toString(_p17._0)));
 		case 'FieldMax':
 			return _elm_lang$core$Maybe$Just(
 				_elm_lang$html$Html_Attributes$max(
-					_elm_lang$core$Basics$toString(_p15._0)));
+					_elm_lang$core$Basics$toString(_p17._0)));
 		default:
 			return _elm_lang$core$Maybe$Nothing;
 	}
 };
 var _user$project$Config$fieldTypeToInputType = function (fieldType) {
-	var _p16 = fieldType;
-	if (_p16.ctor === 'FieldPercentageType') {
+	var _p18 = fieldType;
+	if (_p18.ctor === 'FieldPercentageType') {
 		return 'number';
 	} else {
 		return 'string';
@@ -22612,22 +22728,22 @@ var _user$project$Config$emptyToNothing = function (list) {
 	return _elm_lang$core$List$isEmpty(list) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(list);
 };
 var _user$project$Config$fieldHolderToList = function (fieldHolder) {
-	var _p17 = fieldHolder;
-	if (_p17.ctor === 'FieldOk') {
-		var _p18 = _p17._0;
-		switch (_p18.ctor) {
+	var _p19 = fieldHolder;
+	if (_p19.ctor === 'FieldOk') {
+		var _p20 = _p19._0;
+		switch (_p20.ctor) {
 			case 'FieldLanguageValue':
-				return _p18._0;
+				return _p20._0;
 			case 'FieldCryptoCurrencyValue':
-				return _p18._0;
+				return _p20._0;
 			default:
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Config',
 					{
-						start: {line: 133, column: 13},
-						end: {line: 141, column: 50}
+						start: {line: 132, column: 13},
+						end: {line: 140, column: 50}
 					},
-					_p18)('Not a list type');
+					_p20)('Not a list type');
 		}
 	} else {
 		return {ctor: '[]'};
@@ -22636,13 +22752,13 @@ var _user$project$Config$fieldHolderToList = function (fieldHolder) {
 var _user$project$Config$updateStringFieldInstance = F3(
 	function (fieldLocator, maybeString, fieldInstance) {
 		if (_elm_lang$core$Native_Utils.eq(fieldInstance.fieldLocator, fieldLocator)) {
-			var _p20 = fieldLocator.fieldType;
-			switch (_p20.ctor) {
+			var _p22 = fieldLocator.fieldType;
+			switch (_p22.ctor) {
 				case 'FieldLanguageType':
 					var list = _user$project$Config$fieldHolderToList(fieldInstance.fieldHolder);
 					var newList = function () {
-						var _p21 = maybeString;
-						if (_p21.ctor === 'Nothing') {
+						var _p23 = maybeString;
+						if (_p23.ctor === 'Nothing') {
 							return A2(
 								_elm_lang$core$List$take,
 								_elm_lang$core$List$length(list) - 1,
@@ -22653,7 +22769,7 @@ var _user$project$Config$updateStringFieldInstance = F3(
 								list,
 								{
 									ctor: '::',
-									_0: _p21._0,
+									_0: _p23._0,
 									_1: {ctor: '[]'}
 								});
 						}
@@ -22666,8 +22782,8 @@ var _user$project$Config$updateStringFieldInstance = F3(
 				case 'FieldCryptoCurrencyType':
 					var list = _user$project$Config$fieldHolderToList(fieldInstance.fieldHolder);
 					var newList = function () {
-						var _p22 = maybeString;
-						if (_p22.ctor === 'Nothing') {
+						var _p24 = maybeString;
+						if (_p24.ctor === 'Nothing') {
 							return A2(
 								_elm_lang$core$List$take,
 								_elm_lang$core$List$length(list) - 1,
@@ -22678,7 +22794,7 @@ var _user$project$Config$updateStringFieldInstance = F3(
 								list,
 								{
 									ctor: '::',
-									_0: _p22._0,
+									_0: _p24._0,
 									_1: {ctor: '[]'}
 								});
 						}
@@ -22690,11 +22806,11 @@ var _user$project$Config$updateStringFieldInstance = F3(
 						});
 				default:
 					var fieldHolder = function () {
-						var _p23 = maybeString;
-						if (_p23.ctor === 'Nothing') {
+						var _p25 = maybeString;
+						if (_p25.ctor === 'Nothing') {
 							return _user$project$ConfigTypes$FieldEmpty;
 						} else {
-							return A2(_user$project$ConfigTypes$stringToFieldHolder, fieldLocator.fieldType, _p23._0);
+							return A2(_user$project$ConfigTypes$stringToFieldHolder, fieldLocator.fieldType, _p25._0);
 						}
 					}();
 					return _elm_lang$core$Native_Utils.update(
@@ -22738,12 +22854,12 @@ var _user$project$Config$placeField = F2(
 					field),
 				fieldList));
 		var newField = function () {
-			var _p24 = maybeOldField;
-			if (_p24.ctor === 'Nothing') {
+			var _p26 = maybeOldField;
+			if (_p26.ctor === 'Nothing') {
 				return field;
 			} else {
 				return _elm_lang$core$Native_Utils.update(
-					_p24._0,
+					_p26._0,
 					{fieldValue: field.fieldValue});
 			}
 		}();
@@ -22752,14 +22868,14 @@ var _user$project$Config$placeField = F2(
 			_0: newField,
 			_1: A2(
 				_elm_lang$core$List$filter,
-				function (_p25) {
+				function (_p27) {
 					return !A3(
 						_user$project$Config$similar,
 						function (_) {
 							return _.fieldLocator;
 						},
 						field,
-						_p25);
+						_p27);
 				},
 				fieldList)
 		};
@@ -22820,8 +22936,8 @@ var _user$project$Config$SelectizeMsg = F2(
 	function (a, b) {
 		return {ctor: 'SelectizeMsg', _0: a, _1: b};
 	});
-var _user$project$Config$selectizeView = F5(
-	function (model, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
+var _user$project$Config$selectizeView = F6(
+	function (model, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue, enabled) {
 		var fieldLocator = fieldInstance.fieldLocator;
 		var localConfig = {
 			toMsg: _user$project$Config$SelectizeMsg(fieldLocator),
@@ -22831,10 +22947,11 @@ var _user$project$Config$selectizeView = F5(
 			onBlur: _user$project$Config$BlurSelectize(fieldLocator),
 			toId: function (_) {
 				return _.code;
-			}
+			},
+			enabled: enabled
 		};
-		var _p26 = fieldLocator.fieldType;
-		switch (_p26.ctor) {
+		var _p28 = fieldLocator.fieldType;
+		switch (_p28.ctor) {
 			case 'FieldAccountType':
 				return A6(_user$project$Config$accountSelectizeView, model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue);
 			case 'FieldFiatCurrencyType':
@@ -22849,10 +22966,10 @@ var _user$project$Config$selectizeView = F5(
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Config',
 					{
-						start: {line: 502, column: 9},
-						end: {line: 544, column: 52}
+						start: {line: 503, column: 9},
+						end: {line: 545, column: 52}
 					},
-					_p26)('Not a Selectize field');
+					_p28)('Not a Selectize field');
 		}
 	});
 var _user$project$Config$CryptoSwitch = function (a) {
@@ -22861,12 +22978,12 @@ var _user$project$Config$CryptoSwitch = function (a) {
 var _user$project$Config$cryptoView = F2(
 	function (maybeActiveCrypto, cryptoDisplay) {
 		var activeClass = function () {
-			var _p28 = maybeActiveCrypto;
-			if (_p28.ctor === 'Nothing') {
+			var _p30 = maybeActiveCrypto;
+			if (_p30.ctor === 'Nothing') {
 				return _user$project$Css_Admin$class(
 					{ctor: '[]'});
 			} else {
-				return _elm_lang$core$Native_Utils.eq(_p28._0, cryptoDisplay.crypto) ? _user$project$Css_Admin$class(
+				return _elm_lang$core$Native_Utils.eq(_p30._0, cryptoDisplay.crypto) ? _user$project$Css_Admin$class(
 					{
 						ctor: '::',
 						_0: _user$project$Css_Classes$Active,
@@ -22917,8 +23034,8 @@ var _user$project$Config$Input = F2(
 	function (a, b) {
 		return {ctor: 'Input', _0: a, _1: b};
 	});
-var _user$project$Config$textInput = F3(
-	function (fieldInstance, maybeFieldValue, maybeFallbackFieldValue) {
+var _user$project$Config$textInput = F4(
+	function (fieldInstance, maybeFieldValue, maybeFallbackFieldValue, enabled) {
 		var validations = A2(_elm_lang$core$List$filterMap, _user$project$Config$buildValidationAttribute, fieldInstance.fieldValidation);
 		var maybeFallbackString = A2(_elm_lang$core$Maybe$map, _user$project$ConfigTypes$fieldValueToString, maybeFallbackFieldValue);
 		var fallbackString = A2(_elm_lang$core$Maybe$withDefault, '', maybeFallbackString);
@@ -22927,7 +23044,7 @@ var _user$project$Config$textInput = F3(
 			_user$project$Css_Classes$Fail,
 			A2(
 				_elm_lang$core$Maybe$map,
-				function (_p29) {
+				function (_p31) {
 					return _user$project$Css_Classes$Success;
 				},
 				maybeFallbackString));
@@ -22935,7 +23052,7 @@ var _user$project$Config$textInput = F3(
 		var defaultString = A2(_elm_lang$core$Maybe$withDefault, '', maybeSpecificString);
 		var fieldLocator = fieldInstance.fieldLocator;
 		var inputType = _user$project$Config$fieldTypeToInputType(fieldLocator.fieldType);
-		return A2(
+		return enabled ? A2(
 			_elm_lang$html$Html$input,
 			A2(
 				_elm_lang$core$Basics_ops['++'],
@@ -22981,45 +23098,62 @@ var _user$project$Config$textInput = F3(
 					}
 				},
 				validations),
-			{ctor: '[]'});
+			{ctor: '[]'}) : A2(
+			_elm_lang$html$Html$div,
+			{
+				ctor: '::',
+				_0: _user$project$Css_Admin$class(
+					{
+						ctor: '::',
+						_0: _user$project$Css_Classes$BasicInputDisabled,
+						_1: {ctor: '[]'}
+					}),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text('N/A'),
+				_1: {ctor: '[]'}
+			});
 	});
-var _user$project$Config$fieldInput = F4(
-	function (model, fieldInstance, maybeFieldValue, maybeFallbackFieldValue) {
-		var _p30 = fieldInstance.component;
-		if (_p30.ctor === 'InputBoxComponent') {
-			return A3(_user$project$Config$textInput, fieldInstance, maybeFieldValue, maybeFallbackFieldValue);
+var _user$project$Config$fieldInput = F5(
+	function (model, fieldInstance, maybeFieldValue, maybeFallbackFieldValue, enabled) {
+		var _p32 = fieldInstance.component;
+		if (_p32.ctor === 'InputBoxComponent') {
+			return A4(_user$project$Config$textInput, fieldInstance, maybeFieldValue, maybeFallbackFieldValue, enabled);
 		} else {
-			return A5(_user$project$Config$selectizeView, model, fieldInstance, _p30._0, maybeFieldValue, maybeFallbackFieldValue);
+			return A6(_user$project$Config$selectizeView, model, fieldInstance, _p32._0, maybeFieldValue, maybeFallbackFieldValue, enabled);
 		}
 	});
 var _user$project$Config$fieldComponent = F2(
 	function (model, fieldInstance) {
 		var maybeSpecific = function () {
-			var _p31 = fieldInstance.fieldHolder;
-			if (_p31.ctor === 'FieldOk') {
-				return _elm_lang$core$Maybe$Just(_p31._0);
+			var _p33 = fieldInstance.fieldHolder;
+			if (_p33.ctor === 'FieldOk') {
+				return _elm_lang$core$Maybe$Just(_p33._0);
 			} else {
 				return _elm_lang$core$Maybe$Nothing;
 			}
 		}();
-		var instances = model.fieldInstances;
+		var fieldInstances = model.fieldInstances;
 		var fieldLocator = fieldInstance.fieldLocator;
 		var fieldScope = fieldLocator.fieldScope;
+		var enabled = function () {
+			if (_elm_lang$core$List$isEmpty(fieldInstance.fieldEnabledIf)) {
+				return true;
+			} else {
+				var enabledInstances = A2(
+					_elm_lang$core$Basics_ops['++'],
+					A3(_user$project$Config$referenceFields, fieldScope, model.configGroup.values, fieldInstance.fieldEnabledIf),
+					A3(_user$project$Config$referenceFieldInstances, fieldScope, model.fieldInstances, fieldInstance.fieldEnabledIf));
+				return A2(_elm_lang$core$List$any, _user$project$Config$isField, enabledInstances);
+			}
+		}();
 		var fieldCode = fieldLocator.code;
+		var maybeFallbackFieldValue = A3(_user$project$Config$fallbackValue, fieldScope, fieldInstances, fieldCode);
 		var fieldClass = fieldLocator.fieldClass;
 		var fieldType = fieldLocator.fieldType;
-		var pick = A4(_user$project$Config$pickFieldInstanceValue, fieldType, fieldCode, fieldClass, instances);
-		var maybeGlobal = A2(pick, _user$project$ConfigTypes$GlobalCrypto, _user$project$ConfigTypes$GlobalMachine);
-		var maybeGlobalCrypto = A2(pick, _user$project$ConfigTypes$GlobalCrypto, fieldScope.machine);
-		var maybeGlobalMachine = A2(pick, fieldScope.crypto, _user$project$ConfigTypes$GlobalMachine);
-		var maybeFallbackFieldValue = A2(
-			_elm_community$maybe_extra$Maybe_Extra$or,
-			maybeGlobal,
-			A2(
-				_elm_community$maybe_extra$Maybe_Extra$or,
-				maybeGlobalCrypto,
-				A2(_elm_community$maybe_extra$Maybe_Extra$or, maybeGlobalMachine, maybeSpecific)));
-		return A4(_user$project$Config$fieldInput, model, fieldInstance, maybeSpecific, maybeFallbackFieldValue);
+		return A5(_user$project$Config$fieldInput, model, fieldInstance, maybeSpecific, maybeFallbackFieldValue, enabled);
 	});
 var _user$project$Config$cellView = F2(
 	function (model, fieldInstance) {
@@ -23081,8 +23215,8 @@ var _user$project$Config$rowView = F3(
 		};
 		var machine = machineDisplay.machine;
 		var globalRowClass = function () {
-			var _p32 = machine;
-			if (_p32.ctor === 'GlobalMachine') {
+			var _p34 = machine;
+			if (_p34.ctor === 'GlobalMachine') {
 				return _user$project$Css_Admin$class(
 					{
 						ctor: '::',
@@ -23168,8 +23302,8 @@ var _user$project$Config$tableView = function (model) {
 };
 var _user$project$Config$Submit = {ctor: 'Submit'};
 var _user$project$Config$view = function (model) {
-	var _p33 = model.webConfigGroup;
-	switch (_p33.ctor) {
+	var _p35 = model.webConfigGroup;
+	switch (_p35.ctor) {
 		case 'NotAsked':
 			return A2(
 				_elm_lang$html$Html$div,
@@ -23191,20 +23325,20 @@ var _user$project$Config$view = function (model) {
 				{
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(_p33._0)),
+						_elm_lang$core$Basics$toString(_p35._0)),
 					_1: {ctor: '[]'}
 				});
 		default:
-			var _p35 = _p33._0;
+			var _p37 = _p35._0;
 			var statusString = function () {
-				var _p34 = model.status;
-				if (_p34.ctor === 'Saved') {
+				var _p36 = model.status;
+				if (_p36.ctor === 'Saved') {
 					return 'Saved';
 				} else {
 					return '';
 				}
 			}();
-			var resolvedModel = A2(_user$project$Config$toResolvedModel, model, _p35);
+			var resolvedModel = A2(_user$project$Config$toResolvedModel, model, _p37);
 			var configGroupView = A2(
 				_elm_lang$html$Html$div,
 				{
@@ -23288,7 +23422,7 @@ var _user$project$Config$view = function (model) {
 						_1: {ctor: '[]'}
 					}
 				});
-			return _elm_lang$core$Native_Utils.eq(_p35.schema.cryptoScope, _user$project$ConfigTypes$Global) ? A2(
+			return _elm_lang$core$Native_Utils.eq(_p37.schema.cryptoScope, _user$project$ConfigTypes$Global) ? A2(
 				_elm_lang$html$Html$div,
 				{ctor: '[]'},
 				{
@@ -23307,7 +23441,7 @@ var _user$project$Config$view = function (model) {
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(_p35.schema.display),
+							_0: _elm_lang$html$Html$text(_p37.schema.display),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -23334,7 +23468,7 @@ var _user$project$Config$view = function (model) {
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(_p35.schema.display),
+							_0: _elm_lang$html$Html$text(_p37.schema.display),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -23344,7 +23478,7 @@ var _user$project$Config$view = function (model) {
 							{ctor: '[]'},
 							{
 								ctor: '::',
-								_0: A2(_user$project$Config$cryptosView, model.crypto, _p35),
+								_0: A2(_user$project$Config$cryptosView, model.crypto, _p37),
 								_1: {ctor: '[]'}
 							}),
 						_1: {
@@ -23392,51 +23526,45 @@ var _user$project$Config$postForm = F2(
 				_lukewestby$elm_http_builder$HttpBuilder$send,
 				_krisajenkins$remotedata$RemoteData$fromResult,
 				A2(
-					_elm_lang$core$Debug$log,
-					'DEBUG103',
+					_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+					_elm_lang$http$Http$expectJson(_user$project$ConfigDecoder$configGroupDecoder),
 					A2(
-						_lukewestby$elm_http_builder$HttpBuilder$withExpect,
-						_elm_lang$http$Http$expectJson(_user$project$ConfigDecoder$configGroupDecoder),
-						A2(
-							_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
-							A2(
-								_elm_lang$core$Debug$log,
-								'DEBUG102',
-								A2(_user$project$ConfigEncoder$encodeResults, configGroupCode, fieldInstances)),
-							_lukewestby$elm_http_builder$HttpBuilder$post('/api/config'))))));
+						_lukewestby$elm_http_builder$HttpBuilder$withJsonBody,
+						A2(_user$project$ConfigEncoder$encodeResults, configGroupCode, fieldInstances),
+						_lukewestby$elm_http_builder$HttpBuilder$post('/api/config')))));
 	});
 var _user$project$Config$update = F2(
 	function (msg, model) {
-		var _p36 = msg;
-		switch (_p36.ctor) {
+		var _p38 = msg;
+		switch (_p38.ctor) {
 			case 'Load':
-				var _p41 = _p36._0;
+				var _p43 = _p38._0;
 				var defaultCrypto = function () {
-					var _p37 = _p41;
-					if (_p37.ctor === 'Success') {
+					var _p39 = _p43;
+					if (_p39.ctor === 'Success') {
 						return A2(
 							_elm_lang$core$Maybe$map,
 							function (_) {
 								return _.crypto;
 							},
 							_elm_lang$core$List$head(
-								_user$project$ConfigTypes$listCryptos(_p37._0)));
+								_user$project$ConfigTypes$listCryptos(_p39._0)));
 					} else {
 						return _elm_lang$core$Maybe$Nothing;
 					}
 				}();
 				var crypto = function () {
-					var _p38 = model.crypto;
-					if (_p38.ctor === 'Nothing') {
-						return A2(_elm_lang$core$Debug$log, 'DEBUG27', defaultCrypto);
+					var _p40 = model.crypto;
+					if (_p40.ctor === 'Nothing') {
+						return defaultCrypto;
 					} else {
-						return _elm_lang$core$Maybe$Just(_p38._0);
+						return _elm_lang$core$Maybe$Just(_p40._0);
 					}
 				}();
 				var fieldInstances = function () {
-					var _p39 = _p41;
-					if (_p39.ctor === 'Success') {
-						return _user$project$Config$initFieldInstances(_p39._0);
+					var _p41 = _p43;
+					if (_p41.ctor === 'Success') {
+						return _user$project$Config$initFieldInstances(_p41._0);
 					} else {
 						return {ctor: '[]'};
 					}
@@ -23444,7 +23572,7 @@ var _user$project$Config$update = F2(
 				var status = _elm_lang$core$Native_Utils.eq(model.status, _user$project$Config$Saving) ? _user$project$Config$Saved : model.status;
 				var cmd = _elm_lang$core$Native_Utils.eq(status, _user$project$Config$Saved) ? A2(
 					_elm_lang$core$Task$perform,
-					function (_p40) {
+					function (_p42) {
 						return _user$project$Config$HideSaveIndication;
 					},
 					_elm_lang$core$Process$sleep(2 * _elm_lang$core$Time$second)) : _elm_lang$core$Platform_Cmd$none;
@@ -23452,12 +23580,12 @@ var _user$project$Config$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{webConfigGroup: _p41, fieldInstances: fieldInstances, status: status, crypto: crypto}),
+						{webConfigGroup: _p43, fieldInstances: fieldInstances, status: status, crypto: crypto}),
 					_1: cmd
 				};
 			case 'Submit':
-				var _p42 = model.webConfigGroup;
-				if (_p42.ctor === 'Success') {
+				var _p44 = model.webConfigGroup;
+				if (_p44.ctor === 'Success') {
 					return A2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
 						_elm_lang$core$Native_Utils.update(
@@ -23465,7 +23593,7 @@ var _user$project$Config$update = F2(
 							{status: _user$project$Config$Saving}),
 						{
 							ctor: '::',
-							_0: A2(_user$project$Config$postForm, _p42._0.schema.code, model.fieldInstances),
+							_0: A2(_user$project$Config$postForm, _p44._0.schema.code, model.fieldInstances),
 							_1: {ctor: '[]'}
 						});
 				} else {
@@ -23479,21 +23607,21 @@ var _user$project$Config$update = F2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateInput,
-						_p36._0,
-						_elm_lang$core$Maybe$Just(_p36._1),
+						_p38._0,
+						_elm_lang$core$Maybe$Just(_p38._1),
 						model),
 					{ctor: '[]'});
 			case 'CryptoSwitch':
-				var _p44 = _p36._0;
-				var _p43 = model.webConfigGroup;
-				if (_p43.ctor === 'Success') {
-					var cryptoCode = _user$project$ConfigTypes$cryptoToString(_p44);
+				var _p46 = _p38._0;
+				var _p45 = model.webConfigGroup;
+				if (_p45.ctor === 'Success') {
+					var cryptoCode = _user$project$ConfigTypes$cryptoToString(_p46);
 					var path = A2(
 						_elm_lang$core$Basics_ops['++'],
 						'#config/',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_p43._0.schema.code,
+							_p45._0.schema.code,
 							A2(_elm_lang$core$Basics_ops['++'], '/', cryptoCode)));
 					var command = _elm_lang$navigation$Navigation$newUrl(path);
 					return A2(
@@ -23501,7 +23629,7 @@ var _user$project$Config$update = F2(
 						_elm_lang$core$Native_Utils.update(
 							model,
 							{
-								crypto: _elm_lang$core$Maybe$Just(_p44)
+								crypto: _elm_lang$core$Maybe$Just(_p46)
 							}),
 						{
 							ctor: '::',
@@ -23517,57 +23645,57 @@ var _user$project$Config$update = F2(
 			case 'Focus':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(_user$project$Config$updateFocus, _p36._0, true, model),
+					A3(_user$project$Config$updateFocus, _p38._0, true, model),
 					{ctor: '[]'});
 			case 'Blur':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(_user$project$Config$updateFocus, _p36._0, false, model),
+					A3(_user$project$Config$updateFocus, _p38._0, false, model),
 					{ctor: '[]'});
 			case 'SelectizeMsg':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(_user$project$Config$updateSelectize, _p36._0, _p36._1, model),
+					A3(_user$project$Config$updateSelectize, _p38._0, _p38._1, model),
 					{ctor: '[]'});
 			case 'BlurSelectize':
-				var _p45 = _p36._0;
+				var _p47 = _p38._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateFocus,
-						_p45,
+						_p47,
 						false,
-						A3(_user$project$Config$updateSelectize, _p45, _p36._1, model)),
+						A3(_user$project$Config$updateSelectize, _p47, _p38._1, model)),
 					{ctor: '[]'});
 			case 'FocusSelectize':
-				var _p46 = _p36._0;
+				var _p48 = _p38._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateFocus,
-						_p46,
+						_p48,
 						true,
-						A3(_user$project$Config$updateSelectize, _p46, _p36._1, model)),
+						A3(_user$project$Config$updateSelectize, _p48, _p38._1, model)),
 					{ctor: '[]'});
 			case 'Add':
-				var _p47 = _p36._0;
+				var _p49 = _p38._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateInput,
-						_p47,
-						_elm_lang$core$Maybe$Just(_p36._1),
-						A3(_user$project$Config$updateSelectize, _p47, _p36._2, model)),
+						_p49,
+						_elm_lang$core$Maybe$Just(_p38._1),
+						A3(_user$project$Config$updateSelectize, _p49, _p38._2, model)),
 					{ctor: '[]'});
 			case 'Remove':
-				var _p48 = _p36._0;
+				var _p50 = _p38._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateInput,
-						_p48,
+						_p50,
 						_elm_lang$core$Maybe$Nothing,
-						A3(_user$project$Config$updateSelectize, _p48, _p36._1, model)),
+						A3(_user$project$Config$updateSelectize, _p50, _p38._1, model)),
 					{ctor: '[]'});
 			default:
 				return A2(
@@ -24675,31 +24803,39 @@ var _user$project$NavBar$view = function (route) {
 								ctor: '::',
 								_0: {
 									ctor: '_Tuple2',
-									_0: 'Fiat currencies',
-									_1: A2(_user$project$CoreTypes$ConfigRoute, 'fiat', _elm_lang$core$Maybe$Nothing)
+									_0: 'Machines',
+									_1: A2(_user$project$CoreTypes$ConfigRoute, 'machines', _elm_lang$core$Maybe$Nothing)
 								},
 								_1: {
 									ctor: '::',
 									_0: {
 										ctor: '_Tuple2',
-										_0: 'Crypto services',
-										_1: A2(_user$project$CoreTypes$ConfigRoute, 'cryptoServices', _elm_lang$core$Maybe$Nothing)
+										_0: 'Fiat currencies',
+										_1: A2(_user$project$CoreTypes$ConfigRoute, 'fiat', _elm_lang$core$Maybe$Nothing)
 									},
 									_1: {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple2',
-											_0: 'Notifications',
-											_1: A2(_user$project$CoreTypes$ConfigRoute, 'notifications', _elm_lang$core$Maybe$Nothing)
+											_0: 'Crypto services',
+											_1: A2(_user$project$CoreTypes$ConfigRoute, 'cryptoServices', _elm_lang$core$Maybe$Nothing)
 										},
 										_1: {
 											ctor: '::',
 											_0: {
 												ctor: '_Tuple2',
-												_0: 'Compliance',
-												_1: A2(_user$project$CoreTypes$ConfigRoute, 'compliance', _elm_lang$core$Maybe$Nothing)
+												_0: 'Notifications',
+												_1: A2(_user$project$CoreTypes$ConfigRoute, 'notifications', _elm_lang$core$Maybe$Nothing)
 											},
-											_1: {ctor: '[]'}
+											_1: {
+												ctor: '::',
+												_0: {
+													ctor: '_Tuple2',
+													_0: 'Compliance',
+													_1: A2(_user$project$CoreTypes$ConfigRoute, 'compliance', _elm_lang$core$Maybe$Nothing)
+												},
+												_1: {ctor: '[]'}
+											}
 										}
 									}
 								}
@@ -24768,7 +24904,7 @@ var _user$project$StatusDecoder$statusDecoder = A2(
 var _user$project$Main$subscriptions = function (model) {
 	return A2(
 		_elm_lang$core$Time$every,
-		10 * _elm_lang$core$Time$second,
+		1000 * _elm_lang$core$Time$second,
 		function (_p0) {
 			return _user$project$CoreTypes$Interval;
 		});
@@ -25259,7 +25395,7 @@ var _user$project$Main$Model = F8(
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"FieldSetTypes.FieldValue":{"args":[],"tags":{"FieldString":["String"],"FieldPassword":["Maybe.Maybe String"]}},"Selectize.Status":{"args":[],"tags":{"Editing":[],"Idle":[],"Blurred":[],"Cleared":[],"Initial":[]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"ConfigTypes.ConfigScope":{"args":[],"tags":{"Specific":[],"Both":[],"Global":[]}},"ConfigTypes.FieldType":{"args":[],"tags":{"FieldOnOffType":[],"FieldPercentageType":[],"FieldLanguageType":[],"FieldCryptoCurrencyType":[],"FieldIntegerType":[],"FieldFiatCurrencyType":[],"FieldStringType":[],"FieldAccountType":[]}},"Pair.Msg":{"args":[],"tags":{"SubmitName":[],"Load":["RemoteData.WebData String"],"InputName":["String"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Account.Msg":{"args":[],"tags":{"Load":["Account.Model"],"FieldSetMsg":["FieldSet.Msg"],"Submit":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"RemoteData.RemoteData":{"args":["e","a"],"tags":{"NotAsked":[],"Success":["a"],"Loading":[],"Failure":["e"]}},"ConfigTypes.Crypto":{"args":[],"tags":{"GlobalCrypto":[],"CryptoCode":["String"]}},"FieldSet.Msg":{"args":[],"tags":{"Input":["String","String"]}},"CoreTypes.Msg":{"args":[],"tags":{"ConfigMsg":["Config.Msg"],"LoadAccounts":["List ( String, String )"],"MachineMsg":["Machine.Msg"],"NewUrl":["String"],"Interval":[],"LoadStatus":["StatusTypes.WebStatus"],"UrlChange":["Navigation.Location"],"AccountMsg":["Account.Msg"],"PairMsg":["Pair.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"ConfigTypes.Machine":{"args":[],"tags":{"MachineId":["String"],"GlobalMachine":[]}},"Machine.Msg":{"args":[],"tags":{"Action":[],"Load":["Machine.Model"],"InputCassette":["MachineTypes.Machine","Machine.Position","String"],"SubmitResetBills":["MachineTypes.Machine"]}},"Machine.Position":{"args":[],"tags":{"Bottom":[],"Top":[]}},"Config.Msg":{"args":[],"tags":{"Focus":["ConfigTypes.FieldLocator"],"BlurSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"Remove":["ConfigTypes.FieldLocator","Selectize.State"],"Load":["Config.WebConfigGroup"],"Input":["ConfigTypes.FieldLocator","String"],"Blur":["ConfigTypes.FieldLocator"],"Add":["ConfigTypes.FieldLocator","String","Selectize.State"],"Submit":[],"SelectizeMsg":["ConfigTypes.FieldLocator","Selectize.State"],"FocusSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"HideSaveIndication":[],"CryptoSwitch":["ConfigTypes.Crypto"]}},"ConfigTypes.FieldValidator":{"args":[],"tags":{"FieldRequired":[],"FieldMin":["Int"],"FieldMax":["Int"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String"],"NetworkError":[],"Timeout":[],"BadStatus":["Http.Response String"],"BadPayload":["String","Http.Response String"]}},"ConfigTypes.FieldValue":{"args":[],"tags":{"FieldIntegerValue":["Int"],"FieldCryptoCurrencyValue":["List String"],"FieldFiatCurrencyValue":["String"],"FieldStringValue":["String"],"FieldOnOffValue":["Bool"],"FieldAccountValue":["String"],"FieldLanguageValue":["List String"],"FieldPercentageValue":["Float"]}}},"aliases":{"ConfigTypes.ConfigSchema":{"args":[],"type":"{ code : String , display : String , cryptoScope : ConfigTypes.ConfigScope , machineScope : ConfigTypes.ConfigScope , entries : List ConfigTypes.FieldDescriptor }"},"Machine.Model":{"args":[],"type":"RemoteData.WebData MachineTypes.Machines"},"Selectize.State":{"args":[],"type":"{ boxPosition : Int, status : Selectize.Status, string : String }"},"RemoteData.WebData":{"args":["a"],"type":"RemoteData.RemoteData Http.Error a"},"ConfigTypes.FieldLocator":{"args":[],"type":"{ fieldScope : ConfigTypes.FieldScope , code : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"AccountTypes.Account":{"args":[],"type":"{ code : String , display : String , fields : List FieldSetTypes.Field }"},"Http.Response":{"args":["body"],"type":"{ url : String , status : { code : Int, message : String } , headers : Dict.Dict String String , body : body }"},"MachineTypes.Machine":{"args":[],"type":"{ deviceId : String , name : String , cashbox : Int , cassette1 : Int , cassette2 : Int , paired : Bool }"},"StatusTypes.WebStatus":{"args":[],"type":"RemoteData.WebData StatusTypes.StatusRec"},"ConfigTypes.ConfigData":{"args":[],"type":"{ cryptoCurrencies : List ConfigTypes.CryptoDisplay , currencies : List ConfigTypes.DisplayRec , languages : List ConfigTypes.DisplayRec , accounts : List ConfigTypes.AccountRec , machines : List ConfigTypes.MachineDisplay }"},"Account.Model":{"args":[],"type":"RemoteData.WebData AccountTypes.Account"},"ConfigTypes.CryptoDisplay":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, display : String }"},"Config.WebConfigGroup":{"args":[],"type":"RemoteData.WebData ConfigTypes.ConfigGroup"},"ConfigTypes.DisplayRec":{"args":[],"type":"{ code : String, display : String }"},"ConfigTypes.FieldScope":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, machine : ConfigTypes.Machine }"},"FieldSetTypes.Field":{"args":[],"type":"{ code : String , display : String , secret : Bool , required : Bool , value : FieldSetTypes.FieldValue , loadedValue : FieldSetTypes.FieldValue }"},"ConfigTypes.ConfigGroup":{"args":[],"type":"{ schema : ConfigTypes.ConfigSchema , values : List ConfigTypes.Field , data : ConfigTypes.ConfigData }"},"ConfigTypes.AccountRec":{"args":[],"type":"{ code : String , display : String , class : String , cryptos : Maybe.Maybe (List ConfigTypes.Crypto) }"},"ConfigTypes.Field":{"args":[],"type":"{ fieldLocator : ConfigTypes.FieldLocator , fieldValue : ConfigTypes.FieldValue }"},"ConfigTypes.MachineDisplay":{"args":[],"type":"{ machine : ConfigTypes.Machine, display : String }"},"StatusTypes.ServerRec":{"args":[],"type":"{ up : Bool, lastPing : Maybe.Maybe String }"},"MachineTypes.Machines":{"args":[],"type":"List MachineTypes.Machine"},"ConfigTypes.FieldDescriptor":{"args":[],"type":"{ code : String , display : String , fieldType : ConfigTypes.FieldType , fieldValidation : List ConfigTypes.FieldValidator , fieldClass : Maybe.Maybe String }"},"StatusTypes.StatusRec":{"args":[],"type":"{ server : StatusTypes.ServerRec }"},"Navigation.Location":{"args":[],"type":"{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"}},"message":"CoreTypes.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"FieldSetTypes.FieldValue":{"args":[],"tags":{"FieldString":["String"],"FieldPassword":["Maybe.Maybe String"]}},"Selectize.Status":{"args":[],"tags":{"Editing":[],"Idle":[],"Blurred":[],"Cleared":[],"Initial":[]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"ConfigTypes.ConfigScope":{"args":[],"tags":{"Specific":[],"Both":[],"Global":[]}},"ConfigTypes.FieldType":{"args":[],"tags":{"FieldOnOffType":[],"FieldPercentageType":[],"FieldLanguageType":[],"FieldCryptoCurrencyType":[],"FieldIntegerType":[],"FieldFiatCurrencyType":[],"FieldStringType":[],"FieldAccountType":[]}},"Pair.Msg":{"args":[],"tags":{"SubmitName":[],"Load":["RemoteData.WebData String"],"InputName":["String"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Account.Msg":{"args":[],"tags":{"Load":["Account.Model"],"FieldSetMsg":["FieldSet.Msg"],"Submit":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"RemoteData.RemoteData":{"args":["e","a"],"tags":{"NotAsked":[],"Success":["a"],"Loading":[],"Failure":["e"]}},"ConfigTypes.Crypto":{"args":[],"tags":{"GlobalCrypto":[],"CryptoCode":["String"]}},"FieldSet.Msg":{"args":[],"tags":{"Input":["String","String"]}},"CoreTypes.Msg":{"args":[],"tags":{"ConfigMsg":["Config.Msg"],"LoadAccounts":["List ( String, String )"],"MachineMsg":["Machine.Msg"],"NewUrl":["String"],"Interval":[],"LoadStatus":["StatusTypes.WebStatus"],"UrlChange":["Navigation.Location"],"AccountMsg":["Account.Msg"],"PairMsg":["Pair.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"ConfigTypes.Machine":{"args":[],"tags":{"MachineId":["String"],"GlobalMachine":[]}},"Machine.Msg":{"args":[],"tags":{"Action":[],"Load":["Machine.Model"],"InputCassette":["MachineTypes.Machine","Machine.Position","String"],"SubmitResetBills":["MachineTypes.Machine"]}},"Machine.Position":{"args":[],"tags":{"Bottom":[],"Top":[]}},"Config.Msg":{"args":[],"tags":{"Focus":["ConfigTypes.FieldLocator"],"BlurSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"Remove":["ConfigTypes.FieldLocator","Selectize.State"],"Load":["Config.WebConfigGroup"],"Input":["ConfigTypes.FieldLocator","String"],"Blur":["ConfigTypes.FieldLocator"],"Add":["ConfigTypes.FieldLocator","String","Selectize.State"],"Submit":[],"SelectizeMsg":["ConfigTypes.FieldLocator","Selectize.State"],"FocusSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"HideSaveIndication":[],"CryptoSwitch":["ConfigTypes.Crypto"]}},"ConfigTypes.FieldValidator":{"args":[],"tags":{"FieldRequired":[],"FieldMin":["Int"],"FieldMax":["Int"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String"],"NetworkError":[],"Timeout":[],"BadStatus":["Http.Response String"],"BadPayload":["String","Http.Response String"]}},"ConfigTypes.FieldValue":{"args":[],"tags":{"FieldIntegerValue":["Int"],"FieldCryptoCurrencyValue":["List String"],"FieldFiatCurrencyValue":["String"],"FieldStringValue":["String"],"FieldOnOffValue":["Bool"],"FieldAccountValue":["String"],"FieldLanguageValue":["List String"],"FieldPercentageValue":["Float"]}}},"aliases":{"ConfigTypes.ConfigSchema":{"args":[],"type":"{ code : String , display : String , cryptoScope : ConfigTypes.ConfigScope , machineScope : ConfigTypes.ConfigScope , entries : List ConfigTypes.FieldDescriptor }"},"Machine.Model":{"args":[],"type":"RemoteData.WebData MachineTypes.Machines"},"Selectize.State":{"args":[],"type":"{ boxPosition : Int, status : Selectize.Status, string : String }"},"RemoteData.WebData":{"args":["a"],"type":"RemoteData.RemoteData Http.Error a"},"ConfigTypes.FieldLocator":{"args":[],"type":"{ fieldScope : ConfigTypes.FieldScope , code : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"AccountTypes.Account":{"args":[],"type":"{ code : String , display : String , fields : List FieldSetTypes.Field }"},"Http.Response":{"args":["body"],"type":"{ url : String , status : { code : Int, message : String } , headers : Dict.Dict String String , body : body }"},"MachineTypes.Machine":{"args":[],"type":"{ deviceId : String , name : String , cashbox : Int , cassette1 : Int , cassette2 : Int , paired : Bool }"},"StatusTypes.WebStatus":{"args":[],"type":"RemoteData.WebData StatusTypes.StatusRec"},"ConfigTypes.ConfigData":{"args":[],"type":"{ cryptoCurrencies : List ConfigTypes.CryptoDisplay , currencies : List ConfigTypes.DisplayRec , languages : List ConfigTypes.DisplayRec , accounts : List ConfigTypes.AccountRec , machines : List ConfigTypes.MachineDisplay }"},"Account.Model":{"args":[],"type":"RemoteData.WebData AccountTypes.Account"},"ConfigTypes.CryptoDisplay":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, display : String }"},"Config.WebConfigGroup":{"args":[],"type":"RemoteData.WebData ConfigTypes.ConfigGroup"},"ConfigTypes.DisplayRec":{"args":[],"type":"{ code : String, display : String }"},"ConfigTypes.FieldScope":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, machine : ConfigTypes.Machine }"},"FieldSetTypes.Field":{"args":[],"type":"{ code : String , display : String , secret : Bool , required : Bool , value : FieldSetTypes.FieldValue , loadedValue : FieldSetTypes.FieldValue }"},"ConfigTypes.ConfigGroup":{"args":[],"type":"{ schema : ConfigTypes.ConfigSchema , values : List ConfigTypes.Field , data : ConfigTypes.ConfigData }"},"ConfigTypes.AccountRec":{"args":[],"type":"{ code : String , display : String , class : String , cryptos : Maybe.Maybe (List ConfigTypes.Crypto) }"},"ConfigTypes.Field":{"args":[],"type":"{ fieldLocator : ConfigTypes.FieldLocator , fieldValue : ConfigTypes.FieldValue }"},"ConfigTypes.MachineDisplay":{"args":[],"type":"{ machine : ConfigTypes.Machine, display : String }"},"StatusTypes.ServerRec":{"args":[],"type":"{ up : Bool, lastPing : Maybe.Maybe String }"},"MachineTypes.Machines":{"args":[],"type":"List MachineTypes.Machine"},"ConfigTypes.FieldDescriptor":{"args":[],"type":"{ code : String , display : String , fieldType : ConfigTypes.FieldType , fieldValidation : List ConfigTypes.FieldValidator , fieldClass : Maybe.Maybe String , fieldEnabledIf : List String }"},"StatusTypes.StatusRec":{"args":[],"type":"{ server : StatusTypes.ServerRec }"},"Navigation.Location":{"args":[],"type":"{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"}},"message":"CoreTypes.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])

@@ -251,6 +251,17 @@ p {
     color: #eb6b6e;
 }
 
+.lamassuAdminConfigTable  .lamassuAdminBasicInputDisabled {
+    background-color: #fcfcfa;
+    height: 25px;
+    line-height: 25px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #5f5f56;
+    text-align: center;
+    cursor: default;
+}
+
 .lamassuAdminConfigTable  td {
     padding: 3px 4px;
     text-align: center;
@@ -259,6 +270,7 @@ p {
 
 .lamassuAdminConfigTable  .lamassuAdminComponent {
     border-radius: 3px;
+    border: 2px solid #f6f6f4;
     background-color: #ffffff;
 }
 
