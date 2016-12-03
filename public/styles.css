@@ -346,6 +346,10 @@ p {
     background-color: #282828;
 }
 
+.lamassuAdminNavBar  .lamassuAdminInvalidGroup {
+    color: #eb6b6e !important;
+}
+
 .lamassuAdminNavBar  .lamassuAdminNavBarCategoryContainer  .lamassuAdminNavBarRoute {
     color: #5f5f56;
     font-weight: bold;
