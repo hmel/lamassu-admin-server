@@ -137,6 +137,54 @@ p {
     animation: fadein 0.8s;
 }
 
+.lamassuAdminTxTable {
+    border-radius: 7px;
+    margin: 20px 0;
+    border-collapse: collapse;
+    font-size: 14px;
+    width: 100%;
+    background-color: #ffffff;
+}
+
+.lamassuAdminTxTable  .lamassuAdminNumberColumn {
+    text-align: right;
+}
+
+.lamassuAdminTxTable  .lamassuAdminDirectionColumn {
+    text-align: left;
+    font-weight: bold;
+    font-size: 90%;
+}
+
+.lamassuAdminTxTable  tbody {
+    font-family: Fira Code;
+    color: #5f5f56;
+}
+
+.lamassuAdminTxTable  tbody  td {
+    padding: 2px 14px;
+    border-bottom: 1px solid #f6f6f4;
+    white-space: nowrap;
+}
+
+.lamassuAdminTxTable  tbody  .lamassuAdminTruncatedColumn {
+    max-width: 0;
+    overflow: hidden;
+    width: 300px;
+    text-overflow: ellipsis;
+}
+
+.lamassuAdminTxTable  thead {
+    font-size: 14px;
+    text-align: center;
+    color: #5f5f56;
+}
+
+.lamassuAdminTxTable  thead  td {
+    border-bottom: 2px solid #f6f6f4;
+    padding: 5px;
+}
+
 .lamassuAdminConfigTable {
     font-size: 14px;
     border-radius: 7px;

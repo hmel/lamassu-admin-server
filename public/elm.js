@@ -4195,6 +4195,661 @@ var _elm_lang$core$Dict$diff = F2(
 			t2);
 	});
 
+//import Maybe, Native.Array, Native.List, Native.Utils, Result //
+
+var _elm_lang$core$Native_Json = function() {
+
+
+// CORE DECODERS
+
+function succeed(msg)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'succeed',
+		msg: msg
+	};
+}
+
+function fail(msg)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'fail',
+		msg: msg
+	};
+}
+
+function decodePrimitive(tag)
+{
+	return {
+		ctor: '<decoder>',
+		tag: tag
+	};
+}
+
+function decodeContainer(tag, decoder)
+{
+	return {
+		ctor: '<decoder>',
+		tag: tag,
+		decoder: decoder
+	};
+}
+
+function decodeNull(value)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'null',
+		value: value
+	};
+}
+
+function decodeField(field, decoder)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'field',
+		field: field,
+		decoder: decoder
+	};
+}
+
+function decodeIndex(index, decoder)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'index',
+		index: index,
+		decoder: decoder
+	};
+}
+
+function decodeKeyValuePairs(decoder)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'key-value',
+		decoder: decoder
+	};
+}
+
+function mapMany(f, decoders)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'map-many',
+		func: f,
+		decoders: decoders
+	};
+}
+
+function andThen(callback, decoder)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'andThen',
+		decoder: decoder,
+		callback: callback
+	};
+}
+
+function oneOf(decoders)
+{
+	return {
+		ctor: '<decoder>',
+		tag: 'oneOf',
+		decoders: decoders
+	};
+}
+
+
+// DECODING OBJECTS
+
+function map1(f, d1)
+{
+	return mapMany(f, [d1]);
+}
+
+function map2(f, d1, d2)
+{
+	return mapMany(f, [d1, d2]);
+}
+
+function map3(f, d1, d2, d3)
+{
+	return mapMany(f, [d1, d2, d3]);
+}
+
+function map4(f, d1, d2, d3, d4)
+{
+	return mapMany(f, [d1, d2, d3, d4]);
+}
+
+function map5(f, d1, d2, d3, d4, d5)
+{
+	return mapMany(f, [d1, d2, d3, d4, d5]);
+}
+
+function map6(f, d1, d2, d3, d4, d5, d6)
+{
+	return mapMany(f, [d1, d2, d3, d4, d5, d6]);
+}
+
+function map7(f, d1, d2, d3, d4, d5, d6, d7)
+{
+	return mapMany(f, [d1, d2, d3, d4, d5, d6, d7]);
+}
+
+function map8(f, d1, d2, d3, d4, d5, d6, d7, d8)
+{
+	return mapMany(f, [d1, d2, d3, d4, d5, d6, d7, d8]);
+}
+
+
+// DECODE HELPERS
+
+function ok(value)
+{
+	return { tag: 'ok', value: value };
+}
+
+function badPrimitive(type, value)
+{
+	return { tag: 'primitive', type: type, value: value };
+}
+
+function badIndex(index, nestedProblems)
+{
+	return { tag: 'index', index: index, rest: nestedProblems };
+}
+
+function badField(field, nestedProblems)
+{
+	return { tag: 'field', field: field, rest: nestedProblems };
+}
+
+function badIndex(index, nestedProblems)
+{
+	return { tag: 'index', index: index, rest: nestedProblems };
+}
+
+function badOneOf(problems)
+{
+	return { tag: 'oneOf', problems: problems };
+}
+
+function bad(msg)
+{
+	return { tag: 'fail', msg: msg };
+}
+
+function badToString(problem)
+{
+	var context = '_';
+	while (problem)
+	{
+		switch (problem.tag)
+		{
+			case 'primitive':
+				return 'Expecting ' + problem.type
+					+ (context === '_' ? '' : ' at ' + context)
+					+ ' but instead got: ' + jsToString(problem.value);
+
+			case 'index':
+				context += '[' + problem.index + ']';
+				problem = problem.rest;
+				break;
+
+			case 'field':
+				context += '.' + problem.field;
+				problem = problem.rest;
+				break;
+
+			case 'index':
+				context += '[' + problem.index + ']';
+				problem = problem.rest;
+				break;
+
+			case 'oneOf':
+				var problems = problem.problems;
+				for (var i = 0; i < problems.length; i++)
+				{
+					problems[i] = badToString(problems[i]);
+				}
+				return 'I ran into the following problems'
+					+ (context === '_' ? '' : ' at ' + context)
+					+ ':\n\n' + problems.join('\n');
+
+			case 'fail':
+				return 'I ran into a `fail` decoder'
+					+ (context === '_' ? '' : ' at ' + context)
+					+ ': ' + problem.msg;
+		}
+	}
+}
+
+function jsToString(value)
+{
+	return value === undefined
+		? 'undefined'
+		: JSON.stringify(value);
+}
+
+
+// DECODE
+
+function runOnString(decoder, string)
+{
+	var json;
+	try
+	{
+		json = JSON.parse(string);
+	}
+	catch (e)
+	{
+		return _elm_lang$core$Result$Err('Given an invalid JSON: ' + e.message);
+	}
+	return run(decoder, json);
+}
+
+function run(decoder, value)
+{
+	var result = runHelp(decoder, value);
+	return (result.tag === 'ok')
+		? _elm_lang$core$Result$Ok(result.value)
+		: _elm_lang$core$Result$Err(badToString(result));
+}
+
+function runHelp(decoder, value)
+{
+	switch (decoder.tag)
+	{
+		case 'bool':
+			return (typeof value === 'boolean')
+				? ok(value)
+				: badPrimitive('a Bool', value);
+
+		case 'int':
+			if (typeof value !== 'number') {
+				return badPrimitive('an Int', value);
+			}
+
+			if (-2147483647 < value && value < 2147483647 && (value | 0) === value) {
+				return ok(value);
+			}
+
+			if (isFinite(value) && !(value % 1)) {
+				return ok(value);
+			}
+
+			return badPrimitive('an Int', value);
+
+		case 'float':
+			return (typeof value === 'number')
+				? ok(value)
+				: badPrimitive('a Float', value);
+
+		case 'string':
+			return (typeof value === 'string')
+				? ok(value)
+				: (value instanceof String)
+					? ok(value + '')
+					: badPrimitive('a String', value);
+
+		case 'null':
+			return (value === null)
+				? ok(decoder.value)
+				: badPrimitive('null', value);
+
+		case 'value':
+			return ok(value);
+
+		case 'list':
+			if (!(value instanceof Array))
+			{
+				return badPrimitive('a List', value);
+			}
+
+			var list = _elm_lang$core$Native_List.Nil;
+			for (var i = value.length; i--; )
+			{
+				var result = runHelp(decoder.decoder, value[i]);
+				if (result.tag !== 'ok')
+				{
+					return badIndex(i, result)
+				}
+				list = _elm_lang$core$Native_List.Cons(result.value, list);
+			}
+			return ok(list);
+
+		case 'array':
+			if (!(value instanceof Array))
+			{
+				return badPrimitive('an Array', value);
+			}
+
+			var len = value.length;
+			var array = new Array(len);
+			for (var i = len; i--; )
+			{
+				var result = runHelp(decoder.decoder, value[i]);
+				if (result.tag !== 'ok')
+				{
+					return badIndex(i, result);
+				}
+				array[i] = result.value;
+			}
+			return ok(_elm_lang$core$Native_Array.fromJSArray(array));
+
+		case 'maybe':
+			var result = runHelp(decoder.decoder, value);
+			return (result.tag === 'ok')
+				? ok(_elm_lang$core$Maybe$Just(result.value))
+				: ok(_elm_lang$core$Maybe$Nothing);
+
+		case 'field':
+			var field = decoder.field;
+			if (typeof value !== 'object' || value === null || !(field in value))
+			{
+				return badPrimitive('an object with a field named `' + field + '`', value);
+			}
+
+			var result = runHelp(decoder.decoder, value[field]);
+			return (result.tag === 'ok') ? result : badField(field, result);
+
+		case 'index':
+			var index = decoder.index;
+			if (!(value instanceof Array))
+			{
+				return badPrimitive('an array', value);
+			}
+			if (index >= value.length)
+			{
+				return badPrimitive('a longer array. Need index ' + index + ' but there are only ' + value.length + ' entries', value);
+			}
+
+			var result = runHelp(decoder.decoder, value[index]);
+			return (result.tag === 'ok') ? result : badIndex(index, result);
+
+		case 'key-value':
+			if (typeof value !== 'object' || value === null || value instanceof Array)
+			{
+				return badPrimitive('an object', value);
+			}
+
+			var keyValuePairs = _elm_lang$core$Native_List.Nil;
+			for (var key in value)
+			{
+				var result = runHelp(decoder.decoder, value[key]);
+				if (result.tag !== 'ok')
+				{
+					return badField(key, result);
+				}
+				var pair = _elm_lang$core$Native_Utils.Tuple2(key, result.value);
+				keyValuePairs = _elm_lang$core$Native_List.Cons(pair, keyValuePairs);
+			}
+			return ok(keyValuePairs);
+
+		case 'map-many':
+			var answer = decoder.func;
+			var decoders = decoder.decoders;
+			for (var i = 0; i < decoders.length; i++)
+			{
+				var result = runHelp(decoders[i], value);
+				if (result.tag !== 'ok')
+				{
+					return result;
+				}
+				answer = answer(result.value);
+			}
+			return ok(answer);
+
+		case 'andThen':
+			var result = runHelp(decoder.decoder, value);
+			return (result.tag !== 'ok')
+				? result
+				: runHelp(decoder.callback(result.value), value);
+
+		case 'oneOf':
+			var errors = [];
+			var temp = decoder.decoders;
+			while (temp.ctor !== '[]')
+			{
+				var result = runHelp(temp._0, value);
+
+				if (result.tag === 'ok')
+				{
+					return result;
+				}
+
+				errors.push(result);
+
+				temp = temp._1;
+			}
+			return badOneOf(errors);
+
+		case 'fail':
+			return bad(decoder.msg);
+
+		case 'succeed':
+			return ok(decoder.msg);
+	}
+}
+
+
+// EQUALITY
+
+function equality(a, b)
+{
+	if (a === b)
+	{
+		return true;
+	}
+
+	if (a.tag !== b.tag)
+	{
+		return false;
+	}
+
+	switch (a.tag)
+	{
+		case 'succeed':
+		case 'fail':
+			return a.msg === b.msg;
+
+		case 'bool':
+		case 'int':
+		case 'float':
+		case 'string':
+		case 'value':
+			return true;
+
+		case 'null':
+			return a.value === b.value;
+
+		case 'list':
+		case 'array':
+		case 'maybe':
+		case 'key-value':
+			return equality(a.decoder, b.decoder);
+
+		case 'field':
+			return a.field === b.field && equality(a.decoder, b.decoder);
+
+		case 'index':
+			return a.index === b.index && equality(a.decoder, b.decoder);
+
+		case 'map-many':
+			if (a.func !== b.func)
+			{
+				return false;
+			}
+			return listEquality(a.decoders, b.decoders);
+
+		case 'andThen':
+			return a.callback === b.callback && equality(a.decoder, b.decoder);
+
+		case 'oneOf':
+			return listEquality(a.decoders, b.decoders);
+	}
+}
+
+function listEquality(aDecoders, bDecoders)
+{
+	var len = aDecoders.length;
+	if (len !== bDecoders.length)
+	{
+		return false;
+	}
+	for (var i = 0; i < len; i++)
+	{
+		if (!equality(aDecoders[i], bDecoders[i]))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+
+// ENCODE
+
+function encode(indentLevel, value)
+{
+	return JSON.stringify(value, null, indentLevel);
+}
+
+function identity(value)
+{
+	return value;
+}
+
+function encodeObject(keyValuePairs)
+{
+	var obj = {};
+	while (keyValuePairs.ctor !== '[]')
+	{
+		var pair = keyValuePairs._0;
+		obj[pair._0] = pair._1;
+		keyValuePairs = keyValuePairs._1;
+	}
+	return obj;
+}
+
+return {
+	encode: F2(encode),
+	runOnString: F2(runOnString),
+	run: F2(run),
+
+	decodeNull: decodeNull,
+	decodePrimitive: decodePrimitive,
+	decodeContainer: F2(decodeContainer),
+
+	decodeField: F2(decodeField),
+	decodeIndex: F2(decodeIndex),
+
+	map1: F2(map1),
+	map2: F3(map2),
+	map3: F4(map3),
+	map4: F5(map4),
+	map5: F6(map5),
+	map6: F7(map6),
+	map7: F8(map7),
+	map8: F9(map8),
+	decodeKeyValuePairs: decodeKeyValuePairs,
+
+	andThen: F2(andThen),
+	fail: fail,
+	succeed: succeed,
+	oneOf: oneOf,
+
+	identity: identity,
+	encodeNull: null,
+	encodeArray: _elm_lang$core$Native_Array.toJSArray,
+	encodeList: _elm_lang$core$Native_List.toArray,
+	encodeObject: encodeObject,
+
+	equality: equality
+};
+
+}();
+
+var _elm_lang$core$Json_Encode$list = _elm_lang$core$Native_Json.encodeList;
+var _elm_lang$core$Json_Encode$array = _elm_lang$core$Native_Json.encodeArray;
+var _elm_lang$core$Json_Encode$object = _elm_lang$core$Native_Json.encodeObject;
+var _elm_lang$core$Json_Encode$null = _elm_lang$core$Native_Json.encodeNull;
+var _elm_lang$core$Json_Encode$bool = _elm_lang$core$Native_Json.identity;
+var _elm_lang$core$Json_Encode$float = _elm_lang$core$Native_Json.identity;
+var _elm_lang$core$Json_Encode$int = _elm_lang$core$Native_Json.identity;
+var _elm_lang$core$Json_Encode$string = _elm_lang$core$Native_Json.identity;
+var _elm_lang$core$Json_Encode$encode = _elm_lang$core$Native_Json.encode;
+var _elm_lang$core$Json_Encode$Value = {ctor: 'Value'};
+
+var _elm_lang$core$Json_Decode$null = _elm_lang$core$Native_Json.decodeNull;
+var _elm_lang$core$Json_Decode$value = _elm_lang$core$Native_Json.decodePrimitive('value');
+var _elm_lang$core$Json_Decode$andThen = _elm_lang$core$Native_Json.andThen;
+var _elm_lang$core$Json_Decode$fail = _elm_lang$core$Native_Json.fail;
+var _elm_lang$core$Json_Decode$succeed = _elm_lang$core$Native_Json.succeed;
+var _elm_lang$core$Json_Decode$lazy = function (thunk) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		thunk,
+		_elm_lang$core$Json_Decode$succeed(
+			{ctor: '_Tuple0'}));
+};
+var _elm_lang$core$Json_Decode$decodeValue = _elm_lang$core$Native_Json.run;
+var _elm_lang$core$Json_Decode$decodeString = _elm_lang$core$Native_Json.runOnString;
+var _elm_lang$core$Json_Decode$map8 = _elm_lang$core$Native_Json.map8;
+var _elm_lang$core$Json_Decode$map7 = _elm_lang$core$Native_Json.map7;
+var _elm_lang$core$Json_Decode$map6 = _elm_lang$core$Native_Json.map6;
+var _elm_lang$core$Json_Decode$map5 = _elm_lang$core$Native_Json.map5;
+var _elm_lang$core$Json_Decode$map4 = _elm_lang$core$Native_Json.map4;
+var _elm_lang$core$Json_Decode$map3 = _elm_lang$core$Native_Json.map3;
+var _elm_lang$core$Json_Decode$map2 = _elm_lang$core$Native_Json.map2;
+var _elm_lang$core$Json_Decode$map = _elm_lang$core$Native_Json.map1;
+var _elm_lang$core$Json_Decode$oneOf = _elm_lang$core$Native_Json.oneOf;
+var _elm_lang$core$Json_Decode$maybe = function (decoder) {
+	return A2(_elm_lang$core$Native_Json.decodeContainer, 'maybe', decoder);
+};
+var _elm_lang$core$Json_Decode$index = _elm_lang$core$Native_Json.decodeIndex;
+var _elm_lang$core$Json_Decode$field = _elm_lang$core$Native_Json.decodeField;
+var _elm_lang$core$Json_Decode$at = F2(
+	function (fields, decoder) {
+		return A3(_elm_lang$core$List$foldr, _elm_lang$core$Json_Decode$field, decoder, fields);
+	});
+var _elm_lang$core$Json_Decode$keyValuePairs = _elm_lang$core$Native_Json.decodeKeyValuePairs;
+var _elm_lang$core$Json_Decode$dict = function (decoder) {
+	return A2(
+		_elm_lang$core$Json_Decode$map,
+		_elm_lang$core$Dict$fromList,
+		_elm_lang$core$Json_Decode$keyValuePairs(decoder));
+};
+var _elm_lang$core$Json_Decode$array = function (decoder) {
+	return A2(_elm_lang$core$Native_Json.decodeContainer, 'array', decoder);
+};
+var _elm_lang$core$Json_Decode$list = function (decoder) {
+	return A2(_elm_lang$core$Native_Json.decodeContainer, 'list', decoder);
+};
+var _elm_lang$core$Json_Decode$nullable = function (decoder) {
+	return _elm_lang$core$Json_Decode$oneOf(
+		{
+			ctor: '::',
+			_0: _elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
+			_1: {
+				ctor: '::',
+				_0: A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, decoder),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _elm_lang$core$Json_Decode$float = _elm_lang$core$Native_Json.decodePrimitive('float');
+var _elm_lang$core$Json_Decode$int = _elm_lang$core$Native_Json.decodePrimitive('int');
+var _elm_lang$core$Json_Decode$bool = _elm_lang$core$Native_Json.decodePrimitive('bool');
+var _elm_lang$core$Json_Decode$string = _elm_lang$core$Native_Json.decodePrimitive('string');
+var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
+
 var _elm_lang$core$Debug$crash = _elm_lang$core$Native_Debug.crash;
 var _elm_lang$core$Debug$log = _elm_lang$core$Native_Debug.log;
 
@@ -5098,661 +5753,119 @@ var _elm_lang$core$Platform$Task = {ctor: 'Task'};
 var _elm_lang$core$Platform$ProcessId = {ctor: 'ProcessId'};
 var _elm_lang$core$Platform$Router = {ctor: 'Router'};
 
-//import Maybe, Native.Array, Native.List, Native.Utils, Result //
-
-var _elm_lang$core$Native_Json = function() {
-
-
-// CORE DECODERS
-
-function succeed(msg)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'succeed',
-		msg: msg
-	};
-}
-
-function fail(msg)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'fail',
-		msg: msg
-	};
-}
-
-function decodePrimitive(tag)
-{
-	return {
-		ctor: '<decoder>',
-		tag: tag
-	};
-}
-
-function decodeContainer(tag, decoder)
-{
-	return {
-		ctor: '<decoder>',
-		tag: tag,
-		decoder: decoder
-	};
-}
-
-function decodeNull(value)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'null',
-		value: value
-	};
-}
-
-function decodeField(field, decoder)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'field',
-		field: field,
-		decoder: decoder
-	};
-}
-
-function decodeIndex(index, decoder)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'index',
-		index: index,
-		decoder: decoder
-	};
-}
-
-function decodeKeyValuePairs(decoder)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'key-value',
-		decoder: decoder
-	};
-}
-
-function mapMany(f, decoders)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'map-many',
-		func: f,
-		decoders: decoders
-	};
-}
-
-function andThen(callback, decoder)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'andThen',
-		decoder: decoder,
-		callback: callback
-	};
-}
-
-function oneOf(decoders)
-{
-	return {
-		ctor: '<decoder>',
-		tag: 'oneOf',
-		decoders: decoders
-	};
-}
-
-
-// DECODING OBJECTS
-
-function map1(f, d1)
-{
-	return mapMany(f, [d1]);
-}
-
-function map2(f, d1, d2)
-{
-	return mapMany(f, [d1, d2]);
-}
-
-function map3(f, d1, d2, d3)
-{
-	return mapMany(f, [d1, d2, d3]);
-}
-
-function map4(f, d1, d2, d3, d4)
-{
-	return mapMany(f, [d1, d2, d3, d4]);
-}
-
-function map5(f, d1, d2, d3, d4, d5)
-{
-	return mapMany(f, [d1, d2, d3, d4, d5]);
-}
-
-function map6(f, d1, d2, d3, d4, d5, d6)
-{
-	return mapMany(f, [d1, d2, d3, d4, d5, d6]);
-}
-
-function map7(f, d1, d2, d3, d4, d5, d6, d7)
-{
-	return mapMany(f, [d1, d2, d3, d4, d5, d6, d7]);
-}
-
-function map8(f, d1, d2, d3, d4, d5, d6, d7, d8)
-{
-	return mapMany(f, [d1, d2, d3, d4, d5, d6, d7, d8]);
-}
-
-
-// DECODE HELPERS
-
-function ok(value)
-{
-	return { tag: 'ok', value: value };
-}
-
-function badPrimitive(type, value)
-{
-	return { tag: 'primitive', type: type, value: value };
-}
-
-function badIndex(index, nestedProblems)
-{
-	return { tag: 'index', index: index, rest: nestedProblems };
-}
-
-function badField(field, nestedProblems)
-{
-	return { tag: 'field', field: field, rest: nestedProblems };
-}
-
-function badIndex(index, nestedProblems)
-{
-	return { tag: 'index', index: index, rest: nestedProblems };
-}
-
-function badOneOf(problems)
-{
-	return { tag: 'oneOf', problems: problems };
-}
-
-function bad(msg)
-{
-	return { tag: 'fail', msg: msg };
-}
-
-function badToString(problem)
-{
-	var context = '_';
-	while (problem)
-	{
-		switch (problem.tag)
-		{
-			case 'primitive':
-				return 'Expecting ' + problem.type
-					+ (context === '_' ? '' : ' at ' + context)
-					+ ' but instead got: ' + jsToString(problem.value);
-
-			case 'index':
-				context += '[' + problem.index + ']';
-				problem = problem.rest;
-				break;
-
-			case 'field':
-				context += '.' + problem.field;
-				problem = problem.rest;
-				break;
-
-			case 'index':
-				context += '[' + problem.index + ']';
-				problem = problem.rest;
-				break;
-
-			case 'oneOf':
-				var problems = problem.problems;
-				for (var i = 0; i < problems.length; i++)
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode = _elm_lang$core$Json_Decode$succeed;
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$resolve = _elm_lang$core$Json_Decode$andThen(_elm_lang$core$Basics$identity);
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom = _elm_lang$core$Json_Decode$map2(
+	F2(
+		function (x, y) {
+			return y(x);
+		}));
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$hardcoded = function (_p0) {
+	return _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom(
+		_elm_lang$core$Json_Decode$succeed(_p0));
+};
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalDecoder = F3(
+	function (pathDecoder, valDecoder, fallback) {
+		var nullOr = function (decoder) {
+			return _elm_lang$core$Json_Decode$oneOf(
 				{
-					problems[i] = badToString(problems[i]);
+					ctor: '::',
+					_0: decoder,
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$core$Json_Decode$null(fallback),
+						_1: {ctor: '[]'}
+					}
+				});
+		};
+		var handleResult = function (input) {
+			var _p1 = A2(_elm_lang$core$Json_Decode$decodeValue, pathDecoder, input);
+			if (_p1.ctor === 'Ok') {
+				var _p2 = A2(
+					_elm_lang$core$Json_Decode$decodeValue,
+					nullOr(valDecoder),
+					_p1._0);
+				if (_p2.ctor === 'Ok') {
+					return _elm_lang$core$Json_Decode$succeed(_p2._0);
+				} else {
+					return _elm_lang$core$Json_Decode$fail(_p2._0);
 				}
-				return 'I ran into the following problems'
-					+ (context === '_' ? '' : ' at ' + context)
-					+ ':\n\n' + problems.join('\n');
+			} else {
+				return _elm_lang$core$Json_Decode$succeed(fallback);
+			}
+		};
+		return A2(_elm_lang$core$Json_Decode$andThen, handleResult, _elm_lang$core$Json_Decode$value);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalAt = F4(
+	function (path, valDecoder, fallback, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalDecoder,
+				A2(_elm_lang$core$Json_Decode$at, path, _elm_lang$core$Json_Decode$value),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optional = F4(
+	function (key, valDecoder, fallback, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$optionalDecoder,
+				A2(_elm_lang$core$Json_Decode$field, key, _elm_lang$core$Json_Decode$value),
+				valDecoder,
+				fallback),
+			decoder);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$requiredAt = F3(
+	function (path, valDecoder, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A2(_elm_lang$core$Json_Decode$at, path, valDecoder),
+			decoder);
+	});
+var _NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$custom,
+			A2(_elm_lang$core$Json_Decode$field, key, valDecoder),
+			decoder);
+	});
 
-			case 'fail':
-				return 'I ran into a `fail` decoder'
-					+ (context === '_' ? '' : ' at ' + context)
-					+ ': ' + problem.msg;
-		}
-	}
-}
+//import Result //
 
-function jsToString(value)
+var _elm_lang$core$Native_Date = function() {
+
+function fromString(str)
 {
-	return value === undefined
-		? 'undefined'
-		: JSON.stringify(value);
+	var date = new Date(str);
+	return isNaN(date.getTime())
+		? _elm_lang$core$Result$Err('Unable to parse \'' + str + '\' as a date. Dates must be in the ISO 8601 format.')
+		: _elm_lang$core$Result$Ok(date);
 }
 
+var dayTable = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var monthTable =
+	['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+	 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// DECODE
-
-function runOnString(decoder, string)
-{
-	var json;
-	try
-	{
-		json = JSON.parse(string);
-	}
-	catch (e)
-	{
-		return _elm_lang$core$Result$Err('Given an invalid JSON: ' + e.message);
-	}
-	return run(decoder, json);
-}
-
-function run(decoder, value)
-{
-	var result = runHelp(decoder, value);
-	return (result.tag === 'ok')
-		? _elm_lang$core$Result$Ok(result.value)
-		: _elm_lang$core$Result$Err(badToString(result));
-}
-
-function runHelp(decoder, value)
-{
-	switch (decoder.tag)
-	{
-		case 'bool':
-			return (typeof value === 'boolean')
-				? ok(value)
-				: badPrimitive('a Bool', value);
-
-		case 'int':
-			if (typeof value !== 'number') {
-				return badPrimitive('an Int', value);
-			}
-
-			if (-2147483647 < value && value < 2147483647 && (value | 0) === value) {
-				return ok(value);
-			}
-
-			if (isFinite(value) && !(value % 1)) {
-				return ok(value);
-			}
-
-			return badPrimitive('an Int', value);
-
-		case 'float':
-			return (typeof value === 'number')
-				? ok(value)
-				: badPrimitive('a Float', value);
-
-		case 'string':
-			return (typeof value === 'string')
-				? ok(value)
-				: (value instanceof String)
-					? ok(value + '')
-					: badPrimitive('a String', value);
-
-		case 'null':
-			return (value === null)
-				? ok(decoder.value)
-				: badPrimitive('null', value);
-
-		case 'value':
-			return ok(value);
-
-		case 'list':
-			if (!(value instanceof Array))
-			{
-				return badPrimitive('a List', value);
-			}
-
-			var list = _elm_lang$core$Native_List.Nil;
-			for (var i = value.length; i--; )
-			{
-				var result = runHelp(decoder.decoder, value[i]);
-				if (result.tag !== 'ok')
-				{
-					return badIndex(i, result)
-				}
-				list = _elm_lang$core$Native_List.Cons(result.value, list);
-			}
-			return ok(list);
-
-		case 'array':
-			if (!(value instanceof Array))
-			{
-				return badPrimitive('an Array', value);
-			}
-
-			var len = value.length;
-			var array = new Array(len);
-			for (var i = len; i--; )
-			{
-				var result = runHelp(decoder.decoder, value[i]);
-				if (result.tag !== 'ok')
-				{
-					return badIndex(i, result);
-				}
-				array[i] = result.value;
-			}
-			return ok(_elm_lang$core$Native_Array.fromJSArray(array));
-
-		case 'maybe':
-			var result = runHelp(decoder.decoder, value);
-			return (result.tag === 'ok')
-				? ok(_elm_lang$core$Maybe$Just(result.value))
-				: ok(_elm_lang$core$Maybe$Nothing);
-
-		case 'field':
-			var field = decoder.field;
-			if (typeof value !== 'object' || value === null || !(field in value))
-			{
-				return badPrimitive('an object with a field named `' + field + '`', value);
-			}
-
-			var result = runHelp(decoder.decoder, value[field]);
-			return (result.tag === 'ok') ? result : badField(field, result);
-
-		case 'index':
-			var index = decoder.index;
-			if (!(value instanceof Array))
-			{
-				return badPrimitive('an array', value);
-			}
-			if (index >= value.length)
-			{
-				return badPrimitive('a longer array. Need index ' + index + ' but there are only ' + value.length + ' entries', value);
-			}
-
-			var result = runHelp(decoder.decoder, value[index]);
-			return (result.tag === 'ok') ? result : badIndex(index, result);
-
-		case 'key-value':
-			if (typeof value !== 'object' || value === null || value instanceof Array)
-			{
-				return badPrimitive('an object', value);
-			}
-
-			var keyValuePairs = _elm_lang$core$Native_List.Nil;
-			for (var key in value)
-			{
-				var result = runHelp(decoder.decoder, value[key]);
-				if (result.tag !== 'ok')
-				{
-					return badField(key, result);
-				}
-				var pair = _elm_lang$core$Native_Utils.Tuple2(key, result.value);
-				keyValuePairs = _elm_lang$core$Native_List.Cons(pair, keyValuePairs);
-			}
-			return ok(keyValuePairs);
-
-		case 'map-many':
-			var answer = decoder.func;
-			var decoders = decoder.decoders;
-			for (var i = 0; i < decoders.length; i++)
-			{
-				var result = runHelp(decoders[i], value);
-				if (result.tag !== 'ok')
-				{
-					return result;
-				}
-				answer = answer(result.value);
-			}
-			return ok(answer);
-
-		case 'andThen':
-			var result = runHelp(decoder.decoder, value);
-			return (result.tag !== 'ok')
-				? result
-				: runHelp(decoder.callback(result.value), value);
-
-		case 'oneOf':
-			var errors = [];
-			var temp = decoder.decoders;
-			while (temp.ctor !== '[]')
-			{
-				var result = runHelp(temp._0, value);
-
-				if (result.tag === 'ok')
-				{
-					return result;
-				}
-
-				errors.push(result);
-
-				temp = temp._1;
-			}
-			return badOneOf(errors);
-
-		case 'fail':
-			return bad(decoder.msg);
-
-		case 'succeed':
-			return ok(decoder.msg);
-	}
-}
-
-
-// EQUALITY
-
-function equality(a, b)
-{
-	if (a === b)
-	{
-		return true;
-	}
-
-	if (a.tag !== b.tag)
-	{
-		return false;
-	}
-
-	switch (a.tag)
-	{
-		case 'succeed':
-		case 'fail':
-			return a.msg === b.msg;
-
-		case 'bool':
-		case 'int':
-		case 'float':
-		case 'string':
-		case 'value':
-			return true;
-
-		case 'null':
-			return a.value === b.value;
-
-		case 'list':
-		case 'array':
-		case 'maybe':
-		case 'key-value':
-			return equality(a.decoder, b.decoder);
-
-		case 'field':
-			return a.field === b.field && equality(a.decoder, b.decoder);
-
-		case 'index':
-			return a.index === b.index && equality(a.decoder, b.decoder);
-
-		case 'map-many':
-			if (a.func !== b.func)
-			{
-				return false;
-			}
-			return listEquality(a.decoders, b.decoders);
-
-		case 'andThen':
-			return a.callback === b.callback && equality(a.decoder, b.decoder);
-
-		case 'oneOf':
-			return listEquality(a.decoders, b.decoders);
-	}
-}
-
-function listEquality(aDecoders, bDecoders)
-{
-	var len = aDecoders.length;
-	if (len !== bDecoders.length)
-	{
-		return false;
-	}
-	for (var i = 0; i < len; i++)
-	{
-		if (!equality(aDecoders[i], bDecoders[i]))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-
-// ENCODE
-
-function encode(indentLevel, value)
-{
-	return JSON.stringify(value, null, indentLevel);
-}
-
-function identity(value)
-{
-	return value;
-}
-
-function encodeObject(keyValuePairs)
-{
-	var obj = {};
-	while (keyValuePairs.ctor !== '[]')
-	{
-		var pair = keyValuePairs._0;
-		obj[pair._0] = pair._1;
-		keyValuePairs = keyValuePairs._1;
-	}
-	return obj;
-}
 
 return {
-	encode: F2(encode),
-	runOnString: F2(runOnString),
-	run: F2(run),
-
-	decodeNull: decodeNull,
-	decodePrimitive: decodePrimitive,
-	decodeContainer: F2(decodeContainer),
-
-	decodeField: F2(decodeField),
-	decodeIndex: F2(decodeIndex),
-
-	map1: F2(map1),
-	map2: F3(map2),
-	map3: F4(map3),
-	map4: F5(map4),
-	map5: F6(map5),
-	map6: F7(map6),
-	map7: F8(map7),
-	map8: F9(map8),
-	decodeKeyValuePairs: decodeKeyValuePairs,
-
-	andThen: F2(andThen),
-	fail: fail,
-	succeed: succeed,
-	oneOf: oneOf,
-
-	identity: identity,
-	encodeNull: null,
-	encodeArray: _elm_lang$core$Native_Array.toJSArray,
-	encodeList: _elm_lang$core$Native_List.toArray,
-	encodeObject: encodeObject,
-
-	equality: equality
+	fromString: fromString,
+	year: function(d) { return d.getFullYear(); },
+	month: function(d) { return { ctor: monthTable[d.getMonth()] }; },
+	day: function(d) { return d.getDate(); },
+	hour: function(d) { return d.getHours(); },
+	minute: function(d) { return d.getMinutes(); },
+	second: function(d) { return d.getSeconds(); },
+	millisecond: function(d) { return d.getMilliseconds(); },
+	toTime: function(d) { return d.getTime(); },
+	fromTime: function(t) { return new Date(t); },
+	dayOfWeek: function(d) { return { ctor: dayTable[d.getDay()] }; }
 };
 
 }();
-
-var _elm_lang$core$Json_Encode$list = _elm_lang$core$Native_Json.encodeList;
-var _elm_lang$core$Json_Encode$array = _elm_lang$core$Native_Json.encodeArray;
-var _elm_lang$core$Json_Encode$object = _elm_lang$core$Native_Json.encodeObject;
-var _elm_lang$core$Json_Encode$null = _elm_lang$core$Native_Json.encodeNull;
-var _elm_lang$core$Json_Encode$bool = _elm_lang$core$Native_Json.identity;
-var _elm_lang$core$Json_Encode$float = _elm_lang$core$Native_Json.identity;
-var _elm_lang$core$Json_Encode$int = _elm_lang$core$Native_Json.identity;
-var _elm_lang$core$Json_Encode$string = _elm_lang$core$Native_Json.identity;
-var _elm_lang$core$Json_Encode$encode = _elm_lang$core$Native_Json.encode;
-var _elm_lang$core$Json_Encode$Value = {ctor: 'Value'};
-
-var _elm_lang$core$Json_Decode$null = _elm_lang$core$Native_Json.decodeNull;
-var _elm_lang$core$Json_Decode$value = _elm_lang$core$Native_Json.decodePrimitive('value');
-var _elm_lang$core$Json_Decode$andThen = _elm_lang$core$Native_Json.andThen;
-var _elm_lang$core$Json_Decode$fail = _elm_lang$core$Native_Json.fail;
-var _elm_lang$core$Json_Decode$succeed = _elm_lang$core$Native_Json.succeed;
-var _elm_lang$core$Json_Decode$lazy = function (thunk) {
-	return A2(
-		_elm_lang$core$Json_Decode$andThen,
-		thunk,
-		_elm_lang$core$Json_Decode$succeed(
-			{ctor: '_Tuple0'}));
-};
-var _elm_lang$core$Json_Decode$decodeValue = _elm_lang$core$Native_Json.run;
-var _elm_lang$core$Json_Decode$decodeString = _elm_lang$core$Native_Json.runOnString;
-var _elm_lang$core$Json_Decode$map8 = _elm_lang$core$Native_Json.map8;
-var _elm_lang$core$Json_Decode$map7 = _elm_lang$core$Native_Json.map7;
-var _elm_lang$core$Json_Decode$map6 = _elm_lang$core$Native_Json.map6;
-var _elm_lang$core$Json_Decode$map5 = _elm_lang$core$Native_Json.map5;
-var _elm_lang$core$Json_Decode$map4 = _elm_lang$core$Native_Json.map4;
-var _elm_lang$core$Json_Decode$map3 = _elm_lang$core$Native_Json.map3;
-var _elm_lang$core$Json_Decode$map2 = _elm_lang$core$Native_Json.map2;
-var _elm_lang$core$Json_Decode$map = _elm_lang$core$Native_Json.map1;
-var _elm_lang$core$Json_Decode$oneOf = _elm_lang$core$Native_Json.oneOf;
-var _elm_lang$core$Json_Decode$maybe = function (decoder) {
-	return A2(_elm_lang$core$Native_Json.decodeContainer, 'maybe', decoder);
-};
-var _elm_lang$core$Json_Decode$index = _elm_lang$core$Native_Json.decodeIndex;
-var _elm_lang$core$Json_Decode$field = _elm_lang$core$Native_Json.decodeField;
-var _elm_lang$core$Json_Decode$at = F2(
-	function (fields, decoder) {
-		return A3(_elm_lang$core$List$foldr, _elm_lang$core$Json_Decode$field, decoder, fields);
-	});
-var _elm_lang$core$Json_Decode$keyValuePairs = _elm_lang$core$Native_Json.decodeKeyValuePairs;
-var _elm_lang$core$Json_Decode$dict = function (decoder) {
-	return A2(
-		_elm_lang$core$Json_Decode$map,
-		_elm_lang$core$Dict$fromList,
-		_elm_lang$core$Json_Decode$keyValuePairs(decoder));
-};
-var _elm_lang$core$Json_Decode$array = function (decoder) {
-	return A2(_elm_lang$core$Native_Json.decodeContainer, 'array', decoder);
-};
-var _elm_lang$core$Json_Decode$list = function (decoder) {
-	return A2(_elm_lang$core$Native_Json.decodeContainer, 'list', decoder);
-};
-var _elm_lang$core$Json_Decode$nullable = function (decoder) {
-	return _elm_lang$core$Json_Decode$oneOf(
-		{
-			ctor: '::',
-			_0: _elm_lang$core$Json_Decode$null(_elm_lang$core$Maybe$Nothing),
-			_1: {
-				ctor: '::',
-				_0: A2(_elm_lang$core$Json_Decode$map, _elm_lang$core$Maybe$Just, decoder),
-				_1: {ctor: '[]'}
-			}
-		});
-};
-var _elm_lang$core$Json_Decode$float = _elm_lang$core$Native_Json.decodePrimitive('float');
-var _elm_lang$core$Json_Decode$int = _elm_lang$core$Native_Json.decodePrimitive('int');
-var _elm_lang$core$Json_Decode$bool = _elm_lang$core$Native_Json.decodePrimitive('bool');
-var _elm_lang$core$Json_Decode$string = _elm_lang$core$Native_Json.decodePrimitive('string');
-var _elm_lang$core$Json_Decode$Decoder = {ctor: 'Decoder'};
-
 var _elm_lang$core$Task$onError = _elm_lang$core$Native_Scheduler.onError;
 var _elm_lang$core$Task$andThen = _elm_lang$core$Native_Scheduler.andThen;
 var _elm_lang$core$Task$spawnCmd = F2(
@@ -6164,6 +6277,266 @@ var _elm_lang$core$Time$subMap = F2(
 			});
 	});
 _elm_lang$core$Native_Platform.effectManagers['Time'] = {pkg: 'elm-lang/core', init: _elm_lang$core$Time$init, onEffects: _elm_lang$core$Time$onEffects, onSelfMsg: _elm_lang$core$Time$onSelfMsg, tag: 'sub', subMap: _elm_lang$core$Time$subMap};
+
+var _elm_lang$core$Date$millisecond = _elm_lang$core$Native_Date.millisecond;
+var _elm_lang$core$Date$second = _elm_lang$core$Native_Date.second;
+var _elm_lang$core$Date$minute = _elm_lang$core$Native_Date.minute;
+var _elm_lang$core$Date$hour = _elm_lang$core$Native_Date.hour;
+var _elm_lang$core$Date$dayOfWeek = _elm_lang$core$Native_Date.dayOfWeek;
+var _elm_lang$core$Date$day = _elm_lang$core$Native_Date.day;
+var _elm_lang$core$Date$month = _elm_lang$core$Native_Date.month;
+var _elm_lang$core$Date$year = _elm_lang$core$Native_Date.year;
+var _elm_lang$core$Date$fromTime = _elm_lang$core$Native_Date.fromTime;
+var _elm_lang$core$Date$toTime = _elm_lang$core$Native_Date.toTime;
+var _elm_lang$core$Date$fromString = _elm_lang$core$Native_Date.fromString;
+var _elm_lang$core$Date$now = A2(_elm_lang$core$Task$map, _elm_lang$core$Date$fromTime, _elm_lang$core$Time$now);
+var _elm_lang$core$Date$Date = {ctor: 'Date'};
+var _elm_lang$core$Date$Sun = {ctor: 'Sun'};
+var _elm_lang$core$Date$Sat = {ctor: 'Sat'};
+var _elm_lang$core$Date$Fri = {ctor: 'Fri'};
+var _elm_lang$core$Date$Thu = {ctor: 'Thu'};
+var _elm_lang$core$Date$Wed = {ctor: 'Wed'};
+var _elm_lang$core$Date$Tue = {ctor: 'Tue'};
+var _elm_lang$core$Date$Mon = {ctor: 'Mon'};
+var _elm_lang$core$Date$Dec = {ctor: 'Dec'};
+var _elm_lang$core$Date$Nov = {ctor: 'Nov'};
+var _elm_lang$core$Date$Oct = {ctor: 'Oct'};
+var _elm_lang$core$Date$Sep = {ctor: 'Sep'};
+var _elm_lang$core$Date$Aug = {ctor: 'Aug'};
+var _elm_lang$core$Date$Jul = {ctor: 'Jul'};
+var _elm_lang$core$Date$Jun = {ctor: 'Jun'};
+var _elm_lang$core$Date$May = {ctor: 'May'};
+var _elm_lang$core$Date$Apr = {ctor: 'Apr'};
+var _elm_lang$core$Date$Mar = {ctor: 'Mar'};
+var _elm_lang$core$Date$Feb = {ctor: 'Feb'};
+var _elm_lang$core$Date$Jan = {ctor: 'Jan'};
+
+var _elm_lang$core$Set$foldr = F3(
+	function (f, b, _p0) {
+		var _p1 = _p0;
+		return A3(
+			_elm_lang$core$Dict$foldr,
+			F3(
+				function (k, _p2, b) {
+					return A2(f, k, b);
+				}),
+			b,
+			_p1._0);
+	});
+var _elm_lang$core$Set$foldl = F3(
+	function (f, b, _p3) {
+		var _p4 = _p3;
+		return A3(
+			_elm_lang$core$Dict$foldl,
+			F3(
+				function (k, _p5, b) {
+					return A2(f, k, b);
+				}),
+			b,
+			_p4._0);
+	});
+var _elm_lang$core$Set$toList = function (_p6) {
+	var _p7 = _p6;
+	return _elm_lang$core$Dict$keys(_p7._0);
+};
+var _elm_lang$core$Set$size = function (_p8) {
+	var _p9 = _p8;
+	return _elm_lang$core$Dict$size(_p9._0);
+};
+var _elm_lang$core$Set$member = F2(
+	function (k, _p10) {
+		var _p11 = _p10;
+		return A2(_elm_lang$core$Dict$member, k, _p11._0);
+	});
+var _elm_lang$core$Set$isEmpty = function (_p12) {
+	var _p13 = _p12;
+	return _elm_lang$core$Dict$isEmpty(_p13._0);
+};
+var _elm_lang$core$Set$Set_elm_builtin = function (a) {
+	return {ctor: 'Set_elm_builtin', _0: a};
+};
+var _elm_lang$core$Set$empty = _elm_lang$core$Set$Set_elm_builtin(_elm_lang$core$Dict$empty);
+var _elm_lang$core$Set$singleton = function (k) {
+	return _elm_lang$core$Set$Set_elm_builtin(
+		A2(
+			_elm_lang$core$Dict$singleton,
+			k,
+			{ctor: '_Tuple0'}));
+};
+var _elm_lang$core$Set$insert = F2(
+	function (k, _p14) {
+		var _p15 = _p14;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A3(
+				_elm_lang$core$Dict$insert,
+				k,
+				{ctor: '_Tuple0'},
+				_p15._0));
+	});
+var _elm_lang$core$Set$fromList = function (xs) {
+	return A3(_elm_lang$core$List$foldl, _elm_lang$core$Set$insert, _elm_lang$core$Set$empty, xs);
+};
+var _elm_lang$core$Set$map = F2(
+	function (f, s) {
+		return _elm_lang$core$Set$fromList(
+			A2(
+				_elm_lang$core$List$map,
+				f,
+				_elm_lang$core$Set$toList(s)));
+	});
+var _elm_lang$core$Set$remove = F2(
+	function (k, _p16) {
+		var _p17 = _p16;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$remove, k, _p17._0));
+	});
+var _elm_lang$core$Set$union = F2(
+	function (_p19, _p18) {
+		var _p20 = _p19;
+		var _p21 = _p18;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$union, _p20._0, _p21._0));
+	});
+var _elm_lang$core$Set$intersect = F2(
+	function (_p23, _p22) {
+		var _p24 = _p23;
+		var _p25 = _p22;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$intersect, _p24._0, _p25._0));
+	});
+var _elm_lang$core$Set$diff = F2(
+	function (_p27, _p26) {
+		var _p28 = _p27;
+		var _p29 = _p26;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(_elm_lang$core$Dict$diff, _p28._0, _p29._0));
+	});
+var _elm_lang$core$Set$filter = F2(
+	function (p, _p30) {
+		var _p31 = _p30;
+		return _elm_lang$core$Set$Set_elm_builtin(
+			A2(
+				_elm_lang$core$Dict$filter,
+				F2(
+					function (k, _p32) {
+						return p(k);
+					}),
+				_p31._0));
+	});
+var _elm_lang$core$Set$partition = F2(
+	function (p, _p33) {
+		var _p34 = _p33;
+		var _p35 = A2(
+			_elm_lang$core$Dict$partition,
+			F2(
+				function (k, _p36) {
+					return p(k);
+				}),
+			_p34._0);
+		var p1 = _p35._0;
+		var p2 = _p35._1;
+		return {
+			ctor: '_Tuple2',
+			_0: _elm_lang$core$Set$Set_elm_builtin(p1),
+			_1: _elm_lang$core$Set$Set_elm_builtin(p2)
+		};
+	});
+
+var _elm_community$json_extra$Json_Decode_Extra$fromResult = function (result) {
+	var _p0 = result;
+	if (_p0.ctor === 'Ok') {
+		return _elm_lang$core$Json_Decode$succeed(_p0._0);
+	} else {
+		return _elm_lang$core$Json_Decode$fail(_p0._0);
+	}
+};
+var _elm_community$json_extra$Json_Decode_Extra$sequenceHelp = F2(
+	function (decoders, jsonValues) {
+		return (!_elm_lang$core$Native_Utils.eq(
+			_elm_lang$core$List$length(jsonValues),
+			_elm_lang$core$List$length(decoders))) ? _elm_lang$core$Json_Decode$fail('Number of decoders does not match number of values') : _elm_community$json_extra$Json_Decode_Extra$fromResult(
+			A3(
+				_elm_lang$core$List$foldr,
+				_elm_lang$core$Result$map2(
+					F2(
+						function (x, y) {
+							return {ctor: '::', _0: x, _1: y};
+						})),
+				_elm_lang$core$Result$Ok(
+					{ctor: '[]'}),
+				A3(_elm_lang$core$List$map2, _elm_lang$core$Json_Decode$decodeValue, decoders, jsonValues)));
+	});
+var _elm_community$json_extra$Json_Decode_Extra$sequence = function (decoders) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		_elm_community$json_extra$Json_Decode_Extra$sequenceHelp(decoders),
+		_elm_lang$core$Json_Decode$list(_elm_lang$core$Json_Decode$value));
+};
+var _elm_community$json_extra$Json_Decode_Extra$withDefault = F2(
+	function (fallback, decoder) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (_p1) {
+				return _elm_lang$core$Json_Decode$succeed(
+					A2(_elm_lang$core$Maybe$withDefault, fallback, _p1));
+			},
+			_elm_lang$core$Json_Decode$maybe(decoder));
+	});
+var _elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples = F2(
+	function (keyDecoder, tuples) {
+		var _p2 = tuples;
+		if (_p2.ctor === '[]') {
+			return _elm_lang$core$Json_Decode$succeed(_elm_lang$core$Dict$empty);
+		} else {
+			var _p3 = A2(_elm_lang$core$Json_Decode$decodeString, keyDecoder, _p2._0._0);
+			if (_p3.ctor === 'Ok') {
+				return A2(
+					_elm_lang$core$Json_Decode$andThen,
+					function (_p4) {
+						return _elm_lang$core$Json_Decode$succeed(
+							A3(_elm_lang$core$Dict$insert, _p3._0, _p2._0._1, _p4));
+					},
+					A2(_elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples, keyDecoder, _p2._1));
+			} else {
+				return _elm_lang$core$Json_Decode$fail(_p3._0);
+			}
+		}
+	});
+var _elm_community$json_extra$Json_Decode_Extra$dict2 = F2(
+	function (keyDecoder, valueDecoder) {
+		return A2(
+			_elm_lang$core$Json_Decode$andThen,
+			function (_p5) {
+				return A2(
+					_elm_community$json_extra$Json_Decode_Extra$decodeDictFromTuples,
+					keyDecoder,
+					_elm_lang$core$Dict$toList(_p5));
+			},
+			_elm_lang$core$Json_Decode$dict(valueDecoder));
+	});
+var _elm_community$json_extra$Json_Decode_Extra$set = function (decoder) {
+	return A2(
+		_elm_lang$core$Json_Decode$andThen,
+		function (_p6) {
+			return _elm_lang$core$Json_Decode$succeed(
+				_elm_lang$core$Set$fromList(_p6));
+		},
+		_elm_lang$core$Json_Decode$list(decoder));
+};
+var _elm_community$json_extra$Json_Decode_Extra$date = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p7) {
+		return _elm_community$json_extra$Json_Decode_Extra$fromResult(
+			_elm_lang$core$Date$fromString(_p7));
+	},
+	_elm_lang$core$Json_Decode$string);
+var _elm_community$json_extra$Json_Decode_Extra$andMap = _elm_lang$core$Json_Decode$map2(
+	F2(
+		function (x, y) {
+			return y(x);
+		}));
+var _elm_community$json_extra$Json_Decode_Extra_ops = _elm_community$json_extra$Json_Decode_Extra_ops || {};
+_elm_community$json_extra$Json_Decode_Extra_ops['|:'] = _elm_lang$core$Basics$flip(_elm_community$json_extra$Json_Decode_Extra$andMap);
 
 var _elm_community$maybe_extra$Maybe_Extra$filter = F2(
 	function (f, m) {
@@ -14177,6 +14550,2566 @@ var _evancz$url_parser$UrlParser$intParam = function (name) {
 	return A2(_evancz$url_parser$UrlParser$customParam, name, _evancz$url_parser$UrlParser$intParamHelp);
 };
 
+var _ggb$numeral_elm$Language$Delimiters = F2(
+	function (a, b) {
+		return {thousands: a, decimal: b};
+	});
+var _ggb$numeral_elm$Language$Abbreviations = F4(
+	function (a, b, c, d) {
+		return {thousand: a, million: b, billion: c, trillion: d};
+	});
+var _ggb$numeral_elm$Language$Currency = function (a) {
+	return {symbol: a};
+};
+var _ggb$numeral_elm$Language$Language = F4(
+	function (a, b, c, d) {
+		return {delimiters: a, abbreviations: b, ordinal: c, currency: d};
+	});
+
+var _ggb$numeral_elm$Languages_English$englishOrdinal = function (number) {
+	var number1 = _elm_lang$core$Basics$floor(number);
+	var b = A2(_elm_lang$core$Basics_ops['%'], number1, 10);
+	return _elm_lang$core$Native_Utils.eq(
+		_elm_lang$core$Basics$floor(
+			_elm_lang$core$Basics$toFloat(
+				A2(_elm_lang$core$Basics_ops['%'], number1, 100)) / 10),
+		1) ? 'th' : (_elm_lang$core$Native_Utils.eq(b, 1) ? 'st' : (_elm_lang$core$Native_Utils.eq(b, 2) ? 'nd' : (_elm_lang$core$Native_Utils.eq(b, 3) ? 'rd' : 'th')));
+};
+var _ggb$numeral_elm$Languages_English$lang = {
+	delimiters: {thousands: ',', decimal: '.'},
+	abbreviations: {thousand: 'k', million: 'm', billion: 'b', trillion: 't'},
+	ordinal: _ggb$numeral_elm$Languages_English$englishOrdinal,
+	currency: {symbol: '$'}
+};
+
+var _ggb$numeral_elm$Numeral$createFinalString = function (_p0) {
+	var _p1 = _p0;
+	var _p2 = _p1.parens;
+	return A2(
+		_elm_lang$core$String$join,
+		'',
+		{
+			ctor: '::',
+			_0: _elm_lang$core$Tuple$first(_p2),
+			_1: {
+				ctor: '::',
+				_0: _p1.minus,
+				_1: {
+					ctor: '::',
+					_0: _p1.plus,
+					_1: {
+						ctor: '::',
+						_0: _p1.word,
+						_1: {
+							ctor: '::',
+							_0: _p1.decimal,
+							_1: {
+								ctor: '::',
+								_0: _p1.ordinal,
+								_1: {
+									ctor: '::',
+									_0: _p1.abbreviation,
+									_1: {
+										ctor: '::',
+										_0: _p1.bytes,
+										_1: {
+											ctor: '::',
+											_0: _p1.customSuffix,
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$core$Tuple$second(_p2),
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		});
+};
+var _ggb$numeral_elm$Numeral$hasPlus = function (numeral) {
+	return ((!numeral.neg) && numeral.signed) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{plus: '+'}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$hasMinus = function (numeral) {
+	return ((!numeral.negP) && numeral.neg) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{minus: '-'}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$createParens = function (numeral) {
+	return (numeral.negP && numeral.neg) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			parens: {ctor: '_Tuple2', _0: '(', _1: ')'}
+		}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$checkIfNegative = function (numeral) {
+	return A2(_elm_lang$core$String$contains, '-', numeral.word) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			word: A3(
+				_elm_lang$core$String$slice,
+				1,
+				_elm_lang$core$String$length(numeral.word),
+				numeral.word),
+			neg: true
+		}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$processDecimal = function (numeral) {
+	var d = numeral.decimal;
+	var result = A2(
+		_elm_lang$core$Maybe$withDefault,
+		1,
+		_elm_lang$core$Result$toMaybe(
+			_elm_lang$core$String$toInt(
+				A3(
+					_elm_lang$core$String$slice,
+					1,
+					_elm_lang$core$String$length(d),
+					d))));
+	return (numeral.optionalDecimal && _elm_lang$core$Native_Utils.eq(result, 0)) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{decimal: ''}) : _elm_lang$core$Native_Utils.update(
+		numeral,
+		{decimal: d});
+};
+var _ggb$numeral_elm$Numeral$getPrecision = function (numeral) {
+	var precision = A2(
+		_elm_lang$core$Maybe$withDefault,
+		'',
+		_elm_lang$core$List$head(
+			A2(
+				_elm_lang$core$List$drop,
+				1,
+				A2(_elm_lang$core$String$split, '.', numeral.format))));
+	return _elm_lang$core$Native_Utils.update(
+		numeral,
+		{precision: precision});
+};
+var _ggb$numeral_elm$Numeral$processWord = function (numeral) {
+	var w = A2(
+		_elm_lang$core$Maybe$withDefault,
+		'',
+		_elm_lang$core$List$head(
+			A2(_elm_lang$core$String$split, '.', numeral.strValue)));
+	return _elm_lang$core$Native_Utils.update(
+		numeral,
+		{word: w});
+};
+var _ggb$numeral_elm$Numeral$updateStringValue = function (numeral) {
+	return _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			strValue: _elm_lang$core$Basics$toString(numeral.value)
+		});
+};
+var _ggb$numeral_elm$Numeral$addThousandsDelimiter = F2(
+	function (lang, word) {
+		return A4(
+			_elm_lang$core$Regex$replace,
+			_elm_lang$core$Regex$All,
+			_elm_lang$core$Regex$regex('(\\d)(?=(\\d{3})+(?!\\d))'),
+			function (_p3) {
+				var _p4 = _p3;
+				return A2(_elm_lang$core$Basics_ops['++'], _p4.match, lang.delimiters.thousands);
+			},
+			word);
+	});
+var _ggb$numeral_elm$Numeral$checkThousandsDelimiter = function (numeral) {
+	return A2(_elm_lang$core$String$contains, ',', numeral.format) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			word: A2(_ggb$numeral_elm$Numeral$addThousandsDelimiter, numeral.language, numeral.word)
+		}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$toFixed = F2(
+	function (precision, value) {
+		var pad = function (num) {
+			var _p5 = num;
+			_v2_2:
+			do {
+				if (_p5.ctor === '::') {
+					if (_p5._1.ctor === '::') {
+						if (_p5._1._1.ctor === '[]') {
+							return {
+								ctor: '::',
+								_0: _p5._0,
+								_1: {
+									ctor: '::',
+									_0: A3(
+										_elm_lang$core$String$padRight,
+										precision,
+										_elm_lang$core$Native_Utils.chr('0'),
+										_p5._1._0),
+									_1: {ctor: '[]'}
+								}
+							};
+						} else {
+							break _v2_2;
+						}
+					} else {
+						return {
+							ctor: '::',
+							_0: _p5._0,
+							_1: {
+								ctor: '::',
+								_0: A3(
+									_elm_lang$core$String$padRight,
+									precision,
+									_elm_lang$core$Native_Utils.chr('0'),
+									''),
+								_1: {ctor: '[]'}
+							}
+						};
+					}
+				} else {
+					break _v2_2;
+				}
+			} while(false);
+			return _p5;
+		};
+		var power = Math.pow(
+			_elm_lang$core$Basics$toFloat(10),
+			_elm_lang$core$Basics$toFloat(precision));
+		return A2(
+			_elm_lang$core$String$join,
+			'.',
+			pad(
+				A2(
+					_elm_lang$core$String$split,
+					'.',
+					_elm_lang$core$Basics$toString(
+						_elm_lang$core$Basics$toFloat(
+							_elm_lang$core$Basics$round((value * power) + 1.0e-2)) / power))));
+	});
+var _ggb$numeral_elm$Numeral$checkForCustomSuffix = function (numeral) {
+	var hasSuffix = _elm_lang$core$List$head(
+		A3(
+			_elm_lang$core$Regex$find,
+			_elm_lang$core$Regex$All,
+			_elm_lang$core$Regex$regex('\\[\\D+\\]$'),
+			numeral.format));
+	var _p6 = hasSuffix;
+	if (_p6.ctor === 'Nothing') {
+		return numeral;
+	} else {
+		var _p9 = _p6._0.match;
+		return _elm_lang$core$Native_Utils.update(
+			numeral,
+			{
+				format: A4(
+					_elm_lang$core$Regex$replace,
+					_elm_lang$core$Regex$All,
+					_elm_lang$core$Regex$regex(
+						_elm_lang$core$Regex$escape(_p9)),
+					function (_p7) {
+						return '';
+					},
+					numeral.format),
+				customSuffix: A4(
+					_elm_lang$core$Regex$replace,
+					_elm_lang$core$Regex$All,
+					_elm_lang$core$Regex$regex('\\[|\\]'),
+					function (_p8) {
+						return '';
+					},
+					_p9)
+			});
+	}
+};
+var _ggb$numeral_elm$Numeral$checkOptionalDec = function (numeral) {
+	return A2(_elm_lang$core$String$contains, '[.]', numeral.format) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: A4(
+				_elm_lang$core$Regex$replace,
+				_elm_lang$core$Regex$All,
+				_elm_lang$core$Regex$regex(
+					_elm_lang$core$Regex$escape('[.]')),
+				function (_p10) {
+					return '.';
+				},
+				numeral.format),
+			optionalDecimal: true
+		}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$formatTime = F4(
+	function (lang, format, value, strValue) {
+		var hours = _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$floor((value / 60) / 60));
+		var minutes = _elm_lang$core$Basics$toFloat(
+			_elm_lang$core$Basics$floor((value - ((hours * 60) * 60)) / 60));
+		var seconds = _elm_lang$core$Basics$round((value - ((hours * 60) * 60)) - (minutes * 60));
+		var hasOneDigit = function (val) {
+			return (_elm_lang$core$Native_Utils.cmp(
+				_elm_lang$core$String$length(val),
+				2) < 0) ? A2(_elm_lang$core$Basics_ops['++'], '0', val) : val;
+		};
+		return A2(
+			_elm_lang$core$String$join,
+			':',
+			{
+				ctor: '::',
+				_0: _elm_lang$core$Basics$toString(hours),
+				_1: {
+					ctor: '::',
+					_0: hasOneDigit(
+						_elm_lang$core$Basics$toString(minutes)),
+					_1: {
+						ctor: '::',
+						_0: hasOneDigit(
+							_elm_lang$core$Basics$toString(seconds)),
+						_1: {ctor: '[]'}
+					}
+				}
+			});
+	});
+var _ggb$numeral_elm$Numeral$emptyReplace = function (str) {
+	return A3(
+		_elm_lang$core$Regex$replace,
+		_elm_lang$core$Regex$All,
+		_elm_lang$core$Regex$regex(str),
+		function (_p11) {
+			return '';
+		});
+};
+var _ggb$numeral_elm$Numeral$formatWithoutCurrency = function (format) {
+	return A2(_elm_lang$core$String$contains, ' $', format) ? {
+		ctor: '_Tuple2',
+		_0: ' ',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, ' \\$', format)
+	} : (A2(_elm_lang$core$String$contains, '$ ', format) ? {
+		ctor: '_Tuple2',
+		_0: ' ',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, '\\$ ', format)
+	} : {
+		ctor: '_Tuple2',
+		_0: '',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, '\\$', format)
+	});
+};
+var _ggb$numeral_elm$Numeral$formatWithoutPercent = function (format) {
+	return A2(_elm_lang$core$String$contains, ' %', format) ? {
+		ctor: '_Tuple2',
+		_0: ' ',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, ' %', format)
+	} : {
+		ctor: '_Tuple2',
+		_0: '',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, '%', format)
+	};
+};
+var _ggb$numeral_elm$Numeral$checkParensAndSign = function (numeral) {
+	return A2(_elm_lang$core$String$contains, '(', numeral.format) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: A3(_elm_lang$core$String$slice, 1, -1, numeral.format),
+			negP: true,
+			signed: false
+		}) : (A2(_elm_lang$core$String$contains, '+', numeral.format) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: A2(_ggb$numeral_elm$Numeral$emptyReplace, '\\+', numeral.format),
+			negP: false,
+			signed: true
+		}) : numeral);
+};
+var _ggb$numeral_elm$Numeral$checkAbbreviation = function (numeral) {
+	var _p12 = numeral;
+	var language = _p12.language;
+	var format = _p12.format;
+	var value = _p12.value;
+	var abbrK = A2(_elm_lang$core$String$contains, 'aK', format);
+	var abbrM = A2(_elm_lang$core$String$contains, 'aM', format);
+	var abbrB = A2(_elm_lang$core$String$contains, 'aB', format);
+	var abbrT = A2(_elm_lang$core$String$contains, 'aT', format);
+	var abbrForce = !(abbrK || (abbrM || (abbrB || abbrT)));
+	var absValue = _elm_lang$core$Basics$abs(value);
+	var _p13 = A2(_elm_lang$core$String$contains, ' a', format) ? {
+		ctor: '_Tuple2',
+		_0: ' ',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, ' a', format)
+	} : {
+		ctor: '_Tuple2',
+		_0: '',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, 'a', format)
+	};
+	var abbr = _p13._0;
+	var format1 = _p13._1;
+	return (!A2(_elm_lang$core$String$contains, 'a', format)) ? numeral : ((((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 12)) > -1) && abbrForce) || abbrT) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: format1,
+			abbreviation: A2(_elm_lang$core$Basics_ops['++'], abbr, language.abbreviations.trillion),
+			value: value / Math.pow(10, 12)
+		}) : ((((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 12)) < 0) && ((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 9)) > -1) && abbrForce)) || abbrB) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: format1,
+			abbreviation: A2(_elm_lang$core$Basics_ops['++'], abbr, language.abbreviations.billion),
+			value: value / Math.pow(10, 9)
+		}) : ((((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 9)) < 0) && ((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 6)) > -1) && abbrForce)) || abbrM) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: format1,
+			abbreviation: A2(_elm_lang$core$Basics_ops['++'], abbr, language.abbreviations.million),
+			value: value / Math.pow(10, 6)
+		}) : ((((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 6)) < 0) && ((_elm_lang$core$Native_Utils.cmp(
+		absValue,
+		Math.pow(10, 3)) > -1) && abbrForce)) || abbrK) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: format1,
+			abbreviation: A2(_elm_lang$core$Basics_ops['++'], abbr, language.abbreviations.thousand),
+			value: value / Math.pow(10, 3)
+		}) : _elm_lang$core$Native_Utils.update(
+		numeral,
+		{format: format1, abbreviation: abbr})))));
+};
+var _ggb$numeral_elm$Numeral$checkOrdinal = function (numeral) {
+	var _p14 = numeral;
+	var language = _p14.language;
+	var format = _p14.format;
+	var value = _p14.value;
+	var _p15 = A2(_elm_lang$core$String$contains, ' o', format) ? {
+		ctor: '_Tuple2',
+		_0: ' ',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, ' o', format)
+	} : {
+		ctor: '_Tuple2',
+		_0: '',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, 'o', format)
+	};
+	var ord = _p15._0;
+	var format1 = _p15._1;
+	return A2(_elm_lang$core$String$contains, 'o', format) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: format1,
+			ordinal: A2(
+				_elm_lang$core$Basics_ops['++'],
+				ord,
+				numeral.language.ordinal(value))
+		}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$toFixedWithOptional = F2(
+	function (prs, value) {
+		var _p16 = prs;
+		_v4_2:
+		do {
+			if (_p16.ctor === '::') {
+				if (_p16._1.ctor === '::') {
+					if (_p16._1._1.ctor === '[]') {
+						var _p17 = _p16._1._0;
+						return A2(
+							_ggb$numeral_elm$Numeral$emptyReplace,
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								'0{1,',
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									_elm_lang$core$Basics$toString(_p17),
+									'}$')),
+							A2(_ggb$numeral_elm$Numeral$toFixed, _p16._0 + _p17, value));
+					} else {
+						break _v4_2;
+					}
+				} else {
+					return A2(_ggb$numeral_elm$Numeral$toFixed, _p16._0, value);
+				}
+			} else {
+				break _v4_2;
+			}
+		} while(false);
+		return _elm_lang$core$Basics$toString(value);
+	});
+var _ggb$numeral_elm$Numeral$processPrecision = function (numeral) {
+	var _p18 = numeral;
+	var language = _p18.language;
+	var format = _p18.format;
+	var value = _p18.value;
+	var precision = _p18.precision;
+	var fst = A2(_elm_lang$core$String$contains, '[', precision) ? A3(
+		_elm_lang$core$Basics$flip,
+		_ggb$numeral_elm$Numeral$toFixedWithOptional,
+		value,
+		A2(
+			_elm_lang$core$List$take,
+			2,
+			A2(
+				_elm_lang$core$List$map,
+				_elm_lang$core$String$length,
+				A2(
+					_elm_lang$core$String$split,
+					'[',
+					A2(_ggb$numeral_elm$Numeral$emptyReplace, ']', precision))))) : A2(
+		_ggb$numeral_elm$Numeral$toFixed,
+		_elm_lang$core$String$length(precision),
+		value);
+	var w = A2(
+		_elm_lang$core$Maybe$withDefault,
+		'',
+		_elm_lang$core$List$head(
+			A2(_elm_lang$core$String$split, '.', fst)));
+	var snd = function () {
+		var _p19 = A2(_elm_lang$core$String$split, '.', fst);
+		if (((_p19.ctor === '::') && (_p19._1.ctor === '::')) && (_p19._1._1.ctor === '[]')) {
+			var _p20 = _p19._1._0;
+			return (_elm_lang$core$Native_Utils.cmp(
+				_elm_lang$core$String$length(_p20),
+				0) > 0) ? A2(_elm_lang$core$Basics_ops['++'], language.delimiters.decimal, _p20) : '';
+		} else {
+			return '';
+		}
+	}();
+	return _elm_lang$core$Native_Utils.eq(precision, '') ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{word: w, decimal: ''}) : _elm_lang$core$Native_Utils.update(
+		numeral,
+		{word: w, decimal: snd});
+};
+var _ggb$numeral_elm$Numeral$indexOf = F2(
+	function (part, word) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			-1,
+			_elm_lang$core$List$head(
+				A2(_elm_lang$core$String$indexes, part, word)));
+	});
+var _ggb$numeral_elm$Numeral$createFinalWord = function (numeral) {
+	return _elm_lang$core$Native_Utils.eq(
+		A2(_ggb$numeral_elm$Numeral$indexOf, '.', numeral.format),
+		0) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{word: ''}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$suffixes = _elm_lang$core$Array$fromList(
+	{
+		ctor: '::',
+		_0: 'B',
+		_1: {
+			ctor: '::',
+			_0: 'KB',
+			_1: {
+				ctor: '::',
+				_0: 'MB',
+				_1: {
+					ctor: '::',
+					_0: 'GB',
+					_1: {
+						ctor: '::',
+						_0: 'TB',
+						_1: {
+							ctor: '::',
+							_0: 'PB',
+							_1: {
+								ctor: '::',
+								_0: 'EB',
+								_1: {
+									ctor: '::',
+									_0: 'ZB',
+									_1: {
+										ctor: '::',
+										_0: 'YB',
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	});
+var _ggb$numeral_elm$Numeral$checkByte = function (numeral) {
+	var _p21 = numeral;
+	var format = _p21.format;
+	var value = _p21.value;
+	var _p22 = A2(_elm_lang$core$String$contains, ' b', format) ? {
+		ctor: '_Tuple2',
+		_0: ' ',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, ' b', format)
+	} : {
+		ctor: '_Tuple2',
+		_0: '',
+		_1: A2(_ggb$numeral_elm$Numeral$emptyReplace, 'b', format)
+	};
+	var bytes = _p22._0;
+	var format1 = _p22._1;
+	var suffixIndex1 = function (power) {
+		suffixIndex1:
+		while (true) {
+			var maxValue = Math.pow(1024, power + 1);
+			var minValue = Math.pow(1024, power);
+			if ((_elm_lang$core$Native_Utils.cmp(value, minValue) > -1) && (_elm_lang$core$Native_Utils.cmp(value, maxValue) < 0)) {
+				return (_elm_lang$core$Native_Utils.cmp(minValue, 0) > 0) ? {ctor: '_Tuple2', _0: power, _1: value / minValue} : {ctor: '_Tuple2', _0: power, _1: value};
+			} else {
+				if (_elm_lang$core$Native_Utils.cmp(power, 10) < 0) {
+					var _v6 = power + 1;
+					power = _v6;
+					continue suffixIndex1;
+				} else {
+					return {ctor: '_Tuple2', _0: -1, _1: value};
+				}
+			}
+		}
+	};
+	var _p23 = suffixIndex1(0);
+	var suffixIndex = _p23._0;
+	var value1 = _p23._1;
+	var suffix = A2(
+		_elm_lang$core$Maybe$withDefault,
+		'',
+		A2(_elm_lang$core$Array$get, suffixIndex, _ggb$numeral_elm$Numeral$suffixes));
+	return A2(_elm_lang$core$String$contains, 'b', format) ? _elm_lang$core$Native_Utils.update(
+		numeral,
+		{
+			format: format1,
+			value: value1,
+			bytes: A2(_elm_lang$core$Basics_ops['++'], bytes, suffix)
+		}) : numeral;
+};
+var _ggb$numeral_elm$Numeral$formatNumber = function (numeral) {
+	return _ggb$numeral_elm$Numeral$createFinalString(
+		_ggb$numeral_elm$Numeral$hasPlus(
+			_ggb$numeral_elm$Numeral$hasMinus(
+				_ggb$numeral_elm$Numeral$createParens(
+					_ggb$numeral_elm$Numeral$createFinalWord(
+						_ggb$numeral_elm$Numeral$checkIfNegative(
+							_ggb$numeral_elm$Numeral$checkThousandsDelimiter(
+								_ggb$numeral_elm$Numeral$processDecimal(
+									_ggb$numeral_elm$Numeral$processPrecision(
+										_ggb$numeral_elm$Numeral$getPrecision(
+											_ggb$numeral_elm$Numeral$processWord(
+												_ggb$numeral_elm$Numeral$updateStringValue(
+													_ggb$numeral_elm$Numeral$checkOptionalDec(
+														_ggb$numeral_elm$Numeral$checkOrdinal(
+															_ggb$numeral_elm$Numeral$checkByte(
+																_ggb$numeral_elm$Numeral$checkAbbreviation(
+																	_ggb$numeral_elm$Numeral$checkForCustomSuffix(
+																		_ggb$numeral_elm$Numeral$checkParensAndSign(numeral))))))))))))))))));
+};
+var _ggb$numeral_elm$Numeral$empty = F3(
+	function (lang, format, value) {
+		return {
+			language: lang,
+			format: format,
+			value: value,
+			word: '',
+			strValue: _elm_lang$core$Basics$toString(value),
+			signed: false,
+			neg: false,
+			negP: false,
+			customSuffix: '',
+			abbreviation: '',
+			bytes: '',
+			ordinal: '',
+			decimal: '',
+			optionalDecimal: false,
+			parens: {ctor: '_Tuple2', _0: '', _1: ''},
+			precision: '',
+			minus: '',
+			plus: ''
+		};
+	});
+var _ggb$numeral_elm$Numeral$formatCurrency = F4(
+	function (lang, format, value, strValue) {
+		var currencySymbol = lang.currency.symbol;
+		var _p24 = _ggb$numeral_elm$Numeral$formatWithoutCurrency(format);
+		var space = _p24._0;
+		var format1 = _p24._1;
+		var formatted = _ggb$numeral_elm$Numeral$formatNumber(
+			A3(_ggb$numeral_elm$Numeral$empty, lang, format1, value));
+		var minusSignIndex = A2(_ggb$numeral_elm$Numeral$indexOf, '-', format);
+		var openParenIndex = A2(_ggb$numeral_elm$Numeral$indexOf, '(', format);
+		var symbolIndex = A2(_ggb$numeral_elm$Numeral$indexOf, '$', format);
+		return (_elm_lang$core$Native_Utils.cmp(symbolIndex, 1) < 1) ? ((A2(_elm_lang$core$String$contains, '(', formatted) || A2(_elm_lang$core$String$contains, '-', formatted)) ? (((_elm_lang$core$Native_Utils.cmp(symbolIndex, openParenIndex) < 0) || (_elm_lang$core$Native_Utils.cmp(symbolIndex, minusSignIndex) < 0)) ? A2(
+			_elm_lang$core$String$join,
+			'',
+			{
+				ctor: '::',
+				_0: currencySymbol,
+				_1: {
+					ctor: '::',
+					_0: space,
+					_1: {
+						ctor: '::',
+						_0: A2(_elm_lang$core$String$contains, '-', formatted) ? '-' : '',
+						_1: {
+							ctor: '::',
+							_0: A2(_elm_lang$core$String$contains, '(', formatted) ? '(' : '',
+							_1: {
+								ctor: '::',
+								_0: A3(
+									_elm_lang$core$String$slice,
+									1,
+									_elm_lang$core$String$length(formatted),
+									formatted),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			}) : A2(
+			_elm_lang$core$String$join,
+			'',
+			{
+				ctor: '::',
+				_0: A2(_elm_lang$core$String$contains, '-', formatted) ? '-' : '',
+				_1: {
+					ctor: '::',
+					_0: A2(_elm_lang$core$String$contains, '(', formatted) ? '(' : '',
+					_1: {
+						ctor: '::',
+						_0: currencySymbol,
+						_1: {
+							ctor: '::',
+							_0: space,
+							_1: {
+								ctor: '::',
+								_0: A3(
+									_elm_lang$core$String$slice,
+									1,
+									_elm_lang$core$String$length(formatted),
+									formatted),
+								_1: {ctor: '[]'}
+							}
+						}
+					}
+				}
+			})) : A2(
+			_elm_lang$core$Basics_ops['++'],
+			currencySymbol,
+			A2(_elm_lang$core$Basics_ops['++'], space, formatted))) : (A2(_elm_lang$core$String$contains, ')', formatted) ? A2(
+			_elm_lang$core$String$join,
+			'',
+			{
+				ctor: '::',
+				_0: A3(
+					_elm_lang$core$String$slice,
+					0,
+					_elm_lang$core$String$length(formatted) - 1,
+					formatted),
+				_1: {
+					ctor: '::',
+					_0: space,
+					_1: {
+						ctor: '::',
+						_0: currencySymbol,
+						_1: {
+							ctor: '::',
+							_0: ')',
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}) : A2(
+			_elm_lang$core$Basics_ops['++'],
+			formatted,
+			A2(_elm_lang$core$Basics_ops['++'], space, currencySymbol)));
+	});
+var _ggb$numeral_elm$Numeral$formatPercentage = F4(
+	function (lang, format, value, strValue) {
+		var _p25 = _ggb$numeral_elm$Numeral$formatWithoutPercent(format);
+		var space = _p25._0;
+		var format1 = _p25._1;
+		var value1 = value * 100;
+		var formatted = _ggb$numeral_elm$Numeral$formatNumber(
+			A3(_ggb$numeral_elm$Numeral$empty, lang, format1, value1));
+		return A2(_elm_lang$core$String$contains, ')', formatted) ? A2(
+			_elm_lang$core$String$join,
+			'',
+			{
+				ctor: '::',
+				_0: A3(
+					_elm_lang$core$String$slice,
+					0,
+					_elm_lang$core$String$length(formatted) - 1,
+					formatted),
+				_1: {
+					ctor: '::',
+					_0: space,
+					_1: {
+						ctor: '::',
+						_0: '%',
+						_1: {
+							ctor: '::',
+							_0: ')',
+							_1: {ctor: '[]'}
+						}
+					}
+				}
+			}) : A2(
+			_elm_lang$core$Basics_ops['++'],
+			formatted,
+			A2(_elm_lang$core$Basics_ops['++'], space, '%'));
+	});
+var _ggb$numeral_elm$Numeral$formatWithLanguage = F3(
+	function (lang, format, value) {
+		return A2(_elm_lang$core$String$contains, '$', format) ? A4(
+			_ggb$numeral_elm$Numeral$formatCurrency,
+			lang,
+			format,
+			value,
+			_elm_lang$core$Basics$toString(value)) : (A2(_elm_lang$core$String$contains, '%', format) ? A4(
+			_ggb$numeral_elm$Numeral$formatPercentage,
+			lang,
+			format,
+			value,
+			_elm_lang$core$Basics$toString(value)) : (A2(_elm_lang$core$String$contains, ':', format) ? A4(
+			_ggb$numeral_elm$Numeral$formatTime,
+			lang,
+			format,
+			value,
+			_elm_lang$core$Basics$toString(value)) : _ggb$numeral_elm$Numeral$formatNumber(
+			A3(_ggb$numeral_elm$Numeral$empty, lang, format, value))));
+	});
+var _ggb$numeral_elm$Numeral$format = _ggb$numeral_elm$Numeral$formatWithLanguage(_ggb$numeral_elm$Languages_English$lang);
+var _ggb$numeral_elm$Numeral$Numeral = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return function (k) {
+											return function (l) {
+												return function (m) {
+													return function (n) {
+														return function (o) {
+															return function (p) {
+																return function (q) {
+																	return function (r) {
+																		return {language: a, format: b, value: c, word: d, strValue: e, signed: f, neg: g, negP: h, customSuffix: i, abbreviation: j, bytes: k, ordinal: l, decimal: m, optionalDecimal: n, parens: o, precision: p, minus: q, plus: r};
+																	};
+																};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerSecond = 1000;
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute = 60 * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerSecond;
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerHour = 60 * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute;
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerDay = 24 * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerHour;
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$dayOfWeekFromWeekdayNumber = function (n) {
+	var _p0 = n;
+	switch (_p0) {
+		case 1:
+			return _elm_lang$core$Date$Mon;
+		case 2:
+			return _elm_lang$core$Date$Tue;
+		case 3:
+			return _elm_lang$core$Date$Wed;
+		case 4:
+			return _elm_lang$core$Date$Thu;
+		case 5:
+			return _elm_lang$core$Date$Fri;
+		case 6:
+			return _elm_lang$core$Date$Sat;
+		default:
+			return _elm_lang$core$Date$Sun;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$weekdayNumberFromDayOfWeek = function (d) {
+	var _p1 = d;
+	switch (_p1.ctor) {
+		case 'Mon':
+			return 1;
+		case 'Tue':
+			return 2;
+		case 'Wed':
+			return 3;
+		case 'Thu':
+			return 4;
+		case 'Fri':
+			return 5;
+		case 'Sat':
+			return 6;
+		default:
+			return 7;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$monthFromMonthNumber = function (n) {
+	var _p2 = n;
+	switch (_p2) {
+		case 1:
+			return _elm_lang$core$Date$Jan;
+		case 2:
+			return _elm_lang$core$Date$Feb;
+		case 3:
+			return _elm_lang$core$Date$Mar;
+		case 4:
+			return _elm_lang$core$Date$Apr;
+		case 5:
+			return _elm_lang$core$Date$May;
+		case 6:
+			return _elm_lang$core$Date$Jun;
+		case 7:
+			return _elm_lang$core$Date$Jul;
+		case 8:
+			return _elm_lang$core$Date$Aug;
+		case 9:
+			return _elm_lang$core$Date$Sep;
+		case 10:
+			return _elm_lang$core$Date$Oct;
+		case 11:
+			return _elm_lang$core$Date$Nov;
+		default:
+			return _elm_lang$core$Date$Dec;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$monthNumberFromMonth = function (m) {
+	var _p3 = m;
+	switch (_p3.ctor) {
+		case 'Jan':
+			return 1;
+		case 'Feb':
+			return 2;
+		case 'Mar':
+			return 3;
+		case 'Apr':
+			return 4;
+		case 'May':
+			return 5;
+		case 'Jun':
+			return 6;
+		case 'Jul':
+			return 7;
+		case 'Aug':
+			return 8;
+		case 'Sep':
+			return 9;
+		case 'Oct':
+			return 10;
+		case 'Nov':
+			return 11;
+		default:
+			return 12;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$months = {
+	ctor: '::',
+	_0: _elm_lang$core$Date$Jan,
+	_1: {
+		ctor: '::',
+		_0: _elm_lang$core$Date$Feb,
+		_1: {
+			ctor: '::',
+			_0: _elm_lang$core$Date$Mar,
+			_1: {
+				ctor: '::',
+				_0: _elm_lang$core$Date$Apr,
+				_1: {
+					ctor: '::',
+					_0: _elm_lang$core$Date$May,
+					_1: {
+						ctor: '::',
+						_0: _elm_lang$core$Date$Jun,
+						_1: {
+							ctor: '::',
+							_0: _elm_lang$core$Date$Jul,
+							_1: {
+								ctor: '::',
+								_0: _elm_lang$core$Date$Aug,
+								_1: {
+									ctor: '::',
+									_0: _elm_lang$core$Date$Sep,
+									_1: {
+										ctor: '::',
+										_0: _elm_lang$core$Date$Oct,
+										_1: {
+											ctor: '::',
+											_0: _elm_lang$core$Date$Nov,
+											_1: {
+												ctor: '::',
+												_0: _elm_lang$core$Date$Dec,
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear = function (y) {
+	return (_elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], y, 4),
+		0) && (!_elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], y, 100),
+		0))) || _elm_lang$core$Native_Utils.eq(
+		A2(_elm_lang$core$Basics_ops['%'], y, 400),
+		0);
+};
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$daysInMonth = F2(
+	function (y, m) {
+		var _p4 = m;
+		switch (_p4.ctor) {
+			case 'Jan':
+				return 31;
+			case 'Feb':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 29 : 28;
+			case 'Mar':
+				return 31;
+			case 'Apr':
+				return 30;
+			case 'May':
+				return 31;
+			case 'Jun':
+				return 30;
+			case 'Jul':
+				return 31;
+			case 'Aug':
+				return 31;
+			case 'Sep':
+				return 30;
+			case 'Oct':
+				return 31;
+			case 'Nov':
+				return 30;
+			default:
+				return 31;
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Extra_Facts$daysBeforeStartOfMonth = F2(
+	function (y, m) {
+		var _p5 = m;
+		switch (_p5.ctor) {
+			case 'Jan':
+				return 0;
+			case 'Feb':
+				return 31;
+			case 'Mar':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 60 : 59;
+			case 'Apr':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 91 : 90;
+			case 'May':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 121 : 120;
+			case 'Jun':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 152 : 151;
+			case 'Jul':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 182 : 181;
+			case 'Aug':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 213 : 212;
+			case 'Sep':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 244 : 243;
+			case 'Oct':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 274 : 273;
+			case 'Nov':
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 305 : 304;
+			default:
+				return _justinmimbs$elm_date_extra$Date_Extra_Facts$isLeapYear(y) ? 335 : 334;
+		}
+	});
+
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$toUnixTime = function (rd) {
+	return (rd - 719163) * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerDay;
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekdayNumber = function (rd) {
+	var _p0 = A2(_elm_lang$core$Basics_ops['%'], rd, 7);
+	if (_p0 === 0) {
+		return 7;
+	} else {
+		return _p0;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$leapYearsInCommonEra = function (y) {
+	return (((y / 4) | 0) - ((y / 100) | 0)) + ((y / 400) | 0);
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$rataDieBeforeStartOfYear = function (y) {
+	return (365 * (y - 1)) + _justinmimbs$elm_date_extra$Date_Internal_RataDie$leapYearsInCommonEra(y - 1);
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$fromOrdinalDate = F2(
+	function (y, d) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$rataDieBeforeStartOfYear(y) + d;
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$week1Day1OfWeekYear = function (y) {
+	var jan4RD = A2(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromOrdinalDate, y, 4);
+	return (jan4RD - _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekdayNumber(jan4RD)) + 1;
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$fromWeekDate = F3(
+	function (y, w, d) {
+		var week1Day0RD = _justinmimbs$elm_date_extra$Date_Internal_RataDie$week1Day1OfWeekYear(y) - 1;
+		return (week1Day0RD + ((w - 1) * 7)) + d;
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$fromCalendarDate = F3(
+	function (y, m, d) {
+		var md = A2(_justinmimbs$elm_date_extra$Date_Extra_Facts$daysBeforeStartOfMonth, y, m);
+		var yd = _justinmimbs$elm_date_extra$Date_Internal_RataDie$rataDieBeforeStartOfYear(y);
+		return (yd + md) + d;
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$divideInt = F2(
+	function (a, b) {
+		return {
+			ctor: '_Tuple2',
+			_0: (a / b) | 0,
+			_1: A2(_elm_lang$core$Basics$rem, a, b)
+		};
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$year = function (rd) {
+	var _p1 = A2(_justinmimbs$elm_date_extra$Date_Internal_RataDie$divideInt, rd, 146097);
+	var q400 = _p1._0;
+	var r400 = _p1._1;
+	var _p2 = A2(_justinmimbs$elm_date_extra$Date_Internal_RataDie$divideInt, r400, 36524);
+	var q100 = _p2._0;
+	var r100 = _p2._1;
+	var _p3 = A2(_justinmimbs$elm_date_extra$Date_Internal_RataDie$divideInt, r100, 1461);
+	var q4 = _p3._0;
+	var r4 = _p3._1;
+	var _p4 = A2(_justinmimbs$elm_date_extra$Date_Internal_RataDie$divideInt, r4, 365);
+	var q1 = _p4._0;
+	var r1 = _p4._1;
+	var n = _elm_lang$core$Native_Utils.eq(r1, 0) ? 0 : 1;
+	return ((((q400 * 400) + (q100 * 100)) + (q4 * 4)) + q1) + n;
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$ordinalDay = function (rd) {
+	return rd - _justinmimbs$elm_date_extra$Date_Internal_RataDie$rataDieBeforeStartOfYear(
+		_justinmimbs$elm_date_extra$Date_Internal_RataDie$year(rd));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekYear = function (rd) {
+	var daysToThursday = 4 - _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekdayNumber(rd);
+	return _justinmimbs$elm_date_extra$Date_Internal_RataDie$year(rd + daysToThursday);
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekNumber = function (rd) {
+	var week1Day1RD = _justinmimbs$elm_date_extra$Date_Internal_RataDie$week1Day1OfWeekYear(
+		_justinmimbs$elm_date_extra$Date_Internal_RataDie$weekYear(rd));
+	return (((rd - week1Day1RD) / 7) | 0) + 1;
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$find = F2(
+	function (pred, list) {
+		find:
+		while (true) {
+			var _p5 = list;
+			if (_p5.ctor === '[]') {
+				return _elm_lang$core$Maybe$Nothing;
+			} else {
+				var _p6 = _p5._0;
+				if (pred(_p6)) {
+					return _elm_lang$core$Maybe$Just(_p6);
+				} else {
+					var _v2 = pred,
+						_v3 = _p5._1;
+					pred = _v2;
+					list = _v3;
+					continue find;
+				}
+			}
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$month = function (rd) {
+	var od = _justinmimbs$elm_date_extra$Date_Internal_RataDie$ordinalDay(rd);
+	var y = _justinmimbs$elm_date_extra$Date_Internal_RataDie$year(rd);
+	return A2(
+		_elm_lang$core$Maybe$withDefault,
+		_elm_lang$core$Date$Jan,
+		A2(
+			_justinmimbs$elm_date_extra$Date_Internal_RataDie$find,
+			function (m) {
+				return _elm_lang$core$Native_Utils.cmp(
+					A2(_justinmimbs$elm_date_extra$Date_Extra_Facts$daysBeforeStartOfMonth, y, m),
+					od) < 0;
+			},
+			_elm_lang$core$List$reverse(_justinmimbs$elm_date_extra$Date_Extra_Facts$months)));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_RataDie$day = function (rd) {
+	var od = _justinmimbs$elm_date_extra$Date_Internal_RataDie$ordinalDay(rd);
+	var m = _justinmimbs$elm_date_extra$Date_Internal_RataDie$month(rd);
+	var y = _justinmimbs$elm_date_extra$Date_Internal_RataDie$year(rd);
+	return od - A2(_justinmimbs$elm_date_extra$Date_Extra_Facts$daysBeforeStartOfMonth, y, m);
+};
+
+var _justinmimbs$elm_date_extra$Date_Internal_Core$weekNumberFromCalendarDate = F3(
+	function (y, m, d) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekNumber(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromCalendarDate, y, m, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Core$weekYearFromCalendarDate = F3(
+	function (y, m, d) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$weekYear(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromCalendarDate, y, m, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromOrdinalDate = F2(
+	function (y, d) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$toUnixTime(
+			A2(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromOrdinalDate, y, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromWeekDate = F3(
+	function (y, w, d) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$toUnixTime(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromWeekDate, y, w, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromCalendarDate = F3(
+	function (y, m, d) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$toUnixTime(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromCalendarDate, y, m, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Core$msFromTimeParts = F4(
+	function (hh, mm, ss, ms) {
+		return ((ms + (_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerSecond * ss)) + (_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute * mm)) + (_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerHour * hh);
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromParts = F7(
+	function (y, m, d, hh, mm, ss, ms) {
+		return _justinmimbs$elm_date_extra$Date_Internal_RataDie$toUnixTime(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_RataDie$fromCalendarDate, y, m, d)) + A4(_justinmimbs$elm_date_extra$Date_Internal_Core$msFromTimeParts, hh, mm, ss, ms);
+	});
+
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$msOffsetFromUtc = function (date) {
+	var utcTime = _elm_lang$core$Date$toTime(date);
+	var localTime = _elm_lang$core$Basics$toFloat(
+		A7(
+			_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromParts,
+			_elm_lang$core$Date$year(date),
+			_elm_lang$core$Date$month(date),
+			_elm_lang$core$Date$day(date),
+			_elm_lang$core$Date$hour(date),
+			_elm_lang$core$Date$minute(date),
+			_elm_lang$core$Date$second(date),
+			_elm_lang$core$Date$millisecond(date)));
+	return _elm_lang$core$Basics$floor(localTime - utcTime);
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$offsetFromUtc = function (date) {
+	return (_justinmimbs$elm_date_extra$Date_Internal_Extract$msOffsetFromUtc(date) / _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute) | 0;
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$weekYear = function (date) {
+	return A3(
+		_justinmimbs$elm_date_extra$Date_Internal_Core$weekYearFromCalendarDate,
+		_elm_lang$core$Date$year(date),
+		_elm_lang$core$Date$month(date),
+		_elm_lang$core$Date$day(date));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$weekNumber = function (date) {
+	return A3(
+		_justinmimbs$elm_date_extra$Date_Internal_Core$weekNumberFromCalendarDate,
+		_elm_lang$core$Date$year(date),
+		_elm_lang$core$Date$month(date),
+		_elm_lang$core$Date$day(date));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$weekdayNumber = function (_p0) {
+	return _justinmimbs$elm_date_extra$Date_Extra_Facts$weekdayNumberFromDayOfWeek(
+		_elm_lang$core$Date$dayOfWeek(_p0));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$fractionalDay = function (date) {
+	var timeOfDayMS = A4(
+		_justinmimbs$elm_date_extra$Date_Internal_Core$msFromTimeParts,
+		_elm_lang$core$Date$hour(date),
+		_elm_lang$core$Date$minute(date),
+		_elm_lang$core$Date$second(date),
+		_elm_lang$core$Date$millisecond(date));
+	return _elm_lang$core$Basics$toFloat(timeOfDayMS) / _elm_lang$core$Basics$toFloat(_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerDay);
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$ordinalDay = function (date) {
+	return A2(
+		_justinmimbs$elm_date_extra$Date_Extra_Facts$daysBeforeStartOfMonth,
+		_elm_lang$core$Date$year(date),
+		_elm_lang$core$Date$month(date)) + _elm_lang$core$Date$day(date);
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$monthNumber = function (_p1) {
+	return _justinmimbs$elm_date_extra$Date_Extra_Facts$monthNumberFromMonth(
+		_elm_lang$core$Date$month(_p1));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Extract$quarter = function (date) {
+	return _elm_lang$core$Basics$ceiling(
+		function (n) {
+			return n / 3;
+		}(
+			_elm_lang$core$Basics$toFloat(
+				_justinmimbs$elm_date_extra$Date_Internal_Extract$monthNumber(date))));
+};
+
+var _justinmimbs$elm_date_extra$Date_Internal_Format$toUtc = function (date) {
+	return _elm_lang$core$Date$fromTime(
+		_elm_lang$core$Date$toTime(date) - _elm_lang$core$Basics$toFloat(
+			_justinmimbs$elm_date_extra$Date_Internal_Extract$offsetFromUtc(date) * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$nameForm = function (length) {
+	var _p0 = length;
+	switch (_p0) {
+		case 1:
+			return 'abbreviated';
+		case 2:
+			return 'abbreviated';
+		case 3:
+			return 'abbreviated';
+		case 4:
+			return 'full';
+		case 5:
+			return 'narrow';
+		case 6:
+			return 'short';
+		default:
+			return 'invalid';
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$patternMatches = _elm_lang$core$Regex$regex('([yYQMwdDEeabhHmsSXx])\\1*|\'(?:[^\']|\'\')*?\'(?!\')');
+var _justinmimbs$elm_date_extra$Date_Internal_Format$formatTimeOffset = F3(
+	function (separator, minutesOptional, offset) {
+		var mm = A3(
+			_elm_lang$core$String$padLeft,
+			2,
+			_elm_lang$core$Native_Utils.chr('0'),
+			_elm_lang$core$Basics$toString(
+				A2(
+					_elm_lang$core$Basics_ops['%'],
+					_elm_lang$core$Basics$abs(offset),
+					60)));
+		var hh = A3(
+			_elm_lang$core$String$padLeft,
+			2,
+			_elm_lang$core$Native_Utils.chr('0'),
+			_elm_lang$core$Basics$toString(
+				(_elm_lang$core$Basics$abs(offset) / 60) | 0));
+		var sign = (_elm_lang$core$Native_Utils.cmp(offset, 0) > -1) ? '+' : '-';
+		return (minutesOptional && _elm_lang$core$Native_Utils.eq(mm, '00')) ? A2(_elm_lang$core$Basics_ops['++'], sign, hh) : A2(
+			_elm_lang$core$Basics_ops['++'],
+			sign,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				hh,
+				A2(_elm_lang$core$Basics_ops['++'], separator, mm)));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Format$ordinalSuffix = function (n) {
+	var nn = A2(_elm_lang$core$Basics_ops['%'], n, 100);
+	var _p1 = A2(
+		_elm_lang$core$Basics$min,
+		(_elm_lang$core$Native_Utils.cmp(nn, 20) < 0) ? nn : A2(_elm_lang$core$Basics_ops['%'], nn, 10),
+		4);
+	switch (_p1) {
+		case 0:
+			return 'th';
+		case 1:
+			return 'st';
+		case 2:
+			return 'nd';
+		case 3:
+			return 'rd';
+		case 4:
+			return 'th';
+		default:
+			return '';
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$withOrdinalSuffix = function (n) {
+	return A2(
+		_elm_lang$core$Basics_ops['++'],
+		_elm_lang$core$Basics$toString(n),
+		_justinmimbs$elm_date_extra$Date_Internal_Format$ordinalSuffix(n));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$hour12 = function (date) {
+	var _p2 = A2(
+		_elm_lang$core$Basics_ops['%'],
+		_elm_lang$core$Date$hour(date),
+		12);
+	if (_p2 === 0) {
+		return 12;
+	} else {
+		return _p2;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$dayOfWeekName = function (d) {
+	var _p3 = d;
+	switch (_p3.ctor) {
+		case 'Mon':
+			return 'Monday';
+		case 'Tue':
+			return 'Tuesday';
+		case 'Wed':
+			return 'Wednesday';
+		case 'Thu':
+			return 'Thursday';
+		case 'Fri':
+			return 'Friday';
+		case 'Sat':
+			return 'Saturday';
+		default:
+			return 'Sunday';
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$monthName = function (m) {
+	var _p4 = m;
+	switch (_p4.ctor) {
+		case 'Jan':
+			return 'January';
+		case 'Feb':
+			return 'February';
+		case 'Mar':
+			return 'March';
+		case 'Apr':
+			return 'April';
+		case 'May':
+			return 'May';
+		case 'Jun':
+			return 'June';
+		case 'Jul':
+			return 'July';
+		case 'Aug':
+			return 'August';
+		case 'Sep':
+			return 'September';
+		case 'Oct':
+			return 'October';
+		case 'Nov':
+			return 'November';
+		default:
+			return 'December';
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$PM = {ctor: 'PM'};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$Noon = {ctor: 'Noon'};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$AM = {ctor: 'AM'};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$Midnight = {ctor: 'Midnight'};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$dayPeriod = function (date) {
+	var onTheHour = _elm_lang$core$Native_Utils.eq(
+		_elm_lang$core$Date$minute(date),
+		0) && (_elm_lang$core$Native_Utils.eq(
+		_elm_lang$core$Date$second(date),
+		0) && _elm_lang$core$Native_Utils.eq(
+		_elm_lang$core$Date$millisecond(date),
+		0));
+	var hh = _elm_lang$core$Date$hour(date);
+	return (_elm_lang$core$Native_Utils.eq(hh, 0) && onTheHour) ? _justinmimbs$elm_date_extra$Date_Internal_Format$Midnight : ((_elm_lang$core$Native_Utils.cmp(hh, 12) < 0) ? _justinmimbs$elm_date_extra$Date_Internal_Format$AM : ((_elm_lang$core$Native_Utils.eq(hh, 12) && onTheHour) ? _justinmimbs$elm_date_extra$Date_Internal_Format$Noon : _justinmimbs$elm_date_extra$Date_Internal_Format$PM));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Format$format = F3(
+	function (asUtc, date, match) {
+		format:
+		while (true) {
+			var length = _elm_lang$core$String$length(match);
+			var $char = A2(_elm_lang$core$String$left, 1, match);
+			var _p5 = $char;
+			switch (_p5) {
+				case 'y':
+					var _p6 = length;
+					if (_p6 === 2) {
+						return A2(
+							_elm_lang$core$String$right,
+							2,
+							A3(
+								_elm_lang$core$String$padLeft,
+								length,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_elm_lang$core$Date$year(date))));
+					} else {
+						return A3(
+							_elm_lang$core$String$padLeft,
+							length,
+							_elm_lang$core$Native_Utils.chr('0'),
+							_elm_lang$core$Basics$toString(
+								_elm_lang$core$Date$year(date)));
+					}
+				case 'Y':
+					var _p7 = length;
+					if (_p7 === 2) {
+						return A2(
+							_elm_lang$core$String$right,
+							2,
+							A3(
+								_elm_lang$core$String$padLeft,
+								length,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Extract$weekYear(date))));
+					} else {
+						return A3(
+							_elm_lang$core$String$padLeft,
+							length,
+							_elm_lang$core$Native_Utils.chr('0'),
+							_elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$weekYear(date)));
+					}
+				case 'Q':
+					var _p8 = length;
+					switch (_p8) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$quarter(date));
+						case 2:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$quarter(date));
+						case 3:
+							return A2(
+								F2(
+									function (x, y) {
+										return A2(_elm_lang$core$Basics_ops['++'], x, y);
+									}),
+								'Q',
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Extract$quarter(date)));
+						case 4:
+							return _justinmimbs$elm_date_extra$Date_Internal_Format$withOrdinalSuffix(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$quarter(date));
+						case 5:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$quarter(date));
+						default:
+							return '';
+					}
+				case 'M':
+					var _p9 = length;
+					switch (_p9) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$monthNumber(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Extract$monthNumber(date)));
+						case 3:
+							return A2(
+								_elm_lang$core$String$left,
+								3,
+								_justinmimbs$elm_date_extra$Date_Internal_Format$monthName(
+									_elm_lang$core$Date$month(date)));
+						case 4:
+							return _justinmimbs$elm_date_extra$Date_Internal_Format$monthName(
+								_elm_lang$core$Date$month(date));
+						case 5:
+							return A2(
+								_elm_lang$core$String$left,
+								1,
+								_justinmimbs$elm_date_extra$Date_Internal_Format$monthName(
+									_elm_lang$core$Date$month(date)));
+						default:
+							return '';
+					}
+				case 'w':
+					var _p10 = length;
+					switch (_p10) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$weekNumber(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Extract$weekNumber(date)));
+						default:
+							return '';
+					}
+				case 'd':
+					var _p11 = length;
+					switch (_p11) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_elm_lang$core$Date$day(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_elm_lang$core$Date$day(date)));
+						case 3:
+							return _justinmimbs$elm_date_extra$Date_Internal_Format$withOrdinalSuffix(
+								_elm_lang$core$Date$day(date));
+						default:
+							return '';
+					}
+				case 'D':
+					var _p12 = length;
+					switch (_p12) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$ordinalDay(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Extract$ordinalDay(date)));
+						case 3:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								3,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Extract$ordinalDay(date)));
+						default:
+							return '';
+					}
+				case 'E':
+					var _p13 = _justinmimbs$elm_date_extra$Date_Internal_Format$nameForm(length);
+					switch (_p13) {
+						case 'abbreviated':
+							return A2(
+								_elm_lang$core$String$left,
+								3,
+								_justinmimbs$elm_date_extra$Date_Internal_Format$dayOfWeekName(
+									_elm_lang$core$Date$dayOfWeek(date)));
+						case 'full':
+							return _justinmimbs$elm_date_extra$Date_Internal_Format$dayOfWeekName(
+								_elm_lang$core$Date$dayOfWeek(date));
+						case 'narrow':
+							return A2(
+								_elm_lang$core$String$left,
+								1,
+								_justinmimbs$elm_date_extra$Date_Internal_Format$dayOfWeekName(
+									_elm_lang$core$Date$dayOfWeek(date)));
+						case 'short':
+							return A2(
+								_elm_lang$core$String$left,
+								2,
+								_justinmimbs$elm_date_extra$Date_Internal_Format$dayOfWeekName(
+									_elm_lang$core$Date$dayOfWeek(date)));
+						default:
+							return '';
+					}
+				case 'e':
+					var _p14 = length;
+					switch (_p14) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$weekdayNumber(date));
+						case 2:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Extract$weekdayNumber(date));
+						default:
+							var _v15 = asUtc,
+								_v16 = date,
+								_v17 = _elm_lang$core$String$toUpper(match);
+							asUtc = _v15;
+							date = _v16;
+							match = _v17;
+							continue format;
+					}
+				case 'a':
+					var p = _justinmimbs$elm_date_extra$Date_Internal_Format$dayPeriod(date);
+					var m = (_elm_lang$core$Native_Utils.eq(p, _justinmimbs$elm_date_extra$Date_Internal_Format$Midnight) || _elm_lang$core$Native_Utils.eq(p, _justinmimbs$elm_date_extra$Date_Internal_Format$AM)) ? 'A' : 'P';
+					var _p15 = _justinmimbs$elm_date_extra$Date_Internal_Format$nameForm(length);
+					switch (_p15) {
+						case 'abbreviated':
+							return A2(_elm_lang$core$Basics_ops['++'], m, 'M');
+						case 'full':
+							return A2(_elm_lang$core$Basics_ops['++'], m, '.M.');
+						case 'narrow':
+							return m;
+						default:
+							return '';
+					}
+				case 'b':
+					var _p16 = _justinmimbs$elm_date_extra$Date_Internal_Format$nameForm(length);
+					switch (_p16) {
+						case 'abbreviated':
+							var _p17 = _justinmimbs$elm_date_extra$Date_Internal_Format$dayPeriod(date);
+							switch (_p17.ctor) {
+								case 'Midnight':
+									return 'mid.';
+								case 'AM':
+									return 'am';
+								case 'Noon':
+									return 'noon';
+								default:
+									return 'pm';
+							}
+						case 'full':
+							var _p18 = _justinmimbs$elm_date_extra$Date_Internal_Format$dayPeriod(date);
+							switch (_p18.ctor) {
+								case 'Midnight':
+									return 'midnight';
+								case 'AM':
+									return 'a.m.';
+								case 'Noon':
+									return 'noon';
+								default:
+									return 'p.m.';
+							}
+						case 'narrow':
+							var _p19 = _justinmimbs$elm_date_extra$Date_Internal_Format$dayPeriod(date);
+							switch (_p19.ctor) {
+								case 'Midnight':
+									return 'md';
+								case 'AM':
+									return 'a';
+								case 'Noon':
+									return 'nn';
+								default:
+									return 'p';
+							}
+						default:
+							return '';
+					}
+				case 'h':
+					var _p20 = length;
+					switch (_p20) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_justinmimbs$elm_date_extra$Date_Internal_Format$hour12(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_justinmimbs$elm_date_extra$Date_Internal_Format$hour12(date)));
+						default:
+							return '';
+					}
+				case 'H':
+					var _p21 = length;
+					switch (_p21) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_elm_lang$core$Date$hour(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_elm_lang$core$Date$hour(date)));
+						default:
+							return '';
+					}
+				case 'm':
+					var _p22 = length;
+					switch (_p22) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_elm_lang$core$Date$minute(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_elm_lang$core$Date$minute(date)));
+						default:
+							return '';
+					}
+				case 's':
+					var _p23 = length;
+					switch (_p23) {
+						case 1:
+							return _elm_lang$core$Basics$toString(
+								_elm_lang$core$Date$second(date));
+						case 2:
+							return A3(
+								_elm_lang$core$String$padLeft,
+								2,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_elm_lang$core$Date$second(date)));
+						default:
+							return '';
+					}
+				case 'S':
+					return A3(
+						_elm_lang$core$String$padRight,
+						length,
+						_elm_lang$core$Native_Utils.chr('0'),
+						A2(
+							_elm_lang$core$String$left,
+							length,
+							A3(
+								_elm_lang$core$String$padLeft,
+								3,
+								_elm_lang$core$Native_Utils.chr('0'),
+								_elm_lang$core$Basics$toString(
+									_elm_lang$core$Date$millisecond(date)))));
+				case 'X':
+					if ((_elm_lang$core$Native_Utils.cmp(length, 4) < 0) && (asUtc || _elm_lang$core$Native_Utils.eq(
+						_justinmimbs$elm_date_extra$Date_Internal_Extract$offsetFromUtc(date),
+						0))) {
+						return 'Z';
+					} else {
+						var _v27 = asUtc,
+							_v28 = date,
+							_v29 = _elm_lang$core$String$toLower(match);
+						asUtc = _v27;
+						date = _v28;
+						match = _v29;
+						continue format;
+					}
+				case 'x':
+					var offset = asUtc ? 0 : _justinmimbs$elm_date_extra$Date_Internal_Extract$offsetFromUtc(date);
+					var _p24 = length;
+					switch (_p24) {
+						case 1:
+							return A3(_justinmimbs$elm_date_extra$Date_Internal_Format$formatTimeOffset, '', true, offset);
+						case 2:
+							return A3(_justinmimbs$elm_date_extra$Date_Internal_Format$formatTimeOffset, '', false, offset);
+						case 3:
+							return A3(_justinmimbs$elm_date_extra$Date_Internal_Format$formatTimeOffset, ':', false, offset);
+						default:
+							return '';
+					}
+				case '\'':
+					return _elm_lang$core$Native_Utils.eq(match, '\'\'') ? '\'' : A4(
+						_elm_lang$core$Regex$replace,
+						_elm_lang$core$Regex$All,
+						_elm_lang$core$Regex$regex('\'\''),
+						function (_p25) {
+							return '\'';
+						},
+						A3(_elm_lang$core$String$slice, 1, -1, match));
+				default:
+					return '';
+			}
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Format$toFormattedString = F3(
+	function (asUtc, pattern, date) {
+		var date_ = asUtc ? _justinmimbs$elm_date_extra$Date_Internal_Format$toUtc(date) : date;
+		return A4(
+			_elm_lang$core$Regex$replace,
+			_elm_lang$core$Regex$All,
+			_justinmimbs$elm_date_extra$Date_Internal_Format$patternMatches,
+			function (_p26) {
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Internal_Format$format,
+					asUtc,
+					date_,
+					function (_) {
+						return _.match;
+					}(_p26));
+			},
+			pattern);
+	});
+
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$isoDateRegex = function () {
+	var time = 'T(\\d{2})(?:(\\:)?(\\d{2})(?:\\10(\\d{2}))?)?(\\.\\d+)?(?:(Z)|(?:([+\\-])(\\d{2})(?:\\:?(\\d{2}))?))?';
+	var ord = '\\-?(\\d{3})';
+	var week = '(\\-)?W(\\d{2})(?:\\5(\\d))?';
+	var cal = '(\\-)?(\\d{2})(?:\\2(\\d{2}))?';
+	var year = '(\\d{4})';
+	return _elm_lang$core$Regex$regex(
+		A2(
+			_elm_lang$core$Basics_ops['++'],
+			'^',
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				year,
+				A2(
+					_elm_lang$core$Basics_ops['++'],
+					'(?:',
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						cal,
+						A2(
+							_elm_lang$core$Basics_ops['++'],
+							'|',
+							A2(
+								_elm_lang$core$Basics_ops['++'],
+								week,
+								A2(
+									_elm_lang$core$Basics_ops['++'],
+									'|',
+									A2(
+										_elm_lang$core$Basics_ops['++'],
+										ord,
+										A2(
+											_elm_lang$core$Basics_ops['++'],
+											')?',
+											A2(
+												_elm_lang$core$Basics_ops['++'],
+												'(?:',
+												A2(_elm_lang$core$Basics_ops['++'], time, ')?$'))))))))))));
+}();
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToFloat = function (_p0) {
+	return _elm_lang$core$Result$toMaybe(
+		_elm_lang$core$String$toFloat(_p0));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$msFromMatches = F4(
+	function (timeHH, timeMM, timeSS, timeF) {
+		var fractional = A2(
+			_elm_lang$core$Maybe$withDefault,
+			0.0,
+			A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToFloat, timeF));
+		var _p1 = function () {
+			var _p2 = A2(
+				_elm_lang$core$List$map,
+				_elm_lang$core$Maybe$andThen(_justinmimbs$elm_date_extra$Date_Internal_Parse$stringToFloat),
+				{
+					ctor: '::',
+					_0: timeHH,
+					_1: {
+						ctor: '::',
+						_0: timeMM,
+						_1: {
+							ctor: '::',
+							_0: timeSS,
+							_1: {ctor: '[]'}
+						}
+					}
+				});
+			_v0_3:
+			do {
+				if (((_p2.ctor === '::') && (_p2._0.ctor === 'Just')) && (_p2._1.ctor === '::')) {
+					if (_p2._1._0.ctor === 'Just') {
+						if (_p2._1._1.ctor === '::') {
+							if (_p2._1._1._0.ctor === 'Just') {
+								if (_p2._1._1._1.ctor === '[]') {
+									return {ctor: '_Tuple3', _0: _p2._0._0, _1: _p2._1._0._0, _2: _p2._1._1._0._0 + fractional};
+								} else {
+									break _v0_3;
+								}
+							} else {
+								if (_p2._1._1._1.ctor === '[]') {
+									return {ctor: '_Tuple3', _0: _p2._0._0, _1: _p2._1._0._0 + fractional, _2: 0.0};
+								} else {
+									break _v0_3;
+								}
+							}
+						} else {
+							break _v0_3;
+						}
+					} else {
+						if (((_p2._1._1.ctor === '::') && (_p2._1._1._0.ctor === 'Nothing')) && (_p2._1._1._1.ctor === '[]')) {
+							return {ctor: '_Tuple3', _0: _p2._0._0 + fractional, _1: 0.0, _2: 0.0};
+						} else {
+							break _v0_3;
+						}
+					}
+				} else {
+					break _v0_3;
+				}
+			} while(false);
+			return {ctor: '_Tuple3', _0: 0.0, _1: 0.0, _2: 0.0};
+		}();
+		var hh = _p1._0;
+		var mm = _p1._1;
+		var ss = _p1._2;
+		return _elm_lang$core$Basics$round(
+			((hh * _elm_lang$core$Basics$toFloat(_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerHour)) + (mm * _elm_lang$core$Basics$toFloat(_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute))) + (ss * _elm_lang$core$Basics$toFloat(_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerSecond)));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt = function (_p3) {
+	return _elm_lang$core$Result$toMaybe(
+		_elm_lang$core$String$toInt(_p3));
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$unixTimeFromMatches = F6(
+	function (yyyy, calMM, calDD, weekWW, weekD, ordDDD) {
+		var y = A2(
+			_elm_lang$core$Maybe$withDefault,
+			1,
+			_justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt(yyyy));
+		var _p4 = {ctor: '_Tuple2', _0: calMM, _1: weekWW};
+		_v1_2:
+		do {
+			if (_p4.ctor === '_Tuple2') {
+				if (_p4._0.ctor === 'Just') {
+					if (_p4._1.ctor === 'Nothing') {
+						return A3(
+							_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromCalendarDate,
+							y,
+							_justinmimbs$elm_date_extra$Date_Extra_Facts$monthFromMonthNumber(
+								A2(
+									_elm_lang$core$Maybe$withDefault,
+									1,
+									A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, calMM))),
+							A2(
+								_elm_lang$core$Maybe$withDefault,
+								1,
+								A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, calDD)));
+					} else {
+						break _v1_2;
+					}
+				} else {
+					if (_p4._1.ctor === 'Just') {
+						return A3(
+							_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromWeekDate,
+							y,
+							A2(
+								_elm_lang$core$Maybe$withDefault,
+								1,
+								A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, weekWW)),
+							A2(
+								_elm_lang$core$Maybe$withDefault,
+								1,
+								A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, weekD)));
+					} else {
+						break _v1_2;
+					}
+				}
+			} else {
+				break _v1_2;
+			}
+		} while(false);
+		return A2(
+			_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromOrdinalDate,
+			y,
+			A2(
+				_elm_lang$core$Maybe$withDefault,
+				1,
+				A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, ordDDD)));
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$offsetFromMatches = F4(
+	function (tzZ, tzSign, tzHH, tzMM) {
+		var _p5 = {ctor: '_Tuple2', _0: tzZ, _1: tzSign};
+		_v2_2:
+		do {
+			if (_p5.ctor === '_Tuple2') {
+				if (_p5._0.ctor === 'Just') {
+					if ((_p5._0._0 === 'Z') && (_p5._1.ctor === 'Nothing')) {
+						return _elm_lang$core$Maybe$Just(0);
+					} else {
+						break _v2_2;
+					}
+				} else {
+					if (_p5._1.ctor === 'Just') {
+						var mm = A2(
+							_elm_lang$core$Maybe$withDefault,
+							0,
+							A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, tzMM));
+						var hh = A2(
+							_elm_lang$core$Maybe$withDefault,
+							0,
+							A2(_elm_lang$core$Maybe$andThen, _justinmimbs$elm_date_extra$Date_Internal_Parse$stringToInt, tzHH));
+						return _elm_lang$core$Maybe$Just(
+							(_elm_lang$core$Native_Utils.eq(_p5._1._0, '+') ? 1 : -1) * ((hh * 60) + mm));
+					} else {
+						break _v2_2;
+					}
+				}
+			} else {
+				break _v2_2;
+			}
+		} while(false);
+		return _elm_lang$core$Maybe$Nothing;
+	});
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$offsetTimeFromMatches = function (matches) {
+	var _p6 = matches;
+	if (((((((((((((((((((_p6.ctor === '::') && (_p6._0.ctor === 'Just')) && (_p6._1.ctor === '::')) && (_p6._1._1.ctor === '::')) && (_p6._1._1._1.ctor === '::')) && (_p6._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1.ctor === '::')) && (_p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1.ctor === '[]')) {
+		var offset = A4(_justinmimbs$elm_date_extra$Date_Internal_Parse$offsetFromMatches, _p6._1._1._1._1._1._1._1._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1._1._0);
+		var timeMS = A4(_justinmimbs$elm_date_extra$Date_Internal_Parse$msFromMatches, _p6._1._1._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._1._1._1._1._1._0);
+		var dateMS = A6(_justinmimbs$elm_date_extra$Date_Internal_Parse$unixTimeFromMatches, _p6._0._0, _p6._1._1._0, _p6._1._1._1._0, _p6._1._1._1._1._1._0, _p6._1._1._1._1._1._1._0, _p6._1._1._1._1._1._1._1._0);
+		return _elm_lang$core$Maybe$Just(
+			{ctor: '_Tuple2', _0: offset, _1: dateMS + timeMS});
+	} else {
+		return _elm_lang$core$Maybe$Nothing;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Internal_Parse$offsetTimeFromIsoString = function (s) {
+	return A2(
+		_elm_lang$core$Maybe$andThen,
+		_justinmimbs$elm_date_extra$Date_Internal_Parse$offsetTimeFromMatches,
+		A2(
+			_elm_lang$core$Maybe$map,
+			function (_) {
+				return _.submatches;
+			},
+			_elm_lang$core$List$head(
+				A3(
+					_elm_lang$core$Regex$find,
+					_elm_lang$core$Regex$AtMost(1),
+					_justinmimbs$elm_date_extra$Date_Internal_Parse$isoDateRegex,
+					s))));
+};
+
+var _justinmimbs$elm_date_extra$Date_Extra$unfold = F2(
+	function (f, seed) {
+		var _p0 = f(seed);
+		if (_p0.ctor === 'Nothing') {
+			return {ctor: '[]'};
+		} else {
+			return {
+				ctor: '::',
+				_0: _p0._0._0,
+				_1: A2(_justinmimbs$elm_date_extra$Date_Extra$unfold, f, _p0._0._1)
+			};
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$toParts = function (date) {
+	return {
+		ctor: '_Tuple7',
+		_0: _elm_lang$core$Date$year(date),
+		_1: _elm_lang$core$Date$month(date),
+		_2: _elm_lang$core$Date$day(date),
+		_3: _elm_lang$core$Date$hour(date),
+		_4: _elm_lang$core$Date$minute(date),
+		_5: _elm_lang$core$Date$second(date),
+		_6: _elm_lang$core$Date$millisecond(date)
+	};
+};
+var _justinmimbs$elm_date_extra$Date_Extra$monthFromQuarter = function (q) {
+	var _p1 = q;
+	switch (_p1) {
+		case 1:
+			return _elm_lang$core$Date$Jan;
+		case 2:
+			return _elm_lang$core$Date$Apr;
+		case 3:
+			return _elm_lang$core$Date$Jul;
+		default:
+			return _elm_lang$core$Date$Oct;
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra$clamp = F3(
+	function (min, max, date) {
+		return (_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$Date$toTime(date),
+			_elm_lang$core$Date$toTime(min)) < 0) ? min : ((_elm_lang$core$Native_Utils.cmp(
+			_elm_lang$core$Date$toTime(date),
+			_elm_lang$core$Date$toTime(max)) > 0) ? max : date);
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$comparableIsBetween = F3(
+	function (a, b, x) {
+		return ((_elm_lang$core$Native_Utils.cmp(a, x) < 1) && (_elm_lang$core$Native_Utils.cmp(x, b) < 1)) || ((_elm_lang$core$Native_Utils.cmp(b, x) < 1) && (_elm_lang$core$Native_Utils.cmp(x, a) < 1));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$isBetween = F3(
+	function (date1, date2, date) {
+		return A3(
+			_justinmimbs$elm_date_extra$Date_Extra$comparableIsBetween,
+			_elm_lang$core$Date$toTime(date1),
+			_elm_lang$core$Date$toTime(date2),
+			_elm_lang$core$Date$toTime(date));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$compare = F2(
+	function (a, b) {
+		return A2(
+			_elm_lang$core$Basics$compare,
+			_elm_lang$core$Date$toTime(a),
+			_elm_lang$core$Date$toTime(b));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$equal = F2(
+	function (a, b) {
+		return _elm_lang$core$Native_Utils.eq(
+			_elm_lang$core$Date$toTime(a),
+			_elm_lang$core$Date$toTime(b));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$offsetFromUtc = _justinmimbs$elm_date_extra$Date_Internal_Extract$offsetFromUtc;
+var _justinmimbs$elm_date_extra$Date_Extra$weekYear = _justinmimbs$elm_date_extra$Date_Internal_Extract$weekYear;
+var _justinmimbs$elm_date_extra$Date_Extra$weekNumber = _justinmimbs$elm_date_extra$Date_Internal_Extract$weekNumber;
+var _justinmimbs$elm_date_extra$Date_Extra$weekdayNumber = _justinmimbs$elm_date_extra$Date_Internal_Extract$weekdayNumber;
+var _justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek = F2(
+	function (d, date) {
+		return _elm_lang$core$Basics$negate(
+			A2(
+				_elm_lang$core$Basics_ops['%'],
+				(_justinmimbs$elm_date_extra$Date_Extra$weekdayNumber(date) - _justinmimbs$elm_date_extra$Date_Extra_Facts$weekdayNumberFromDayOfWeek(d)) + 7,
+				7));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$fractionalDay = _justinmimbs$elm_date_extra$Date_Internal_Extract$fractionalDay;
+var _justinmimbs$elm_date_extra$Date_Extra$ordinalDay = _justinmimbs$elm_date_extra$Date_Internal_Extract$ordinalDay;
+var _justinmimbs$elm_date_extra$Date_Extra$quarter = _justinmimbs$elm_date_extra$Date_Internal_Extract$quarter;
+var _justinmimbs$elm_date_extra$Date_Extra$monthNumber = _justinmimbs$elm_date_extra$Date_Internal_Extract$monthNumber;
+var _justinmimbs$elm_date_extra$Date_Extra$ordinalMonth = function (date) {
+	return (_elm_lang$core$Date$year(date) * 12) + _justinmimbs$elm_date_extra$Date_Extra$monthNumber(date);
+};
+var _justinmimbs$elm_date_extra$Date_Extra$diffMonth = F2(
+	function (date1, date2) {
+		var fractionalMonth = function (date) {
+			return (_elm_lang$core$Basics$toFloat(
+				_elm_lang$core$Date$day(date) - 1) + _justinmimbs$elm_date_extra$Date_Extra$fractionalDay(date)) / 31;
+		};
+		var ordinalMonthFloat = function (date) {
+			return _elm_lang$core$Basics$toFloat(
+				_justinmimbs$elm_date_extra$Date_Extra$ordinalMonth(date)) + fractionalMonth(date);
+		};
+		return _elm_lang$core$Basics$truncate(
+			ordinalMonthFloat(date2) - ordinalMonthFloat(date1));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$toUtcFormattedString = _justinmimbs$elm_date_extra$Date_Internal_Format$toFormattedString(true);
+var _justinmimbs$elm_date_extra$Date_Extra$toUtcIsoString = _justinmimbs$elm_date_extra$Date_Extra$toUtcFormattedString('yyyy-MM-dd\'T\'HH:mm:ss.SSSXXX');
+var _justinmimbs$elm_date_extra$Date_Extra$toFormattedString = _justinmimbs$elm_date_extra$Date_Internal_Format$toFormattedString(false);
+var _justinmimbs$elm_date_extra$Date_Extra$toIsoString = _justinmimbs$elm_date_extra$Date_Extra$toFormattedString('yyyy-MM-dd\'T\'HH:mm:ss.SSSxxx');
+var _justinmimbs$elm_date_extra$Date_Extra$fromTime = function (_p2) {
+	return _elm_lang$core$Date$fromTime(
+		_elm_lang$core$Basics$toFloat(_p2));
+};
+var _justinmimbs$elm_date_extra$Date_Extra$fromOffsetTime = function (_p3) {
+	var _p4 = _p3;
+	var _p6 = _p4._1;
+	var _p5 = _p4._0;
+	if (_p5.ctor === 'Just') {
+		return _justinmimbs$elm_date_extra$Date_Extra$fromTime(_p6 - (_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute * _p5._0));
+	} else {
+		var offset0 = _justinmimbs$elm_date_extra$Date_Extra$offsetFromUtc(
+			_justinmimbs$elm_date_extra$Date_Extra$fromTime(_p6));
+		var date1 = _justinmimbs$elm_date_extra$Date_Extra$fromTime(_p6 - (_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute * offset0));
+		var offset1 = _justinmimbs$elm_date_extra$Date_Extra$offsetFromUtc(date1);
+		if (_elm_lang$core$Native_Utils.eq(offset0, offset1)) {
+			return date1;
+		} else {
+			var date2 = _justinmimbs$elm_date_extra$Date_Extra$fromTime(_p6 - (_justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute * offset1));
+			var offset2 = _justinmimbs$elm_date_extra$Date_Extra$offsetFromUtc(date2);
+			return _elm_lang$core$Native_Utils.eq(offset1, offset2) ? date2 : date1;
+		}
+	}
+};
+var _justinmimbs$elm_date_extra$Date_Extra$fromParts = F7(
+	function (y, m, d, hh, mm, ss, ms) {
+		return _justinmimbs$elm_date_extra$Date_Extra$fromOffsetTime(
+			{
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Maybe$Nothing,
+				_1: A7(_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromParts, y, m, d, hh, mm, ss, ms)
+			});
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$addMonths = F2(
+	function (n, date) {
+		var om = (_justinmimbs$elm_date_extra$Date_Extra$ordinalMonth(date) + n) + -1;
+		var y_ = (om / 12) | 0;
+		var m_ = _justinmimbs$elm_date_extra$Date_Extra_Facts$monthFromMonthNumber(
+			A2(_elm_lang$core$Basics_ops['%'], om, 12) + 1);
+		var _p7 = _justinmimbs$elm_date_extra$Date_Extra$toParts(date);
+		var y = _p7._0;
+		var m = _p7._1;
+		var d = _p7._2;
+		var hh = _p7._3;
+		var mm = _p7._4;
+		var ss = _p7._5;
+		var ms = _p7._6;
+		var d_ = A2(
+			_elm_lang$core$Basics$min,
+			d,
+			A2(_justinmimbs$elm_date_extra$Date_Extra_Facts$daysInMonth, y_, m_));
+		return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y_, m_, d_, hh, mm, ss, ms);
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$add = F3(
+	function (interval, n, date) {
+		var _p8 = _justinmimbs$elm_date_extra$Date_Extra$toParts(date);
+		var y = _p8._0;
+		var m = _p8._1;
+		var d = _p8._2;
+		var hh = _p8._3;
+		var mm = _p8._4;
+		var ss = _p8._5;
+		var ms = _p8._6;
+		var _p9 = interval;
+		switch (_p9.ctor) {
+			case 'Millisecond':
+				return _elm_lang$core$Date$fromTime(
+					_elm_lang$core$Date$toTime(date) + _elm_lang$core$Basics$toFloat(n));
+			case 'Second':
+				return _elm_lang$core$Date$fromTime(
+					_elm_lang$core$Date$toTime(date) + _elm_lang$core$Basics$toFloat(n * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerSecond));
+			case 'Minute':
+				return _elm_lang$core$Date$fromTime(
+					_elm_lang$core$Date$toTime(date) + _elm_lang$core$Basics$toFloat(n * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute));
+			case 'Hour':
+				return _elm_lang$core$Date$fromTime(
+					_elm_lang$core$Date$toTime(date) + _elm_lang$core$Basics$toFloat(n * _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerHour));
+			case 'Day':
+				return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y, m, d + n, hh, mm, ss, ms);
+			case 'Month':
+				return A2(_justinmimbs$elm_date_extra$Date_Extra$addMonths, n, date);
+			case 'Year':
+				return A2(_justinmimbs$elm_date_extra$Date_Extra$addMonths, n * 12, date);
+			case 'Quarter':
+				return A2(_justinmimbs$elm_date_extra$Date_Extra$addMonths, n * 3, date);
+			case 'Week':
+				return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y, m, d + (n * 7), hh, mm, ss, ms);
+			default:
+				return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y, m, d + (n * 7), hh, mm, ss, ms);
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate = F3(
+	function (y, m, d) {
+		return _justinmimbs$elm_date_extra$Date_Extra$fromOffsetTime(
+			{
+				ctor: '_Tuple2',
+				_0: _elm_lang$core$Maybe$Nothing,
+				_1: A3(_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromCalendarDate, y, m, d)
+			});
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$floor = F2(
+	function (interval, date) {
+		var _p10 = _justinmimbs$elm_date_extra$Date_Extra$toParts(date);
+		var y = _p10._0;
+		var m = _p10._1;
+		var d = _p10._2;
+		var hh = _p10._3;
+		var mm = _p10._4;
+		var ss = _p10._5;
+		var _p11 = interval;
+		switch (_p11.ctor) {
+			case 'Millisecond':
+				return date;
+			case 'Second':
+				return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y, m, d, hh, mm, ss, 0);
+			case 'Minute':
+				return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y, m, d, hh, mm, 0, 0);
+			case 'Hour':
+				return A7(_justinmimbs$elm_date_extra$Date_Extra$fromParts, y, m, d, hh, 0, 0, 0);
+			case 'Day':
+				return A3(_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate, y, m, d);
+			case 'Month':
+				return A3(_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate, y, m, 1);
+			case 'Year':
+				return A3(_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate, y, _elm_lang$core$Date$Jan, 1);
+			case 'Quarter':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					_justinmimbs$elm_date_extra$Date_Extra$monthFromQuarter(
+						_justinmimbs$elm_date_extra$Date_Extra$quarter(date)),
+					1);
+			case 'Week':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Mon, date));
+			case 'Monday':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Mon, date));
+			case 'Tuesday':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Tue, date));
+			case 'Wednesday':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Wed, date));
+			case 'Thursday':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Thu, date));
+			case 'Friday':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Fri, date));
+			case 'Saturday':
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Sat, date));
+			default:
+				return A3(
+					_justinmimbs$elm_date_extra$Date_Extra$fromCalendarDate,
+					y,
+					m,
+					d + A2(_justinmimbs$elm_date_extra$Date_Extra$daysToPreviousDayOfWeek, _elm_lang$core$Date$Sun, date));
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$ceiling = F2(
+	function (interval, date) {
+		var floored = A2(_justinmimbs$elm_date_extra$Date_Extra$floor, interval, date);
+		return _elm_lang$core$Native_Utils.eq(
+			_elm_lang$core$Date$toTime(date),
+			_elm_lang$core$Date$toTime(floored)) ? date : A3(_justinmimbs$elm_date_extra$Date_Extra$add, interval, 1, floored);
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$range = F4(
+	function (interval, step, start, end) {
+		var next = function (date) {
+			return (_elm_lang$core$Native_Utils.cmp(
+				_elm_lang$core$Date$toTime(date),
+				_elm_lang$core$Date$toTime(end)) > -1) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(
+				{
+					ctor: '_Tuple2',
+					_0: date,
+					_1: A3(
+						_justinmimbs$elm_date_extra$Date_Extra$add,
+						interval,
+						A2(_elm_lang$core$Basics$max, 1, step),
+						date)
+				});
+		};
+		return A2(
+			_justinmimbs$elm_date_extra$Date_Extra$unfold,
+			next,
+			A2(_justinmimbs$elm_date_extra$Date_Extra$ceiling, interval, start));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$fromIsoString = function (_p12) {
+	return A2(
+		_elm_lang$core$Maybe$map,
+		_justinmimbs$elm_date_extra$Date_Extra$fromOffsetTime,
+		_justinmimbs$elm_date_extra$Date_Internal_Parse$offsetTimeFromIsoString(_p12));
+};
+var _justinmimbs$elm_date_extra$Date_Extra$fromSpec = F3(
+	function (_p15, _p14, _p13) {
+		var _p16 = _p15;
+		var _p17 = _p14;
+		var _p18 = _p13;
+		return _justinmimbs$elm_date_extra$Date_Extra$fromOffsetTime(
+			{ctor: '_Tuple2', _0: _p16._0, _1: _p18._0 + _p17._0});
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$Offset = function (a) {
+	return {ctor: 'Offset', _0: a};
+};
+var _justinmimbs$elm_date_extra$Date_Extra$utc = _justinmimbs$elm_date_extra$Date_Extra$Offset(
+	_elm_lang$core$Maybe$Just(0));
+var _justinmimbs$elm_date_extra$Date_Extra$offset = function (minutes) {
+	return _justinmimbs$elm_date_extra$Date_Extra$Offset(
+		_elm_lang$core$Maybe$Just(minutes));
+};
+var _justinmimbs$elm_date_extra$Date_Extra$local = _justinmimbs$elm_date_extra$Date_Extra$Offset(_elm_lang$core$Maybe$Nothing);
+var _justinmimbs$elm_date_extra$Date_Extra$TimeMS = function (a) {
+	return {ctor: 'TimeMS', _0: a};
+};
+var _justinmimbs$elm_date_extra$Date_Extra$noTime = _justinmimbs$elm_date_extra$Date_Extra$TimeMS(0);
+var _justinmimbs$elm_date_extra$Date_Extra$atTime = F4(
+	function (hh, mm, ss, ms) {
+		return _justinmimbs$elm_date_extra$Date_Extra$TimeMS(
+			A4(_justinmimbs$elm_date_extra$Date_Internal_Core$msFromTimeParts, hh, mm, ss, ms));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$DateMS = function (a) {
+	return {ctor: 'DateMS', _0: a};
+};
+var _justinmimbs$elm_date_extra$Date_Extra$calendarDate = F3(
+	function (y, m, d) {
+		return _justinmimbs$elm_date_extra$Date_Extra$DateMS(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromCalendarDate, y, m, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$ordinalDate = F2(
+	function (y, d) {
+		return _justinmimbs$elm_date_extra$Date_Extra$DateMS(
+			A2(_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromOrdinalDate, y, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$weekDate = F3(
+	function (y, w, d) {
+		return _justinmimbs$elm_date_extra$Date_Extra$DateMS(
+			A3(_justinmimbs$elm_date_extra$Date_Internal_Core$unixTimeFromWeekDate, y, w, d));
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$Sunday = {ctor: 'Sunday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Saturday = {ctor: 'Saturday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Friday = {ctor: 'Friday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Thursday = {ctor: 'Thursday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Wednesday = {ctor: 'Wednesday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Tuesday = {ctor: 'Tuesday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Monday = {ctor: 'Monday'};
+var _justinmimbs$elm_date_extra$Date_Extra$Week = {ctor: 'Week'};
+var _justinmimbs$elm_date_extra$Date_Extra$Quarter = {ctor: 'Quarter'};
+var _justinmimbs$elm_date_extra$Date_Extra$Year = {ctor: 'Year'};
+var _justinmimbs$elm_date_extra$Date_Extra$Month = {ctor: 'Month'};
+var _justinmimbs$elm_date_extra$Date_Extra$Day = {ctor: 'Day'};
+var _justinmimbs$elm_date_extra$Date_Extra$diff = F3(
+	function (interval, date1, date2) {
+		var diffMS = _elm_lang$core$Basics$floor(
+			_elm_lang$core$Date$toTime(date2) - _elm_lang$core$Date$toTime(date1));
+		var _p19 = interval;
+		switch (_p19.ctor) {
+			case 'Millisecond':
+				return diffMS;
+			case 'Second':
+				return (diffMS / _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerSecond) | 0;
+			case 'Minute':
+				return (diffMS / _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerMinute) | 0;
+			case 'Hour':
+				return (diffMS / _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerHour) | 0;
+			case 'Day':
+				return (diffMS / _justinmimbs$elm_date_extra$Date_Extra_Facts$msPerDay) | 0;
+			case 'Month':
+				return A2(_justinmimbs$elm_date_extra$Date_Extra$diffMonth, date1, date2);
+			case 'Year':
+				return (A2(_justinmimbs$elm_date_extra$Date_Extra$diffMonth, date1, date2) / 12) | 0;
+			case 'Quarter':
+				return (A2(_justinmimbs$elm_date_extra$Date_Extra$diffMonth, date1, date2) / 3) | 0;
+			case 'Week':
+				return (A3(_justinmimbs$elm_date_extra$Date_Extra$diff, _justinmimbs$elm_date_extra$Date_Extra$Day, date1, date2) / 7) | 0;
+			default:
+				var _p20 = _p19;
+				return (A3(
+					_justinmimbs$elm_date_extra$Date_Extra$diff,
+					_justinmimbs$elm_date_extra$Date_Extra$Day,
+					A2(_justinmimbs$elm_date_extra$Date_Extra$floor, _p20, date1),
+					A2(_justinmimbs$elm_date_extra$Date_Extra$floor, _p20, date2)) / 7) | 0;
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$Hour = {ctor: 'Hour'};
+var _justinmimbs$elm_date_extra$Date_Extra$Minute = {ctor: 'Minute'};
+var _justinmimbs$elm_date_extra$Date_Extra$equalBy = F3(
+	function (interval, date1, date2) {
+		equalBy:
+		while (true) {
+			var _p21 = interval;
+			switch (_p21.ctor) {
+				case 'Millisecond':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$toTime(date1),
+						_elm_lang$core$Date$toTime(date2));
+				case 'Second':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$second(date1),
+						_elm_lang$core$Date$second(date2)) && A3(_justinmimbs$elm_date_extra$Date_Extra$equalBy, _justinmimbs$elm_date_extra$Date_Extra$Minute, date1, date2);
+				case 'Minute':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$minute(date1),
+						_elm_lang$core$Date$minute(date2)) && A3(_justinmimbs$elm_date_extra$Date_Extra$equalBy, _justinmimbs$elm_date_extra$Date_Extra$Hour, date1, date2);
+				case 'Hour':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$hour(date1),
+						_elm_lang$core$Date$hour(date2)) && A3(_justinmimbs$elm_date_extra$Date_Extra$equalBy, _justinmimbs$elm_date_extra$Date_Extra$Day, date1, date2);
+				case 'Day':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$day(date1),
+						_elm_lang$core$Date$day(date2)) && A3(_justinmimbs$elm_date_extra$Date_Extra$equalBy, _justinmimbs$elm_date_extra$Date_Extra$Month, date1, date2);
+				case 'Month':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$month(date1),
+						_elm_lang$core$Date$month(date2)) && A3(_justinmimbs$elm_date_extra$Date_Extra$equalBy, _justinmimbs$elm_date_extra$Date_Extra$Year, date1, date2);
+				case 'Year':
+					return _elm_lang$core$Native_Utils.eq(
+						_elm_lang$core$Date$year(date1),
+						_elm_lang$core$Date$year(date2));
+				case 'Quarter':
+					return _elm_lang$core$Native_Utils.eq(
+						_justinmimbs$elm_date_extra$Date_Extra$quarter(date1),
+						_justinmimbs$elm_date_extra$Date_Extra$quarter(date2)) && A3(_justinmimbs$elm_date_extra$Date_Extra$equalBy, _justinmimbs$elm_date_extra$Date_Extra$Year, date1, date2);
+				case 'Week':
+					return _elm_lang$core$Native_Utils.eq(
+						_justinmimbs$elm_date_extra$Date_Extra$weekNumber(date1),
+						_justinmimbs$elm_date_extra$Date_Extra$weekNumber(date2)) && _elm_lang$core$Native_Utils.eq(
+						_justinmimbs$elm_date_extra$Date_Extra$weekYear(date1),
+						_justinmimbs$elm_date_extra$Date_Extra$weekYear(date2));
+				default:
+					var _p22 = _p21;
+					var _v11 = _justinmimbs$elm_date_extra$Date_Extra$Day,
+						_v12 = A2(_justinmimbs$elm_date_extra$Date_Extra$floor, _p22, date1),
+						_v13 = A2(_justinmimbs$elm_date_extra$Date_Extra$floor, _p22, date2);
+					interval = _v11;
+					date1 = _v12;
+					date2 = _v13;
+					continue equalBy;
+			}
+		}
+	});
+var _justinmimbs$elm_date_extra$Date_Extra$Second = {ctor: 'Second'};
+var _justinmimbs$elm_date_extra$Date_Extra$Millisecond = {ctor: 'Millisecond'};
+
 var _krisajenkins$remotedata$RemoteData$isNotAsked = function (data) {
 	var _p0 = data;
 	if (_p0.ctor === 'NotAsked') {
@@ -19673,6 +22606,11 @@ var _user$project$Css_Admin$className = function ($class) {
 	return A2(_rtfeldman$elm_css_util$Css_Helpers$identifierToString, _user$project$Css_Admin$name, $class);
 };
 
+var _user$project$Css_Classes$TxTable = {ctor: 'TxTable'};
+var _user$project$Css_Classes$DateColumn = {ctor: 'DateColumn'};
+var _user$project$Css_Classes$TruncatedColumn = {ctor: 'TruncatedColumn'};
+var _user$project$Css_Classes$DirectionColumn = {ctor: 'DirectionColumn'};
+var _user$project$Css_Classes$NumberColumn = {ctor: 'NumberColumn'};
 var _user$project$Css_Classes$InvalidGroup = {ctor: 'InvalidGroup'};
 var _user$project$Css_Classes$StatusBar = {ctor: 'StatusBar'};
 var _user$project$Css_Classes$Success = {ctor: 'Success'};
@@ -20040,9 +22978,10 @@ var _user$project$Selectize$rawOnKeyUp = function (tagger) {
 		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$keyCode));
 };
 var _user$project$Selectize$rawOnKeyDownNoPrevent = function (tagger) {
-	return A2(
-		_elm_lang$html$Html_Events$on,
+	return A3(
+		_elm_lang$html$Html_Events$onWithOptions,
 		'keydown',
+		{stopPropagation: false, preventDefault: true},
 		A2(_elm_lang$core$Json_Decode$map, tagger, _elm_lang$html$Html_Events$keyCode));
 };
 var _user$project$Selectize$preventSpecialDecoder = function (specialKeys) {
@@ -20544,11 +23483,6 @@ var _user$project$Selectize$updateKeyDown = F4(
 			}
 		}
 	});
-var _user$project$Selectize$onKeyDown = F3(
-	function (config, items, state) {
-		return _user$project$Selectize$rawOnKeyDownNoPrevent(
-			A3(_user$project$Selectize$updateKeyDown, config, items, state));
-	});
 var _user$project$Selectize$onKeyDownDelete = F3(
 	function (config, items, state) {
 		return A2(
@@ -20671,7 +23605,7 @@ var _user$project$Selectize$view = F5(
 					5,
 					A2(config.match, state.string, remainingItems));
 				var items = A3(_user$project$Selectize$buildItems, selectedItems, availableItems, boxItems);
-				var keyDown = (_elm_lang$core$Native_Utils.cmp(config.maxItems, 1) > 0) ? (_elm_lang$core$String$isEmpty(state.string) ? A3(_user$project$Selectize$onKeyDownNoDelete, config, items, state) : A3(_user$project$Selectize$onKeyDownDelete, config, items, state)) : A3(_user$project$Selectize$onKeyDown, config, items, state);
+				var keyDown = (_elm_lang$core$Native_Utils.cmp(config.maxItems, 1) > 0) ? (_elm_lang$core$String$isEmpty(state.string) ? A3(_user$project$Selectize$onKeyDownNoDelete, config, items, state) : A3(_user$project$Selectize$onKeyDownDelete, config, items, state)) : A3(_user$project$Selectize$onKeyDownNoDelete, config, items, state);
 				var h = config.htmlOptions;
 				var editInput = function () {
 					var _p9 = state.status;
@@ -20874,20 +23808,37 @@ var _user$project$Selectize$view = F5(
 		}
 	});
 
+var _user$project$ConfigTypes$groupMember = F2(
+	function (configGroup, fieldCode) {
+		return A2(
+			_elm_lang$core$List$any,
+			function (_p0) {
+				return A2(
+					F2(
+						function (x, y) {
+							return _elm_lang$core$Native_Utils.eq(x, y);
+						}),
+					fieldCode,
+					function (_) {
+						return _.code;
+					}(_p0));
+			},
+			configGroup.schema.entries);
+	});
 var _user$project$ConfigTypes$fieldHolderToMaybe = function (fieldHolder) {
-	var _p0 = fieldHolder;
-	if (_p0.ctor === 'FieldOk') {
-		return _elm_lang$core$Maybe$Just(_p0._0);
+	var _p1 = fieldHolder;
+	if (_p1.ctor === 'FieldOk') {
+		return _elm_lang$core$Maybe$Just(_p1._0);
 	} else {
 		return _elm_lang$core$Maybe$Nothing;
 	}
 };
 var _user$project$ConfigTypes$fieldHolderToCryptoStrings = function (fieldHolder) {
-	var _p1 = fieldHolder;
-	if (_p1.ctor === 'FieldOk') {
-		var _p2 = _p1._0;
-		if (_p2.ctor === 'FieldCryptoCurrencyValue') {
-			return _p2._0;
+	var _p2 = fieldHolder;
+	if (_p2.ctor === 'FieldOk') {
+		var _p3 = _p2._0;
+		if (_p3.ctor === 'FieldCryptoCurrencyValue') {
+			return _p3._0;
 		} else {
 			return {ctor: '[]'};
 		}
@@ -20897,11 +23848,11 @@ var _user$project$ConfigTypes$fieldHolderToCryptoStrings = function (fieldHolder
 };
 var _user$project$ConfigTypes$isCrypto = F2(
 	function (cryptoString, cryptoDisplay) {
-		var _p3 = cryptoDisplay.crypto;
-		if (_p3.ctor === 'GlobalCrypto') {
+		var _p4 = cryptoDisplay.crypto;
+		if (_p4.ctor === 'GlobalCrypto') {
 			return _elm_lang$core$Native_Utils.eq(cryptoString, 'global');
 		} else {
-			return _elm_lang$core$Native_Utils.eq(cryptoString, _p3._0);
+			return _elm_lang$core$Native_Utils.eq(cryptoString, _p4._0);
 		}
 	});
 var _user$project$ConfigTypes$lookupCryptoDisplay = F2(
@@ -20913,36 +23864,36 @@ var _user$project$ConfigTypes$lookupCryptoDisplay = F2(
 				cryptoDisplays));
 	});
 var _user$project$ConfigTypes$cryptoToString = function (crypto) {
-	var _p4 = crypto;
-	if (_p4.ctor === 'GlobalCrypto') {
-		return 'global';
-	} else {
-		return _p4._0;
-	}
-};
-var _user$project$ConfigTypes$machineToString = function (machine) {
-	var _p5 = machine;
-	if (_p5.ctor === 'GlobalMachine') {
+	var _p5 = crypto;
+	if (_p5.ctor === 'GlobalCrypto') {
 		return 'global';
 	} else {
 		return _p5._0;
 	}
 };
+var _user$project$ConfigTypes$machineToString = function (machine) {
+	var _p6 = machine;
+	if (_p6.ctor === 'GlobalMachine') {
+		return 'global';
+	} else {
+		return _p6._0;
+	}
+};
 var _user$project$ConfigTypes$fieldValueToString = function (fieldValue) {
-	var _p6 = fieldValue;
-	switch (_p6.ctor) {
+	var _p7 = fieldValue;
+	switch (_p7.ctor) {
 		case 'FieldStringValue':
-			return _p6._0;
+			return _p7._0;
 		case 'FieldPercentageValue':
-			return _elm_lang$core$Basics$toString(_p6._0);
+			return _elm_lang$core$Basics$toString(_p7._0);
 		case 'FieldIntegerValue':
-			return _elm_lang$core$Basics$toString(_p6._0);
+			return _elm_lang$core$Basics$toString(_p7._0);
 		case 'FieldOnOffValue':
-			return _p6._0 ? 'on' : 'off';
+			return _p7._0 ? 'on' : 'off';
 		case 'FieldAccountValue':
-			return _p6._0;
+			return _p7._0;
 		case 'FieldFiatCurrencyValue':
-			return _p6._0;
+			return _p7._0;
 		case 'FieldCryptoCurrencyValue':
 			return _elm_lang$core$Native_Utils.crashCase(
 				'ConfigTypes',
@@ -20950,7 +23901,7 @@ var _user$project$ConfigTypes$fieldValueToString = function (fieldValue) {
 					start: {line: 184, column: 5},
 					end: {line: 210, column: 43}
 				},
-				_p6)('N/A for cryptoCurrency');
+				_p7)('N/A for cryptoCurrency');
 		default:
 			return _elm_lang$core$Native_Utils.crashCase(
 				'ConfigTypes',
@@ -20958,7 +23909,7 @@ var _user$project$ConfigTypes$fieldValueToString = function (fieldValue) {
 					start: {line: 184, column: 5},
 					end: {line: 210, column: 43}
 				},
-				_p6)('N/A for language');
+				_p7)('N/A for language');
 	}
 };
 var _user$project$ConfigTypes$accountRecToDisplayRec = function (accountRec) {
@@ -21024,8 +23975,8 @@ var _user$project$ConfigTypes$allCryptos = F3(
 			_elm_lang$core$List$filterMap,
 			_user$project$ConfigTypes$lookupCryptoDisplay(cryptoDisplays),
 			cryptoStrings);
-		var _p9 = cryptoScope;
-		switch (_p9.ctor) {
+		var _p10 = cryptoScope;
+		switch (_p10.ctor) {
 			case 'Global':
 				return {
 					ctor: '::',
@@ -21039,8 +23990,8 @@ var _user$project$ConfigTypes$allCryptos = F3(
 		}
 	});
 var _user$project$ConfigTypes$listCryptos = function (configGroup) {
-	var _p10 = configGroup.schema.cryptoScope;
-	switch (_p10.ctor) {
+	var _p11 = configGroup.schema.cryptoScope;
+	switch (_p11.ctor) {
 		case 'Specific':
 			return configGroup.data.cryptoCurrencies;
 		case 'Global':
@@ -21057,8 +24008,8 @@ var _user$project$ConfigTypes$CryptoCode = function (a) {
 	return {ctor: 'CryptoCode', _0: a};
 };
 var _user$project$ConfigTypes$stringToCrypto = function (string) {
-	var _p11 = string;
-	if (_p11 === 'global') {
+	var _p12 = string;
+	if (_p12 === 'global') {
 		return _user$project$ConfigTypes$GlobalCrypto;
 	} else {
 		return _user$project$ConfigTypes$CryptoCode(string);
@@ -21067,8 +24018,8 @@ var _user$project$ConfigTypes$stringToCrypto = function (string) {
 var _user$project$ConfigTypes$GlobalMachine = {ctor: 'GlobalMachine'};
 var _user$project$ConfigTypes$globalMachineDisplay = {machine: _user$project$ConfigTypes$GlobalMachine, display: 'Global'};
 var _user$project$ConfigTypes$listMachines = function (configGroup) {
-	var _p12 = configGroup.schema.machineScope;
-	switch (_p12.ctor) {
+	var _p13 = configGroup.schema.machineScope;
+	switch (_p13.ctor) {
 		case 'Specific':
 			return configGroup.data.machines;
 		case 'Global':
@@ -21121,11 +24072,11 @@ var _user$project$ConfigTypes$ParsingError = function (a) {
 	return {ctor: 'ParsingError', _0: a};
 };
 var _user$project$ConfigTypes$resultToFieldHolder = function (result) {
-	var _p13 = result;
-	if (_p13.ctor === 'Ok') {
-		return _user$project$ConfigTypes$FieldOk(_p13._0);
+	var _p14 = result;
+	if (_p14.ctor === 'Ok') {
+		return _user$project$ConfigTypes$FieldOk(_p14._0);
 	} else {
-		return _user$project$ConfigTypes$ParsingError(_p13._0);
+		return _user$project$ConfigTypes$ParsingError(_p14._0);
 	}
 };
 var _user$project$ConfigTypes$SelectizeComponent = function (a) {
@@ -21169,8 +24120,8 @@ var _user$project$ConfigTypes$stringToFieldHolder = F2(
 		if (_elm_lang$core$String$isEmpty(s)) {
 			return _user$project$ConfigTypes$FieldEmpty;
 		} else {
-			var _p14 = fieldType;
-			switch (_p14.ctor) {
+			var _p15 = fieldType;
+			switch (_p15.ctor) {
 				case 'FieldStringType':
 					return _user$project$ConfigTypes$FieldOk(
 						_user$project$ConfigTypes$FieldStringValue(s));
@@ -21187,8 +24138,8 @@ var _user$project$ConfigTypes$stringToFieldHolder = F2(
 							_user$project$ConfigTypes$FieldIntegerValue,
 							_elm_lang$core$String$toInt(s)));
 				case 'FieldOnOffType':
-					var _p15 = s;
-					switch (_p15) {
+					var _p16 = s;
+					switch (_p16) {
 						case 'on':
 							return _user$project$ConfigTypes$FieldOk(
 								_user$project$ConfigTypes$FieldOnOffValue(true));
@@ -22332,8 +25283,8 @@ var _user$project$Config$updateSelectize = F3(
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
 						{
-							start: {line: 999, column: 17},
-							end: {line: 1004, column: 56}
+							start: {line: 1014, column: 17},
+							end: {line: 1019, column: 56}
 						},
 						_p1)('Shouldn\'t be here');
 				}
@@ -22478,8 +25429,8 @@ var _user$project$Config$isField = function (fieldValue) {
 		return _elm_lang$core$Native_Utils.crashCase(
 			'Config',
 			{
-				start: {line: 845, column: 5},
-				end: {line: 850, column: 59}
+				start: {line: 860, column: 5},
+				end: {line: 865, column: 59}
 			},
 			_p7)('Referenced field must be boolean');
 	}
@@ -22548,8 +25499,8 @@ var _user$project$Config$referenceFields = F3(
 			},
 			A2(_elm_lang$core$List$filter, filter, fields));
 	});
-var _user$project$Config$referenceFieldInstances = F3(
-	function (fieldScope, fieldInstances, fieldCodes) {
+var _user$project$Config$referenceFieldInstances = F4(
+	function (configGroup, fieldScope, fieldInstances, fieldCodes) {
 		var matchesMachine = function (targetMachine) {
 			return _elm_lang$core$Native_Utils.eq(fieldScope.machine, _user$project$ConfigTypes$GlobalMachine) ? true : _elm_lang$core$Native_Utils.eq(fieldScope.machine, targetMachine);
 		};
@@ -22557,7 +25508,7 @@ var _user$project$Config$referenceFieldInstances = F3(
 			return _elm_lang$core$Native_Utils.eq(fieldScope.crypto, _user$project$ConfigTypes$GlobalCrypto) ? true : _elm_lang$core$Native_Utils.eq(fieldScope.crypto, targetCrypto);
 		};
 		var filter = function (fieldInstance) {
-			return A2(_elm_lang$core$List$member, fieldInstance.fieldLocator.code, fieldCodes) && (matchesCrypto(fieldInstance.fieldLocator.fieldScope.crypto) && matchesMachine(fieldInstance.fieldLocator.fieldScope.machine));
+			return A2(_elm_lang$core$List$member, fieldInstance.fieldLocator.code, fieldCodes) && (matchesCrypto(fieldInstance.fieldLocator.fieldScope.crypto) && (matchesMachine(fieldInstance.fieldLocator.fieldScope.machine) && A4(_user$project$Config$checkEnabled, fieldInstances, configGroup, fieldInstance.fieldEnabledIf, fieldInstance.fieldLocator.fieldScope)));
 		};
 		return A2(
 			_elm_lang$core$List$filterMap,
@@ -22568,6 +25519,24 @@ var _user$project$Config$referenceFieldInstances = F3(
 					}(_p9));
 			},
 			A2(_elm_lang$core$List$filter, filter, fieldInstances));
+	});
+var _user$project$Config$checkEnabled = F4(
+	function (fieldInstances, configGroup, enabledIf, fieldScope) {
+		if (_elm_lang$core$List$isEmpty(enabledIf)) {
+			return true;
+		} else {
+			var _p10 = A2(
+				_elm_lang$core$List$partition,
+				_user$project$ConfigTypes$groupMember(configGroup),
+				enabledIf);
+			var inGroup = _p10._0;
+			var outGroup = _p10._1;
+			var enabledInstances = A2(
+				_elm_lang$core$Basics_ops['++'],
+				A3(_user$project$Config$referenceFields, fieldScope, configGroup.values, outGroup),
+				A4(_user$project$Config$referenceFieldInstances, configGroup, fieldScope, fieldInstances, inGroup));
+			return A2(_elm_lang$core$List$any, _user$project$Config$isField, enabledInstances);
+		}
 	});
 var _user$project$Config$onOffSelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
@@ -22605,13 +25574,13 @@ var _user$project$Config$onOffSelectizeView = F6(
 var _user$project$Config$languageSelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
 		var toList = function (maybeValue) {
-			var _p10 = maybeValue;
-			if (_p10.ctor === 'Nothing') {
+			var _p11 = maybeValue;
+			if (_p11.ctor === 'Nothing') {
 				return {ctor: '[]'};
 			} else {
-				var _p11 = _p10._0;
-				if (_p11.ctor === 'FieldLanguageValue') {
-					return _p11._0;
+				var _p12 = _p11._0;
+				if (_p12.ctor === 'FieldLanguageValue') {
+					return _p12._0;
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
@@ -22619,7 +25588,7 @@ var _user$project$Config$languageSelectizeView = F6(
 							start: {line: 460, column: 21},
 							end: {line: 465, column: 60}
 						},
-						_p11)('Shouldn\'t be here');
+						_p12)('Shouldn\'t be here');
 				}
 			}
 		};
@@ -22647,13 +25616,13 @@ var _user$project$Config$languageSelectizeView = F6(
 var _user$project$Config$cryptoCurrencySelectizeView = F6(
 	function (model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue) {
 		var toList = function (maybeValue) {
-			var _p13 = maybeValue;
-			if (_p13.ctor === 'Nothing') {
+			var _p14 = maybeValue;
+			if (_p14.ctor === 'Nothing') {
 				return {ctor: '[]'};
 			} else {
-				var _p14 = _p13._0;
-				if (_p14.ctor === 'FieldCryptoCurrencyValue') {
-					return _p14._0;
+				var _p15 = _p14._0;
+				if (_p15.ctor === 'FieldCryptoCurrencyValue') {
+					return _p15._0;
 				} else {
 					return _elm_lang$core$Native_Utils.crashCase(
 						'Config',
@@ -22661,7 +25630,7 @@ var _user$project$Config$cryptoCurrencySelectizeView = F6(
 							start: {line: 414, column: 21},
 							end: {line: 419, column: 60}
 						},
-						_p14)('Shouldn\'t be here');
+						_p15)('Shouldn\'t be here');
 				}
 			}
 		};
@@ -22724,16 +25693,16 @@ var _user$project$Config$accountSelectizeView = F6(
 		var selectedIds = _user$project$Config$maybeToList(
 			A2(_elm_lang$core$Maybe$map, _user$project$ConfigTypes$fieldValueToString, maybeFieldValue));
 		var matchAccount = function (accountRec) {
-			var _p16 = fieldInstance.fieldLocator.fieldClass;
-			if (_p16.ctor === 'Nothing') {
+			var _p17 = fieldInstance.fieldLocator.fieldClass;
+			if (_p17.ctor === 'Nothing') {
 				return true;
 			} else {
-				return _elm_lang$core$Native_Utils.eq(accountRec.$class, _p16._0) && function () {
-					var _p17 = accountRec.cryptos;
-					if (_p17.ctor === 'Nothing') {
+				return _elm_lang$core$Native_Utils.eq(accountRec.$class, _p17._0) && function () {
+					var _p18 = accountRec.cryptos;
+					if (_p18.ctor === 'Nothing') {
 						return true;
 					} else {
-						return A2(_elm_lang$core$List$member, model.crypto, _p17._0);
+						return A2(_elm_lang$core$List$member, model.crypto, _p18._0);
 					}
 				}();
 			}
@@ -22761,23 +25730,23 @@ var _user$project$Config$accountSelectizeView = F6(
 			selectizeState);
 	});
 var _user$project$Config$buildValidationAttribute = function (fieldValidator) {
-	var _p18 = fieldValidator;
-	switch (_p18.ctor) {
+	var _p19 = fieldValidator;
+	switch (_p19.ctor) {
 		case 'FieldMin':
 			return _elm_lang$core$Maybe$Just(
 				_elm_lang$html$Html_Attributes$min(
-					_elm_lang$core$Basics$toString(_p18._0)));
+					_elm_lang$core$Basics$toString(_p19._0)));
 		case 'FieldMax':
 			return _elm_lang$core$Maybe$Just(
 				_elm_lang$html$Html_Attributes$max(
-					_elm_lang$core$Basics$toString(_p18._0)));
+					_elm_lang$core$Basics$toString(_p19._0)));
 		default:
 			return _elm_lang$core$Maybe$Nothing;
 	}
 };
 var _user$project$Config$fieldTypeToInputType = function (fieldType) {
-	var _p19 = fieldType;
-	if (_p19.ctor === 'FieldPercentageType') {
+	var _p20 = fieldType;
+	if (_p20.ctor === 'FieldPercentageType') {
 		return 'number';
 	} else {
 		return 'string';
@@ -22792,14 +25761,14 @@ var _user$project$Config$emptyToNothing = function (list) {
 	return _elm_lang$core$List$isEmpty(list) ? _elm_lang$core$Maybe$Nothing : _elm_lang$core$Maybe$Just(list);
 };
 var _user$project$Config$fieldHolderToList = function (fieldHolder) {
-	var _p20 = fieldHolder;
-	if (_p20.ctor === 'FieldOk') {
-		var _p21 = _p20._0;
-		switch (_p21.ctor) {
+	var _p21 = fieldHolder;
+	if (_p21.ctor === 'FieldOk') {
+		var _p22 = _p21._0;
+		switch (_p22.ctor) {
 			case 'FieldLanguageValue':
-				return _p21._0;
+				return _p22._0;
 			case 'FieldCryptoCurrencyValue':
-				return _p21._0;
+				return _p22._0;
 			default:
 				return _elm_lang$core$Native_Utils.crashCase(
 					'Config',
@@ -22807,7 +25776,7 @@ var _user$project$Config$fieldHolderToList = function (fieldHolder) {
 						start: {line: 132, column: 13},
 						end: {line: 140, column: 50}
 					},
-					_p21)('Not a list type');
+					_p22)('Not a list type');
 		}
 	} else {
 		return {ctor: '[]'};
@@ -22816,34 +25785,9 @@ var _user$project$Config$fieldHolderToList = function (fieldHolder) {
 var _user$project$Config$updateStringFieldInstance = F3(
 	function (fieldLocator, maybeString, fieldInstance) {
 		if (_elm_lang$core$Native_Utils.eq(fieldInstance.fieldLocator, fieldLocator)) {
-			var _p23 = fieldLocator.fieldType;
-			switch (_p23.ctor) {
+			var _p24 = fieldLocator.fieldType;
+			switch (_p24.ctor) {
 				case 'FieldLanguageType':
-					var list = _user$project$Config$fieldHolderToList(fieldInstance.fieldHolder);
-					var newList = function () {
-						var _p24 = maybeString;
-						if (_p24.ctor === 'Nothing') {
-							return A2(
-								_elm_lang$core$List$take,
-								_elm_lang$core$List$length(list) - 1,
-								list);
-						} else {
-							return A2(
-								_elm_lang$core$Basics_ops['++'],
-								list,
-								{
-									ctor: '::',
-									_0: _p24._0,
-									_1: {ctor: '[]'}
-								});
-						}
-					}();
-					return _elm_lang$core$Native_Utils.update(
-						fieldInstance,
-						{
-							fieldHolder: A2(_user$project$Config$listToFieldHolder, _user$project$ConfigTypes$FieldLanguageValue, newList)
-						});
-				case 'FieldCryptoCurrencyType':
 					var list = _user$project$Config$fieldHolderToList(fieldInstance.fieldHolder);
 					var newList = function () {
 						var _p25 = maybeString;
@@ -22866,15 +25810,40 @@ var _user$project$Config$updateStringFieldInstance = F3(
 					return _elm_lang$core$Native_Utils.update(
 						fieldInstance,
 						{
+							fieldHolder: A2(_user$project$Config$listToFieldHolder, _user$project$ConfigTypes$FieldLanguageValue, newList)
+						});
+				case 'FieldCryptoCurrencyType':
+					var list = _user$project$Config$fieldHolderToList(fieldInstance.fieldHolder);
+					var newList = function () {
+						var _p26 = maybeString;
+						if (_p26.ctor === 'Nothing') {
+							return A2(
+								_elm_lang$core$List$take,
+								_elm_lang$core$List$length(list) - 1,
+								list);
+						} else {
+							return A2(
+								_elm_lang$core$Basics_ops['++'],
+								list,
+								{
+									ctor: '::',
+									_0: _p26._0,
+									_1: {ctor: '[]'}
+								});
+						}
+					}();
+					return _elm_lang$core$Native_Utils.update(
+						fieldInstance,
+						{
 							fieldHolder: A2(_user$project$Config$listToFieldHolder, _user$project$ConfigTypes$FieldCryptoCurrencyValue, newList)
 						});
 				default:
 					var fieldHolder = function () {
-						var _p26 = maybeString;
-						if (_p26.ctor === 'Nothing') {
+						var _p27 = maybeString;
+						if (_p27.ctor === 'Nothing') {
 							return _user$project$ConfigTypes$FieldEmpty;
 						} else {
-							return A2(_user$project$ConfigTypes$stringToFieldHolder, fieldLocator.fieldType, _p26._0);
+							return A2(_user$project$ConfigTypes$stringToFieldHolder, fieldLocator.fieldType, _p27._0);
 						}
 					}();
 					return _elm_lang$core$Native_Utils.update(
@@ -22918,12 +25887,12 @@ var _user$project$Config$placeField = F2(
 					field),
 				fieldList));
 		var newField = function () {
-			var _p27 = maybeOldField;
-			if (_p27.ctor === 'Nothing') {
+			var _p28 = maybeOldField;
+			if (_p28.ctor === 'Nothing') {
 				return field;
 			} else {
 				return _elm_lang$core$Native_Utils.update(
-					_p27._0,
+					_p28._0,
 					{fieldValue: field.fieldValue});
 			}
 		}();
@@ -22932,14 +25901,14 @@ var _user$project$Config$placeField = F2(
 			_0: newField,
 			_1: A2(
 				_elm_lang$core$List$filter,
-				function (_p28) {
+				function (_p29) {
 					return !A3(
 						_user$project$Config$similar,
 						function (_) {
 							return _.fieldLocator;
 						},
 						field,
-						_p28);
+						_p29);
 				},
 				fieldList)
 		};
@@ -23014,8 +25983,8 @@ var _user$project$Config$selectizeView = F6(
 			},
 			enabled: enabled
 		};
-		var _p29 = fieldLocator.fieldType;
-		switch (_p29.ctor) {
+		var _p30 = fieldLocator.fieldType;
+		switch (_p30.ctor) {
 			case 'FieldAccountType':
 				return A6(_user$project$Config$accountSelectizeView, model, localConfig, fieldInstance, selectizeState, maybeFieldValue, maybeFallbackFieldValue);
 			case 'FieldFiatCurrencyType':
@@ -23033,7 +26002,7 @@ var _user$project$Config$selectizeView = F6(
 						start: {line: 503, column: 9},
 						end: {line: 545, column: 52}
 					},
-					_p29)('Not a Selectize field');
+					_p30)('Not a Selectize field');
 		}
 	});
 var _user$project$Config$CryptoSwitch = function (a) {
@@ -23042,12 +26011,12 @@ var _user$project$Config$CryptoSwitch = function (a) {
 var _user$project$Config$cryptoView = F2(
 	function (maybeActiveCrypto, cryptoDisplay) {
 		var activeClass = function () {
-			var _p31 = maybeActiveCrypto;
-			if (_p31.ctor === 'Nothing') {
+			var _p32 = maybeActiveCrypto;
+			if (_p32.ctor === 'Nothing') {
 				return _user$project$Css_Admin$class(
 					{ctor: '[]'});
 			} else {
-				return _elm_lang$core$Native_Utils.eq(_p31._0, cryptoDisplay.crypto) ? _user$project$Css_Admin$class(
+				return _elm_lang$core$Native_Utils.eq(_p32._0, cryptoDisplay.crypto) ? _user$project$Css_Admin$class(
 					{
 						ctor: '::',
 						_0: _user$project$Css_Classes$Active,
@@ -23179,19 +26148,20 @@ var _user$project$Config$textInput = F4(
 	});
 var _user$project$Config$fieldInput = F5(
 	function (model, fieldInstance, maybeFieldValue, maybeFallbackFieldValue, enabled) {
-		var _p32 = fieldInstance.component;
-		if (_p32.ctor === 'InputBoxComponent') {
+		var _p33 = fieldInstance.component;
+		if (_p33.ctor === 'InputBoxComponent') {
 			return A4(_user$project$Config$textInput, fieldInstance, maybeFieldValue, maybeFallbackFieldValue, enabled);
 		} else {
-			return A6(_user$project$Config$selectizeView, model, fieldInstance, _p32._0, maybeFieldValue, maybeFallbackFieldValue, enabled);
+			return A6(_user$project$Config$selectizeView, model, fieldInstance, _p33._0, maybeFieldValue, maybeFallbackFieldValue, enabled);
 		}
 	});
 var _user$project$Config$fieldComponent = F2(
 	function (model, fieldInstance) {
+		var configGroup = model.configGroup;
 		var maybeSpecific = function () {
-			var _p33 = fieldInstance.fieldHolder;
-			if (_p33.ctor === 'FieldOk') {
-				return _elm_lang$core$Maybe$Just(_p33._0);
+			var _p34 = fieldInstance.fieldHolder;
+			if (_p34.ctor === 'FieldOk') {
+				return _elm_lang$core$Maybe$Just(_p34._0);
 			} else {
 				return _elm_lang$core$Maybe$Nothing;
 			}
@@ -23199,17 +26169,7 @@ var _user$project$Config$fieldComponent = F2(
 		var fieldInstances = model.fieldInstances;
 		var fieldLocator = fieldInstance.fieldLocator;
 		var fieldScope = fieldLocator.fieldScope;
-		var enabled = function () {
-			if (_elm_lang$core$List$isEmpty(fieldInstance.fieldEnabledIf)) {
-				return true;
-			} else {
-				var enabledInstances = A2(
-					_elm_lang$core$Basics_ops['++'],
-					A3(_user$project$Config$referenceFields, fieldScope, model.configGroup.values, fieldInstance.fieldEnabledIf),
-					A3(_user$project$Config$referenceFieldInstances, fieldScope, model.fieldInstances, fieldInstance.fieldEnabledIf));
-				return A2(_elm_lang$core$List$any, _user$project$Config$isField, enabledInstances);
-			}
-		}();
+		var enabled = A4(_user$project$Config$checkEnabled, fieldInstances, configGroup, fieldInstance.fieldEnabledIf, fieldScope);
 		var fieldCode = fieldLocator.code;
 		var maybeFallbackFieldValue = A3(_user$project$Config$fallbackValue, fieldScope, fieldInstances, fieldCode);
 		var fieldClass = fieldLocator.fieldClass;
@@ -23287,8 +26247,8 @@ var _user$project$Config$rowView = F3(
 		};
 		var machine = machineDisplay.machine;
 		var globalRowClass = function () {
-			var _p34 = machine;
-			if (_p34.ctor === 'GlobalMachine') {
+			var _p35 = machine;
+			if (_p35.ctor === 'GlobalMachine') {
 				return _user$project$Css_Admin$class(
 					{
 						ctor: '::',
@@ -23374,8 +26334,8 @@ var _user$project$Config$tableView = function (model) {
 };
 var _user$project$Config$Submit = {ctor: 'Submit'};
 var _user$project$Config$view = function (model) {
-	var _p35 = model.webConfigGroup;
-	switch (_p35.ctor) {
+	var _p36 = model.webConfigGroup;
+	switch (_p36.ctor) {
 		case 'NotAsked':
 			return A2(
 				_elm_lang$html$Html$div,
@@ -23397,21 +26357,21 @@ var _user$project$Config$view = function (model) {
 				{
 					ctor: '::',
 					_0: _elm_lang$html$Html$text(
-						_elm_lang$core$Basics$toString(_p35._0)),
+						_elm_lang$core$Basics$toString(_p36._0)),
 					_1: {ctor: '[]'}
 				});
 		default:
-			var _p37 = _p35._0;
+			var _p38 = _p36._0;
 			var statusString = function () {
-				var _p36 = model.status;
-				if (_p36.ctor === 'Saved') {
+				var _p37 = model.status;
+				if (_p37.ctor === 'Saved') {
 					return 'Saved';
 				} else {
 					return '';
 				}
 			}();
-			var cryptos = A3(_user$project$ConfigTypes$allCryptos, _p37.data.cryptoCurrencies, _p37.schema.cryptoScope, _p37.selectedCryptos);
-			var resolvedModel = A2(_user$project$Config$toResolvedModel, model, _p37);
+			var cryptos = A3(_user$project$ConfigTypes$allCryptos, _p38.data.cryptoCurrencies, _p38.schema.cryptoScope, _p38.selectedCryptos);
+			var resolvedModel = A2(_user$project$Config$toResolvedModel, model, _p38);
 			var configGroupView = A2(
 				_elm_lang$html$Html$div,
 				{
@@ -23495,7 +26455,7 @@ var _user$project$Config$view = function (model) {
 						_1: {ctor: '[]'}
 					}
 				});
-			return _elm_lang$core$Native_Utils.eq(_p37.schema.cryptoScope, _user$project$ConfigTypes$Global) ? A2(
+			return _elm_lang$core$Native_Utils.eq(_p38.schema.cryptoScope, _user$project$ConfigTypes$Global) ? A2(
 				_elm_lang$html$Html$div,
 				{ctor: '[]'},
 				{
@@ -23514,7 +26474,7 @@ var _user$project$Config$view = function (model) {
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(_p37.schema.display),
+							_0: _elm_lang$html$Html$text(_p38.schema.display),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -23541,7 +26501,7 @@ var _user$project$Config$view = function (model) {
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(_p37.schema.display),
+							_0: _elm_lang$html$Html$text(_p38.schema.display),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -23575,7 +26535,7 @@ var _user$project$Config$view = function (model) {
 						},
 						{
 							ctor: '::',
-							_0: _elm_lang$html$Html$text(_p37.schema.display),
+							_0: _elm_lang$html$Html$text(_p38.schema.display),
 							_1: {ctor: '[]'}
 						}),
 					_1: {
@@ -23642,37 +26602,37 @@ var _user$project$Config$postForm = F2(
 	});
 var _user$project$Config$update = F2(
 	function (msg, model) {
-		var _p38 = msg;
-		switch (_p38.ctor) {
+		var _p39 = msg;
+		switch (_p39.ctor) {
 			case 'Load':
-				var _p44 = _p38._0;
+				var _p45 = _p39._0;
 				var defaultCrypto = function () {
-					var _p39 = _p44;
-					if (_p39.ctor === 'Success') {
-						var _p40 = _p39._0;
+					var _p40 = _p45;
+					if (_p40.ctor === 'Success') {
+						var _p41 = _p40._0;
 						return A2(
 							_elm_lang$core$Maybe$map,
 							function (_) {
 								return _.crypto;
 							},
 							_elm_lang$core$List$head(
-								A3(_user$project$ConfigTypes$allCryptos, _p40.data.cryptoCurrencies, _p40.schema.cryptoScope, _p40.selectedCryptos)));
+								A3(_user$project$ConfigTypes$allCryptos, _p41.data.cryptoCurrencies, _p41.schema.cryptoScope, _p41.selectedCryptos)));
 					} else {
 						return _elm_lang$core$Maybe$Nothing;
 					}
 				}();
 				var crypto = function () {
-					var _p41 = model.crypto;
-					if (_p41.ctor === 'Nothing') {
+					var _p42 = model.crypto;
+					if (_p42.ctor === 'Nothing') {
 						return defaultCrypto;
 					} else {
-						return _elm_lang$core$Maybe$Just(_p41._0);
+						return _elm_lang$core$Maybe$Just(_p42._0);
 					}
 				}();
 				var fieldInstances = function () {
-					var _p42 = _p44;
-					if (_p42.ctor === 'Success') {
-						return _user$project$Config$initFieldInstances(_p42._0);
+					var _p43 = _p45;
+					if (_p43.ctor === 'Success') {
+						return _user$project$Config$initFieldInstances(_p43._0);
 					} else {
 						return {ctor: '[]'};
 					}
@@ -23680,7 +26640,7 @@ var _user$project$Config$update = F2(
 				var status = _elm_lang$core$Native_Utils.eq(model.status, _user$project$Config$Saving) ? _user$project$Config$Saved : model.status;
 				var cmd = _elm_lang$core$Native_Utils.eq(status, _user$project$Config$Saved) ? A2(
 					_elm_lang$core$Task$perform,
-					function (_p43) {
+					function (_p44) {
 						return _user$project$Config$HideSaveIndication;
 					},
 					_elm_lang$core$Process$sleep(2 * _elm_lang$core$Time$second)) : _elm_lang$core$Platform_Cmd$none;
@@ -23688,12 +26648,12 @@ var _user$project$Config$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{webConfigGroup: _p44, fieldInstances: fieldInstances, status: status, crypto: crypto}),
+						{webConfigGroup: _p45, fieldInstances: fieldInstances, status: status, crypto: crypto}),
 					_1: cmd
 				};
 			case 'Submit':
-				var _p45 = model.webConfigGroup;
-				if (_p45.ctor === 'Success') {
+				var _p46 = model.webConfigGroup;
+				if (_p46.ctor === 'Success') {
 					return A2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
 						_elm_lang$core$Native_Utils.update(
@@ -23701,7 +26661,7 @@ var _user$project$Config$update = F2(
 							{status: _user$project$Config$Saving}),
 						{
 							ctor: '::',
-							_0: A2(_user$project$Config$postForm, _p45._0.schema.code, model.fieldInstances),
+							_0: A2(_user$project$Config$postForm, _p46._0.schema.code, model.fieldInstances),
 							_1: {ctor: '[]'}
 						});
 				} else {
@@ -23715,29 +26675,30 @@ var _user$project$Config$update = F2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateInput,
-						_p38._0,
-						_elm_lang$core$Maybe$Just(_p38._1),
+						_p39._0,
+						_elm_lang$core$Maybe$Just(_p39._1),
 						model),
 					{ctor: '[]'});
 			case 'CryptoSwitch':
-				var _p47 = _p38._0;
-				var _p46 = model.webConfigGroup;
-				if (_p46.ctor === 'Success') {
-					var cryptoCode = _user$project$ConfigTypes$cryptoToString(_p47);
+				var _p48 = _p39._0;
+				var _p47 = model.webConfigGroup;
+				if (_p47.ctor === 'Success') {
+					var cryptoCode = _user$project$ConfigTypes$cryptoToString(_p48);
 					var path = A2(
 						_elm_lang$core$Basics_ops['++'],
 						'#config/',
 						A2(
 							_elm_lang$core$Basics_ops['++'],
-							_p46._0.schema.code,
+							_p47._0.schema.code,
 							A2(_elm_lang$core$Basics_ops['++'], '/', cryptoCode)));
-					var command = _elm_lang$navigation$Navigation$newUrl(path);
+					var command = _elm_lang$navigation$Navigation$newUrl(
+						A2(_elm_lang$core$Debug$log, 'DEBUG123', path));
 					return A2(
 						_elm_lang$core$Platform_Cmd_ops['!'],
 						_elm_lang$core$Native_Utils.update(
 							model,
 							{
-								crypto: _elm_lang$core$Maybe$Just(_p47)
+								crypto: _elm_lang$core$Maybe$Just(_p48)
 							}),
 						{
 							ctor: '::',
@@ -23753,57 +26714,57 @@ var _user$project$Config$update = F2(
 			case 'Focus':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(_user$project$Config$updateFocus, _p38._0, true, model),
+					A3(_user$project$Config$updateFocus, _p39._0, true, model),
 					{ctor: '[]'});
 			case 'Blur':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(_user$project$Config$updateFocus, _p38._0, false, model),
+					A3(_user$project$Config$updateFocus, _p39._0, false, model),
 					{ctor: '[]'});
 			case 'SelectizeMsg':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(_user$project$Config$updateSelectize, _p38._0, _p38._1, model),
+					A3(_user$project$Config$updateSelectize, _p39._0, _p39._1, model),
 					{ctor: '[]'});
 			case 'BlurSelectize':
-				var _p48 = _p38._0;
-				return A2(
-					_elm_lang$core$Platform_Cmd_ops['!'],
-					A3(
-						_user$project$Config$updateFocus,
-						_p48,
-						false,
-						A3(_user$project$Config$updateSelectize, _p48, _p38._1, model)),
-					{ctor: '[]'});
-			case 'FocusSelectize':
-				var _p49 = _p38._0;
+				var _p49 = _p39._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateFocus,
 						_p49,
-						true,
-						A3(_user$project$Config$updateSelectize, _p49, _p38._1, model)),
+						false,
+						A3(_user$project$Config$updateSelectize, _p49, _p39._1, model)),
 					{ctor: '[]'});
-			case 'Add':
-				var _p50 = _p38._0;
+			case 'FocusSelectize':
+				var _p50 = _p39._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
-						_user$project$Config$updateInput,
+						_user$project$Config$updateFocus,
 						_p50,
-						_elm_lang$core$Maybe$Just(_p38._1),
-						A3(_user$project$Config$updateSelectize, _p50, _p38._2, model)),
+						true,
+						A3(_user$project$Config$updateSelectize, _p50, _p39._1, model)),
 					{ctor: '[]'});
-			case 'Remove':
-				var _p51 = _p38._0;
+			case 'Add':
+				var _p51 = _p39._0;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					A3(
 						_user$project$Config$updateInput,
 						_p51,
+						_elm_lang$core$Maybe$Just(_p39._1),
+						A3(_user$project$Config$updateSelectize, _p51, _p39._2, model)),
+					{ctor: '[]'});
+			case 'Remove':
+				var _p52 = _p39._0;
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					A3(
+						_user$project$Config$updateInput,
+						_p52,
 						_elm_lang$core$Maybe$Nothing,
-						A3(_user$project$Config$updateSelectize, _p51, _p38._1, model)),
+						A3(_user$project$Config$updateSelectize, _p52, _p39._1, model)),
 					{ctor: '[]'});
 			default:
 				return A2(
@@ -24550,6 +27511,697 @@ var _user$project$Machine$view = function (model) {
 	}
 };
 
+var _user$project$TransactionTypes$CashInTxRec = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return function (k) {
+											return {id: a, machineName: b, toAddress: c, cryptoAtoms: d, cryptoCode: e, fiat: f, currencyCode: g, txHash: h, phone: i, error: j, created: k};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var _user$project$TransactionTypes$CashOutTxRec = function (a) {
+	return function (b) {
+		return function (c) {
+			return function (d) {
+				return function (e) {
+					return function (f) {
+						return function (g) {
+							return function (h) {
+								return function (i) {
+									return function (j) {
+										return function (k) {
+											return function (l) {
+												return function (m) {
+													return function (n) {
+														return function (o) {
+															return function (p) {
+																return {id: a, machineName: b, toAddress: c, cryptoAtoms: d, cryptoCode: e, fiat: f, currencyCode: g, txHash: h, status: i, dispensed: j, notified: k, redeemed: l, phone: m, error: n, created: o, confirmed: p};
+															};
+														};
+													};
+												};
+											};
+										};
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+};
+var _user$project$TransactionTypes$CashOutTx = function (a) {
+	return {ctor: 'CashOutTx', _0: a};
+};
+var _user$project$TransactionTypes$CashInTx = function (a) {
+	return {ctor: 'CashInTx', _0: a};
+};
+
+var _user$project$TransactionDecoder$confirmedDecoder = A2(
+	_elm_lang$core$Json_Decode$map,
+	function (_p0) {
+		return A2(
+			_elm_lang$core$Maybe$withDefault,
+			false,
+			A2(
+				_elm_lang$core$Maybe$map,
+				_elm_lang$core$Basics$always(true),
+				_p0));
+	},
+	_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string));
+var _user$project$TransactionDecoder$intString = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p1) {
+		return _elm_community$json_extra$Json_Decode_Extra$fromResult(
+			_elm_lang$core$String$toInt(_p1));
+	},
+	_elm_lang$core$Json_Decode$string);
+var _user$project$TransactionDecoder$floatString = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	function (_p2) {
+		return _elm_community$json_extra$Json_Decode_Extra$fromResult(
+			_elm_lang$core$String$toFloat(_p2));
+	},
+	_elm_lang$core$Json_Decode$string);
+var _user$project$TransactionDecoder$cashInTxDecoder = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'created',
+	_elm_community$json_extra$Json_Decode_Extra$date,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'error',
+		_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'phone',
+			_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'txHash',
+				_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'currencyCode',
+					_elm_lang$core$Json_Decode$string,
+					A3(
+						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+						'fiat',
+						_user$project$TransactionDecoder$floatString,
+						A3(
+							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+							'cryptoCode',
+							_elm_lang$core$Json_Decode$string,
+							A3(
+								_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+								'cryptoAtoms',
+								_user$project$TransactionDecoder$intString,
+								A3(
+									_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+									'toAddress',
+									_elm_lang$core$Json_Decode$string,
+									A3(
+										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+										'machineName',
+										_elm_lang$core$Json_Decode$string,
+										A3(
+											_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+											'id',
+											_elm_lang$core$Json_Decode$string,
+											_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$TransactionTypes$CashInTxRec))))))))))));
+var _user$project$TransactionDecoder$cashOutTxDecoder = A3(
+	_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+	'confirmationTime',
+	_user$project$TransactionDecoder$confirmedDecoder,
+	A3(
+		_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+		'created',
+		_elm_community$json_extra$Json_Decode_Extra$date,
+		A3(
+			_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+			'error',
+			_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
+			A3(
+				_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+				'phone',
+				_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
+				A3(
+					_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+					'redeem',
+					_elm_lang$core$Json_Decode$bool,
+					A3(
+						_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+						'notified',
+						_elm_lang$core$Json_Decode$bool,
+						A3(
+							_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+							'dispensed',
+							_elm_lang$core$Json_Decode$bool,
+							A3(
+								_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+								'status',
+								_elm_lang$core$Json_Decode$string,
+								A3(
+									_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+									'txHash',
+									_elm_lang$core$Json_Decode$nullable(_elm_lang$core$Json_Decode$string),
+									A3(
+										_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+										'currencyCode',
+										_elm_lang$core$Json_Decode$string,
+										A3(
+											_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+											'fiat',
+											_user$project$TransactionDecoder$floatString,
+											A3(
+												_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+												'cryptoCode',
+												_elm_lang$core$Json_Decode$string,
+												A3(
+													_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+													'cryptoAtoms',
+													_user$project$TransactionDecoder$intString,
+													A3(
+														_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+														'toAddress',
+														_elm_lang$core$Json_Decode$string,
+														A3(
+															_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+															'machineName',
+															_elm_lang$core$Json_Decode$string,
+															A3(
+																_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$required,
+																'id',
+																_elm_lang$core$Json_Decode$string,
+																_NoRedInk$elm_decode_pipeline$Json_Decode_Pipeline$decode(_user$project$TransactionTypes$CashOutTxRec)))))))))))))))));
+var _user$project$TransactionDecoder$txDecode = function (txClass) {
+	var _p3 = txClass;
+	switch (_p3) {
+		case 'cashIn':
+			return A2(_elm_lang$core$Json_Decode$map, _user$project$TransactionTypes$CashInTx, _user$project$TransactionDecoder$cashInTxDecoder);
+		case 'cashOut':
+			return A2(_elm_lang$core$Json_Decode$map, _user$project$TransactionTypes$CashOutTx, _user$project$TransactionDecoder$cashOutTxDecoder);
+		default:
+			return _elm_lang$core$Json_Decode$fail(
+				A2(_elm_lang$core$Basics_ops['++'], 'Unknown tx class: ', txClass));
+	}
+};
+var _user$project$TransactionDecoder$txDecoder = A2(
+	_elm_lang$core$Json_Decode$andThen,
+	_user$project$TransactionDecoder$txDecode,
+	A2(_elm_lang$core$Json_Decode$field, 'txClass', _elm_lang$core$Json_Decode$string));
+var _user$project$TransactionDecoder$txsDecoder = A2(
+	_elm_lang$core$Json_Decode$field,
+	'transactions',
+	_elm_lang$core$Json_Decode$list(_user$project$TransactionDecoder$txDecoder));
+
+var _user$project$Transaction$rowView = function (tx) {
+	var _p0 = tx;
+	if (_p0.ctor === 'CashInTx') {
+		var _p1 = _p0._0;
+		return A2(
+			_elm_lang$html$Html$tr,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$td,
+					{
+						ctor: '::',
+						_0: _user$project$Css_Admin$class(
+							{
+								ctor: '::',
+								_0: _user$project$Css_Classes$NumberColumn,
+								_1: {
+									ctor: '::',
+									_0: _user$project$Css_Classes$DateColumn,
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(_justinmimbs$elm_date_extra$Date_Extra$toFormattedString, 'yyyy-MM-dd HH:mm', _p1.created)),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(_p1.machineName),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{
+								ctor: '::',
+								_0: _user$project$Css_Admin$class(
+									{
+										ctor: '::',
+										_0: _user$project$Css_Classes$NumberColumn,
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									A2(
+										_ggb$numeral_elm$Numeral$format,
+										'0,0.000000',
+										_elm_lang$core$Basics$negate(
+											_elm_lang$core$Basics$toFloat(_p1.cryptoAtoms)) / 1.0e8)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(_p1.cryptoCode),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{
+										ctor: '::',
+										_0: _user$project$Css_Admin$class(
+											{
+												ctor: '::',
+												_0: _user$project$Css_Classes$NumberColumn,
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											A2(_ggb$numeral_elm$Numeral$format, '0,0.00', _p1.fiat)),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$td,
+										{
+											ctor: '::',
+											_0: _user$project$Css_Admin$class(
+												{
+													ctor: '::',
+													_0: _user$project$Css_Classes$NumberColumn,
+													_1: {ctor: '[]'}
+												}),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(
+												A2(_elm_lang$core$Maybe$withDefault, '', _p1.phone)),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$td,
+											{
+												ctor: '::',
+												_0: _user$project$Css_Admin$class(
+													{
+														ctor: '::',
+														_0: _user$project$Css_Classes$NumberColumn,
+														_1: {
+															ctor: '::',
+															_0: _user$project$Css_Classes$TruncatedColumn,
+															_1: {ctor: '[]'}
+														}
+													}),
+												_1: {ctor: '[]'}
+											},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text(_p1.toAddress),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+	} else {
+		var _p2 = _p0._0;
+		return A2(
+			_elm_lang$html$Html$tr,
+			{ctor: '[]'},
+			{
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$td,
+					{
+						ctor: '::',
+						_0: _user$project$Css_Admin$class(
+							{
+								ctor: '::',
+								_0: _user$project$Css_Classes$NumberColumn,
+								_1: {
+									ctor: '::',
+									_0: _user$project$Css_Classes$DateColumn,
+									_1: {ctor: '[]'}
+								}
+							}),
+						_1: {ctor: '[]'}
+					},
+					{
+						ctor: '::',
+						_0: _elm_lang$html$Html$text(
+							A2(_justinmimbs$elm_date_extra$Date_Extra$toFormattedString, 'yyyy-MM-dd HH:mm', _p2.created)),
+						_1: {ctor: '[]'}
+					}),
+				_1: {
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$td,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: _elm_lang$html$Html$text(_p2.machineName),
+							_1: {ctor: '[]'}
+						}),
+					_1: {
+						ctor: '::',
+						_0: A2(
+							_elm_lang$html$Html$td,
+							{
+								ctor: '::',
+								_0: _user$project$Css_Admin$class(
+									{
+										ctor: '::',
+										_0: _user$project$Css_Classes$NumberColumn,
+										_1: {ctor: '[]'}
+									}),
+								_1: {ctor: '[]'}
+							},
+							{
+								ctor: '::',
+								_0: _elm_lang$html$Html$text(
+									A2(
+										_ggb$numeral_elm$Numeral$format,
+										'0,0.000000',
+										_elm_lang$core$Basics$toFloat(_p2.cryptoAtoms) / 1.0e8)),
+								_1: {ctor: '[]'}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{ctor: '[]'},
+								{
+									ctor: '::',
+									_0: _elm_lang$html$Html$text(_p2.cryptoCode),
+									_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{
+										ctor: '::',
+										_0: _user$project$Css_Admin$class(
+											{
+												ctor: '::',
+												_0: _user$project$Css_Classes$NumberColumn,
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									},
+									{
+										ctor: '::',
+										_0: _elm_lang$html$Html$text(
+											A2(
+												_ggb$numeral_elm$Numeral$format,
+												'0,0.00',
+												_elm_lang$core$Basics$negate(_p2.fiat))),
+										_1: {ctor: '[]'}
+									}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$td,
+										{
+											ctor: '::',
+											_0: _user$project$Css_Admin$class(
+												{
+													ctor: '::',
+													_0: _user$project$Css_Classes$NumberColumn,
+													_1: {ctor: '[]'}
+												}),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text(
+												A2(_elm_lang$core$Maybe$withDefault, '', _p2.phone)),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$td,
+											{
+												ctor: '::',
+												_0: _user$project$Css_Admin$class(
+													{
+														ctor: '::',
+														_0: _user$project$Css_Classes$NumberColumn,
+														_1: {
+															ctor: '::',
+															_0: _user$project$Css_Classes$TruncatedColumn,
+															_1: {ctor: '[]'}
+														}
+													}),
+												_1: {ctor: '[]'}
+											},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text(_p2.toAddress),
+												_1: {ctor: '[]'}
+											}),
+										_1: {ctor: '[]'}
+									}
+								}
+							}
+						}
+					}
+				}
+			});
+	}
+};
+var _user$project$Transaction$tableView = function (txs) {
+	return _elm_lang$core$List$isEmpty(txs) ? A2(
+		_elm_lang$html$Html$div,
+		{ctor: '[]'},
+		{
+			ctor: '::',
+			_0: _elm_lang$html$Html$text('No activity yet.'),
+			_1: {ctor: '[]'}
+		}) : A2(
+		_elm_lang$html$Html$table,
+		{
+			ctor: '::',
+			_0: _user$project$Css_Admin$class(
+				{
+					ctor: '::',
+					_0: _user$project$Css_Classes$TxTable,
+					_1: {ctor: '[]'}
+				}),
+			_1: {ctor: '[]'}
+		},
+		{
+			ctor: '::',
+			_0: A2(
+				_elm_lang$html$Html$thead,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: A2(
+						_elm_lang$html$Html$tr,
+						{ctor: '[]'},
+						{
+							ctor: '::',
+							_0: A2(
+								_elm_lang$html$Html$td,
+								{
+									ctor: '::',
+									_0: _user$project$Css_Admin$class(
+										{
+											ctor: '::',
+											_0: _user$project$Css_Classes$DateColumn,
+											_1: {ctor: '[]'}
+										}),
+									_1: {ctor: '[]'}
+								},
+								{ctor: '[]'}),
+							_1: {
+								ctor: '::',
+								_0: A2(
+									_elm_lang$html$Html$td,
+									{ctor: '[]'},
+									{ctor: '[]'}),
+								_1: {
+									ctor: '::',
+									_0: A2(
+										_elm_lang$html$Html$td,
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html_Attributes$colspan(2),
+											_1: {ctor: '[]'}
+										},
+										{
+											ctor: '::',
+											_0: _elm_lang$html$Html$text('Crypto'),
+											_1: {ctor: '[]'}
+										}),
+									_1: {
+										ctor: '::',
+										_0: A2(
+											_elm_lang$html$Html$td,
+											{ctor: '[]'},
+											{
+												ctor: '::',
+												_0: _elm_lang$html$Html$text('Fiat'),
+												_1: {ctor: '[]'}
+											}),
+										_1: {
+											ctor: '::',
+											_0: A2(
+												_elm_lang$html$Html$td,
+												{ctor: '[]'},
+												{
+													ctor: '::',
+													_0: _elm_lang$html$Html$text('Phone'),
+													_1: {ctor: '[]'}
+												}),
+											_1: {
+												ctor: '::',
+												_0: A2(
+													_elm_lang$html$Html$td,
+													{ctor: '[]'},
+													{
+														ctor: '::',
+														_0: _elm_lang$html$Html$text('To address'),
+														_1: {ctor: '[]'}
+													}),
+												_1: {ctor: '[]'}
+											}
+										}
+									}
+								}
+							}
+						}),
+					_1: {ctor: '[]'}
+				}),
+			_1: {
+				ctor: '::',
+				_0: A2(
+					_elm_lang$html$Html$tbody,
+					{ctor: '[]'},
+					A2(_elm_lang$core$List$map, _user$project$Transaction$rowView, txs)),
+				_1: {ctor: '[]'}
+			}
+		});
+};
+var _user$project$Transaction$view = function (model) {
+	var _p3 = model;
+	switch (_p3.ctor) {
+		case 'NotAsked':
+			return A2(
+				_elm_lang$html$Html$div,
+				{ctor: '[]'},
+				{ctor: '[]'});
+		case 'Loading':
+			return A2(
+				_elm_lang$html$Html$div,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text('Loading...'),
+					_1: {ctor: '[]'}
+				});
+		case 'Failure':
+			return A2(
+				_elm_lang$html$Html$div,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _elm_lang$html$Html$text(
+						_elm_lang$core$Basics$toString(_p3._0)),
+					_1: {ctor: '[]'}
+				});
+		default:
+			return A2(
+				_elm_lang$html$Html$div,
+				{ctor: '[]'},
+				{
+					ctor: '::',
+					_0: _user$project$Transaction$tableView(_p3._0),
+					_1: {ctor: '[]'}
+				});
+	}
+};
+var _user$project$Transaction$update = F2(
+	function (msg, model) {
+		var _p4 = msg;
+		return A2(
+			_elm_lang$core$Platform_Cmd_ops['!'],
+			_p4._0,
+			{ctor: '[]'});
+	});
+var _user$project$Transaction$init = _krisajenkins$remotedata$RemoteData$NotAsked;
+var _user$project$Transaction$Load = function (a) {
+	return {ctor: 'Load', _0: a};
+};
+var _user$project$Transaction$getTransactions = A2(
+	_elm_lang$core$Platform_Cmd$map,
+	_user$project$Transaction$Load,
+	A2(
+		_lukewestby$elm_http_builder$HttpBuilder$send,
+		_krisajenkins$remotedata$RemoteData$fromResult,
+		A2(
+			_lukewestby$elm_http_builder$HttpBuilder$withExpect,
+			_elm_lang$http$Http$expectJson(_user$project$TransactionDecoder$txsDecoder),
+			_lukewestby$elm_http_builder$HttpBuilder$get('/api/transactions'))));
+var _user$project$Transaction$loadCmd = _user$project$Transaction$getTransactions;
+var _user$project$Transaction$load = {ctor: '_Tuple2', _0: _krisajenkins$remotedata$RemoteData$Loading, _1: _user$project$Transaction$loadCmd};
+
 var _user$project$StatusTypes$ServerRec = F2(
 	function (a, b) {
 		return {up: a, lastPing: b};
@@ -24568,6 +28220,7 @@ var _user$project$CoreTypes$ConfigCat = {ctor: 'ConfigCat'};
 var _user$project$CoreTypes$AccountCat = {ctor: 'AccountCat'};
 var _user$project$CoreTypes$MachineActions = {ctor: 'MachineActions'};
 var _user$project$CoreTypes$NotFoundRoute = {ctor: 'NotFoundRoute'};
+var _user$project$CoreTypes$TransactionRoute = {ctor: 'TransactionRoute'};
 var _user$project$CoreTypes$MachineRoute = function (a) {
 	return {ctor: 'MachineRoute', _0: a};
 };
@@ -24592,6 +28245,9 @@ var _user$project$CoreTypes$LoadStatus = function (a) {
 var _user$project$CoreTypes$LoadAccounts = function (a) {
 	return {ctor: 'LoadAccounts', _0: a};
 };
+var _user$project$CoreTypes$TransactionMsg = function (a) {
+	return {ctor: 'TransactionMsg', _0: a};
+};
 var _user$project$CoreTypes$MachineMsg = function (a) {
 	return {ctor: 'MachineMsg', _0: a};
 };
@@ -24608,8 +28264,6 @@ var _user$project$CoreTypes$AccountMsg = function (a) {
 var _user$project$NavBar$determineCategory = function (route) {
 	var _p0 = route;
 	switch (_p0.ctor) {
-		case 'PairRoute':
-			return _elm_lang$core$Maybe$Nothing;
 		case 'AccountRoute':
 			return _elm_lang$core$Maybe$Just(_user$project$CoreTypes$AccountCat);
 		case 'ConfigRoute':
@@ -24655,12 +28309,14 @@ var _user$project$NavBar$routeToUrl = function (route) {
 				_elm_lang$core$Basics_ops['++'],
 				'/#machine/',
 				_user$project$CoreTypes$machineSubRouteToString(_p1._0));
+		case 'TransactionRoute':
+			return '/#transaction/';
 		default:
 			return _elm_lang$core$Native_Utils.crashCase(
 				'NavBar',
 				{
 					start: {line: 31, column: 5},
-					end: {line: 45, column: 45}
+					end: {line: 48, column: 45}
 				},
 				_p1)('Need unknown route');
 	}
@@ -24673,25 +28329,12 @@ var _user$project$NavBar$linkClasses = F3(
 	function (linkRoute, route, isValid) {
 		var active = function () {
 			var _p4 = route;
-			switch (_p4.ctor) {
-				case 'PairRoute':
-					return _elm_lang$core$Native_Utils.eq(linkRoute, route);
-				case 'AccountRoute':
-					return _elm_lang$core$Native_Utils.eq(linkRoute, route);
-				case 'ConfigRoute':
-					return _elm_lang$core$Native_Utils.eq(
-						linkRoute,
-						A2(_user$project$CoreTypes$ConfigRoute, _p4._0, _elm_lang$core$Maybe$Nothing));
-				case 'MachineRoute':
-					return _elm_lang$core$Native_Utils.eq(linkRoute, route);
-				default:
-					return _elm_lang$core$Native_Utils.crashCase(
-						'NavBar',
-						{
-							start: {line: 58, column: 13},
-							end: {line: 72, column: 53}
-						},
-						_p4)('Need NotFoundRoute');
+			if (_p4.ctor === 'ConfigRoute') {
+				return _elm_lang$core$Native_Utils.eq(
+					linkRoute,
+					A2(_user$project$CoreTypes$ConfigRoute, _p4._0, _elm_lang$core$Maybe$Nothing));
+			} else {
+				return _elm_lang$core$Native_Utils.eq(linkRoute, route);
 			}
 		}();
 		var validityClass = isValid ? {ctor: '[]'} : {
@@ -24723,10 +28366,10 @@ var _user$project$NavBar$linkClasses = F3(
 	});
 var _user$project$NavBar$linkView = F4(
 	function (maybeCategory, currentRoute, maybeLinkedCategory, link) {
-		var _p6 = link;
-		var desc = _p6._0;
-		var linkRoute = _p6._1;
-		var isValid = _p6._2;
+		var _p5 = link;
+		var desc = _p5._0;
+		var linkRoute = _p5._1;
+		var isValid = _p5._2;
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -24748,8 +28391,8 @@ var _user$project$NavBar$linkView = F4(
 	});
 var _user$project$NavBar$activeCategory = F2(
 	function (maybeCurrentCategory, linkedCategory) {
-		var _p7 = maybeCurrentCategory;
-		if (_p7.ctor === 'Nothing') {
+		var _p6 = maybeCurrentCategory;
+		if (_p6.ctor === 'Nothing') {
 			return _user$project$NavBar$class(
 				{
 					ctor: '::',
@@ -24757,7 +28400,7 @@ var _user$project$NavBar$activeCategory = F2(
 					_1: {ctor: '[]'}
 				});
 		} else {
-			return _elm_lang$core$Native_Utils.eq(_p7._0, linkedCategory) ? _user$project$NavBar$class(
+			return _elm_lang$core$Native_Utils.eq(_p6._0, linkedCategory) ? _user$project$NavBar$class(
 				{
 					ctor: '::',
 					_0: _user$project$Css_Classes$NavBarCategory,
@@ -24776,10 +28419,10 @@ var _user$project$NavBar$activeCategory = F2(
 	});
 var _user$project$NavBar$categoryView = F2(
 	function (currentCategory, link) {
-		var _p8 = link;
-		var desc = _p8._0;
-		var category = _p8._1;
-		var linkRoute = _p8._2;
+		var _p7 = link;
+		var desc = _p7._0;
+		var category = _p7._1;
+		var linkRoute = _p7._2;
 		return A2(
 			_elm_lang$html$Html$div,
 			{
@@ -24800,14 +28443,14 @@ var _user$project$NavBar$categoryView = F2(
 			});
 	});
 var _user$project$NavBar$linksView = F4(
-	function (maybeCurrentCategory, currentRoute, _p9, links) {
-		var _p10 = _p9;
-		var _p13 = _p10._2;
-		var _p12 = _p10._0;
-		var _p11 = _p10._1;
+	function (maybeCurrentCategory, currentRoute, _p8, links) {
+		var _p9 = _p8;
+		var _p12 = _p9._2;
+		var _p11 = _p9._0;
+		var _p10 = _p9._1;
 		return _elm_lang$core$Native_Utils.eq(
 			maybeCurrentCategory,
-			_elm_lang$core$Maybe$Just(_p11)) ? A2(
+			_elm_lang$core$Maybe$Just(_p10)) ? A2(
 			_elm_lang$html$Html$div,
 			{
 				ctor: '::',
@@ -24824,7 +28467,7 @@ var _user$project$NavBar$linksView = F4(
 				_0: A2(
 					_user$project$NavBar$categoryView,
 					maybeCurrentCategory,
-					{ctor: '_Tuple3', _0: _p12, _1: _p11, _2: _p13}),
+					{ctor: '_Tuple3', _0: _p11, _1: _p10, _2: _p12}),
 				_1: {
 					ctor: '::',
 					_0: A2(
@@ -24836,7 +28479,7 @@ var _user$project$NavBar$linksView = F4(
 								_user$project$NavBar$linkView,
 								maybeCurrentCategory,
 								currentRoute,
-								_elm_lang$core$Maybe$Just(_p11)),
+								_elm_lang$core$Maybe$Just(_p10)),
 							links)),
 					_1: {ctor: '[]'}
 				}
@@ -24857,7 +28500,7 @@ var _user$project$NavBar$linksView = F4(
 				_0: A2(
 					_user$project$NavBar$categoryView,
 					maybeCurrentCategory,
-					{ctor: '_Tuple3', _0: _p12, _1: _p11, _2: _p13}),
+					{ctor: '_Tuple3', _0: _p11, _1: _p10, _2: _p12}),
 				_1: {ctor: '[]'}
 			});
 	});
@@ -24892,62 +28535,27 @@ var _user$project$NavBar$view = F2(
 			},
 			{
 				ctor: '::',
-				_0: A2(
-					ll,
-					{
-						ctor: '_Tuple3',
-						_0: 'Machines',
-						_1: _user$project$CoreTypes$MachineCat,
-						_2: _user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions)
-					},
-					{
-						ctor: '::',
-						_0: {
-							ctor: '_Tuple3',
-							_0: 'Actions',
-							_1: _user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions),
-							_2: true
-						},
-						_1: {ctor: '[]'}
-					}),
+				_0: l(
+					{ctor: '_Tuple3', _0: 'Transactions', _1: _user$project$CoreTypes$TransactionRoute, _2: true}),
 				_1: {
 					ctor: '::',
 					_0: A2(
 						ll,
 						{
 							ctor: '_Tuple3',
-							_0: 'Configuration',
-							_1: _user$project$CoreTypes$ConfigCat,
-							_2: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
+							_0: 'Machines',
+							_1: _user$project$CoreTypes$MachineCat,
+							_2: _user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions)
 						},
 						{
 							ctor: '::',
-							_0: A2(configLink, 'commissions', 'Commissions'),
-							_1: {
-								ctor: '::',
-								_0: A2(configLink, 'machineSettings', 'Machine settings'),
-								_1: {
-									ctor: '::',
-									_0: A2(configLink, 'machines', 'Machines'),
-									_1: {
-										ctor: '::',
-										_0: A2(configLink, 'fiat', 'Fiat currencies'),
-										_1: {
-											ctor: '::',
-											_0: A2(configLink, 'cryptoServices', 'Crypto services'),
-											_1: {
-												ctor: '::',
-												_0: A2(configLink, 'notifications', 'Notifications'),
-												_1: {
-													ctor: '::',
-													_0: A2(configLink, 'compliance', 'Compliance'),
-													_1: {ctor: '[]'}
-												}
-											}
-										}
-									}
-								}
-							}
+							_0: {
+								ctor: '_Tuple3',
+								_0: 'Actions',
+								_1: _user$project$CoreTypes$MachineRoute(_user$project$CoreTypes$MachineActions),
+								_2: true
+							},
+							_1: {ctor: '[]'}
 						}),
 					_1: {
 						ctor: '::',
@@ -24955,43 +28563,83 @@ var _user$project$NavBar$view = F2(
 							ll,
 							{
 								ctor: '_Tuple3',
-								_0: 'Accounts',
-								_1: _user$project$CoreTypes$AccountCat,
-								_2: _user$project$CoreTypes$AccountRoute('bitgo')
+								_0: 'Configuration',
+								_1: _user$project$CoreTypes$ConfigCat,
+								_2: A2(_user$project$CoreTypes$ConfigRoute, 'commissions', _elm_lang$core$Maybe$Nothing)
 							},
 							{
 								ctor: '::',
-								_0: {
-									ctor: '_Tuple3',
-									_0: 'BitGo',
-									_1: _user$project$CoreTypes$AccountRoute('bitgo'),
-									_2: true
-								},
+								_0: A2(configLink, 'commissions', 'Commissions'),
 								_1: {
+									ctor: '::',
+									_0: A2(configLink, 'machineSettings', 'Machine settings'),
+									_1: {
+										ctor: '::',
+										_0: A2(configLink, 'machines', 'Machines'),
+										_1: {
+											ctor: '::',
+											_0: A2(configLink, 'fiat', 'Fiat currencies'),
+											_1: {
+												ctor: '::',
+												_0: A2(configLink, 'cryptoServices', 'Crypto services'),
+												_1: {
+													ctor: '::',
+													_0: A2(configLink, 'notifications', 'Notifications'),
+													_1: {
+														ctor: '::',
+														_0: A2(configLink, 'compliance', 'Compliance'),
+														_1: {ctor: '[]'}
+													}
+												}
+											}
+										}
+									}
+								}
+							}),
+						_1: {
+							ctor: '::',
+							_0: A2(
+								ll,
+								{
+									ctor: '_Tuple3',
+									_0: 'Accounts',
+									_1: _user$project$CoreTypes$AccountCat,
+									_2: _user$project$CoreTypes$AccountRoute('bitgo')
+								},
+								{
 									ctor: '::',
 									_0: {
 										ctor: '_Tuple3',
-										_0: 'Twilio',
-										_1: _user$project$CoreTypes$AccountRoute('twilio'),
+										_0: 'BitGo',
+										_1: _user$project$CoreTypes$AccountRoute('bitgo'),
 										_2: true
 									},
 									_1: {
 										ctor: '::',
 										_0: {
 											ctor: '_Tuple3',
-											_0: 'Mailjet',
-											_1: _user$project$CoreTypes$AccountRoute('mailjet'),
+											_0: 'Twilio',
+											_1: _user$project$CoreTypes$AccountRoute('twilio'),
 											_2: true
 										},
-										_1: {ctor: '[]'}
+										_1: {
+											ctor: '::',
+											_0: {
+												ctor: '_Tuple3',
+												_0: 'Mailjet',
+												_1: _user$project$CoreTypes$AccountRoute('mailjet'),
+												_2: true
+											},
+											_1: {ctor: '[]'}
+										}
 									}
-								}
-							}),
-						_1: {
-							ctor: '::',
-							_0: l(
-								{ctor: '_Tuple3', _0: 'Pairing', _1: _user$project$CoreTypes$PairRoute, _2: true}),
-							_1: {ctor: '[]'}
+								}),
+							_1: {
+								ctor: '::',
+								_0: l(
+									{ctor: '_Tuple3', _0: 'Pairing', _1: _user$project$CoreTypes$PairRoute, _2: true}),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
@@ -25018,7 +28666,7 @@ var _user$project$StatusDecoder$statusDecoder = A3(
 var _user$project$Main$subscriptions = function (model) {
 	return A2(
 		_elm_lang$core$Time$every,
-		1000 * _elm_lang$core$Time$second,
+		5 * _elm_lang$core$Time$second,
 		function (_p0) {
 			return _user$project$CoreTypes$Interval;
 		});
@@ -25117,6 +28765,11 @@ var _user$project$Main$content = F2(
 					_elm_lang$html$Html$map,
 					_user$project$CoreTypes$MachineMsg,
 					_user$project$Machine$view(model.machine));
+			case 'TransactionRoute':
+				return A2(
+					_elm_lang$html$Html$map,
+					_user$project$CoreTypes$TransactionMsg,
+					_user$project$Transaction$view(model.transaction));
 			default:
 				return A2(
 					_elm_lang$html$Html$div,
@@ -25205,8 +28858,15 @@ var _user$project$Main$parseRoute = _evancz$url_parser$UrlParser$oneOf(
 								_evancz$url_parser$UrlParser$s('actions'))),
 						_1: {
 							ctor: '::',
-							_0: A2(_evancz$url_parser$UrlParser$map, _user$project$CoreTypes$PairRoute, _evancz$url_parser$UrlParser$top),
-							_1: {ctor: '[]'}
+							_0: A2(
+								_evancz$url_parser$UrlParser$map,
+								_user$project$CoreTypes$TransactionRoute,
+								_evancz$url_parser$UrlParser$s('transaction')),
+							_1: {
+								ctor: '::',
+								_0: A2(_evancz$url_parser$UrlParser$map, _user$project$CoreTypes$PairRoute, _evancz$url_parser$UrlParser$top),
+								_1: {ctor: '[]'}
+							}
 						}
 					}
 				}
@@ -25345,6 +29005,20 @@ var _user$project$Main$urlUpdate = F2(
 						_0: A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$MachineMsg, cmd),
 						_1: {ctor: '[]'}
 					});
+			case 'TransactionRoute':
+				var _p9 = _user$project$Transaction$load;
+				var transactionModel = _p9._0;
+				var cmd = _p9._1;
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{location: location, transaction: transactionModel}),
+					{
+						ctor: '::',
+						_0: A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$TransactionMsg, cmd),
+						_1: {ctor: '[]'}
+					});
 			default:
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
@@ -25361,13 +29035,14 @@ var _user$project$Main$init = function (location) {
 		pair: _user$project$Pair$init,
 		config: _user$project$Config$init,
 		machine: _user$project$Machine$init,
+		transaction: _user$project$Transaction$init,
 		accounts: {ctor: '[]'},
 		status: _elm_lang$core$Maybe$Nothing,
 		err: _elm_lang$core$Maybe$Nothing
 	};
-	var _p9 = A2(_user$project$Main$urlUpdate, location, model);
-	var newModel = _p9._0;
-	var newCmd = _p9._1;
+	var _p10 = A2(_user$project$Main$urlUpdate, location, model);
+	var newModel = _p10._0;
+	var newCmd = _p10._1;
 	return A2(
 		_elm_lang$core$Platform_Cmd_ops['!'],
 		newModel,
@@ -25387,15 +29062,15 @@ var _user$project$Main$init = function (location) {
 };
 var _user$project$Main$update = F2(
 	function (msg, model) {
-		var _p10 = msg;
-		switch (_p10.ctor) {
+		var _p11 = msg;
+		switch (_p11.ctor) {
 			case 'PairMsg':
-				var _p11 = A2(
+				var _p12 = A2(
 					_user$project$Pair$update,
-					A2(_elm_lang$core$Debug$log, 'DEBUG22', _p10._0),
+					A2(_elm_lang$core$Debug$log, 'DEBUG22', _p11._0),
 					model.pair);
-				var pairModel = _p11._0;
-				var cmd = _p11._1;
+				var pairModel = _p12._0;
+				var cmd = _p12._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -25407,9 +29082,9 @@ var _user$project$Main$update = F2(
 						_1: {ctor: '[]'}
 					});
 			case 'AccountMsg':
-				var _p12 = A2(_user$project$Account$update, _p10._0, model.account);
-				var accountModel = _p12._0;
-				var cmd = _p12._1;
+				var _p13 = A2(_user$project$Account$update, _p11._0, model.account);
+				var accountModel = _p13._0;
+				var cmd = _p13._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -25421,8 +29096,8 @@ var _user$project$Main$update = F2(
 						_1: {ctor: '[]'}
 					});
 			case 'ConfigMsg':
-				var _p14 = _p10._0;
-				var loaded = _user$project$Config$loaded(_p14);
+				var _p15 = _p11._0;
+				var loaded = _user$project$Config$loaded(_p15);
 				var extraCmds = loaded ? {
 					ctor: '::',
 					_0: _user$project$Main$getAccounts,
@@ -25432,9 +29107,9 @@ var _user$project$Main$update = F2(
 						_1: {ctor: '[]'}
 					}
 				} : {ctor: '[]'};
-				var _p13 = A2(_user$project$Config$update, _p14, model.config);
-				var configModel = _p13._0;
-				var cmd = _p13._1;
+				var _p14 = A2(_user$project$Config$update, _p15, model.config);
+				var configModel = _p14._0;
+				var cmd = _p14._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -25449,9 +29124,9 @@ var _user$project$Main$update = F2(
 						},
 						extraCmds));
 			case 'MachineMsg':
-				var _p15 = A2(_user$project$Machine$update, _p10._0, model.machine);
-				var machineModel = _p15._0;
-				var cmd = _p15._1;
+				var _p16 = A2(_user$project$Machine$update, _p11._0, model.machine);
+				var machineModel = _p16._0;
+				var cmd = _p16._1;
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
@@ -25462,20 +29137,34 @@ var _user$project$Main$update = F2(
 						_0: A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$MachineMsg, cmd),
 						_1: {ctor: '[]'}
 					});
+			case 'TransactionMsg':
+				var _p17 = A2(_user$project$Transaction$update, _p11._0, model.transaction);
+				var transactionModel = _p17._0;
+				var cmd = _p17._1;
+				return A2(
+					_elm_lang$core$Platform_Cmd_ops['!'],
+					_elm_lang$core$Native_Utils.update(
+						model,
+						{transaction: transactionModel}),
+					{
+						ctor: '::',
+						_0: A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$TransactionMsg, cmd),
+						_1: {ctor: '[]'}
+					});
 			case 'LoadAccounts':
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					_elm_lang$core$Native_Utils.update(
 						model,
 						{
-							accounts: A2(_elm_lang$core$Debug$log, 'DEBUG55', _p10._0)
+							accounts: A2(_elm_lang$core$Debug$log, 'DEBUG55', _p11._0)
 						}),
 					{ctor: '[]'});
 			case 'LoadStatus':
 				var newStatus = A2(
 					_elm_community$maybe_extra$Maybe_Extra$orElse,
 					model.status,
-					_krisajenkins$remotedata$RemoteData$toMaybe(_p10._0));
+					_krisajenkins$remotedata$RemoteData$toMaybe(_p11._0));
 				var serverStatus = A2(
 					_elm_lang$core$Maybe$withDefault,
 					false,
@@ -25500,35 +29189,50 @@ var _user$project$Main$update = F2(
 					model,
 					{
 						ctor: '::',
-						_0: _elm_lang$navigation$Navigation$newUrl(_p10._0),
+						_0: _elm_lang$navigation$Navigation$newUrl(_p11._0),
 						_1: {ctor: '[]'}
 					});
 			case 'UrlChange':
-				return A2(_user$project$Main$urlUpdate, _p10._0, model);
+				return A2(
+					_user$project$Main$urlUpdate,
+					A2(_elm_lang$core$Debug$log, 'DEBUG120', _p11._0),
+					model);
 			default:
+				var route = A2(
+					_elm_lang$core$Maybe$withDefault,
+					_user$project$CoreTypes$NotFoundRoute,
+					A2(_evancz$url_parser$UrlParser$parseHash, _user$project$Main$parseRoute, model.location));
+				var extraCmds = _elm_lang$core$Native_Utils.eq(route, _user$project$CoreTypes$TransactionRoute) ? {
+					ctor: '::',
+					_0: A2(_elm_lang$core$Platform_Cmd$map, _user$project$CoreTypes$TransactionMsg, _user$project$Transaction$loadCmd),
+					_1: {ctor: '[]'}
+				} : {ctor: '[]'};
 				return A2(
 					_elm_lang$core$Platform_Cmd_ops['!'],
 					model,
-					{
-						ctor: '::',
-						_0: _user$project$Main$getStatus,
-						_1: {ctor: '[]'}
-					});
+					A2(
+						_elm_lang$core$Basics_ops['++'],
+						{
+							ctor: '::',
+							_0: _user$project$Main$getStatus,
+							_1: {ctor: '[]'}
+						},
+						extraCmds));
 		}
 	});
 var _user$project$Main$main = A2(
 	_elm_lang$navigation$Navigation$program,
 	_user$project$CoreTypes$UrlChange,
 	{init: _user$project$Main$init, update: _user$project$Main$update, view: _user$project$Main$view, subscriptions: _user$project$Main$subscriptions})();
-var _user$project$Main$Model = F8(
-	function (a, b, c, d, e, f, g, h) {
-		return {location: a, pair: b, account: c, config: d, machine: e, accounts: f, status: g, err: h};
+var _user$project$Main$Model = F9(
+	function (a, b, c, d, e, f, g, h, i) {
+		return {location: a, pair: b, account: c, config: d, machine: e, transaction: f, accounts: g, status: h, err: i};
 	});
 
 var Elm = {};
 Elm['Main'] = Elm['Main'] || {};
 if (typeof _user$project$Main$main !== 'undefined') {
-    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"FieldSetTypes.FieldValue":{"args":[],"tags":{"FieldString":["String"],"FieldPassword":["Maybe.Maybe String"]}},"Selectize.Status":{"args":[],"tags":{"Editing":[],"Idle":[],"Blurred":[],"Cleared":[],"Initial":[]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"ConfigTypes.ConfigScope":{"args":[],"tags":{"Specific":[],"Both":[],"Global":[]}},"ConfigTypes.FieldType":{"args":[],"tags":{"FieldOnOffType":[],"FieldPercentageType":[],"FieldLanguageType":[],"FieldCryptoCurrencyType":[],"FieldIntegerType":[],"FieldFiatCurrencyType":[],"FieldStringType":[],"FieldAccountType":[]}},"Pair.Msg":{"args":[],"tags":{"SubmitName":[],"Load":["RemoteData.WebData String"],"InputName":["String"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Account.Msg":{"args":[],"tags":{"Load":["Account.Model"],"FieldSetMsg":["FieldSet.Msg"],"Submit":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"RemoteData.RemoteData":{"args":["e","a"],"tags":{"NotAsked":[],"Success":["a"],"Loading":[],"Failure":["e"]}},"ConfigTypes.Crypto":{"args":[],"tags":{"GlobalCrypto":[],"CryptoCode":["String"]}},"FieldSet.Msg":{"args":[],"tags":{"Input":["String","String"]}},"CoreTypes.Msg":{"args":[],"tags":{"ConfigMsg":["Config.Msg"],"LoadAccounts":["List ( String, String )"],"MachineMsg":["Machine.Msg"],"NewUrl":["String"],"Interval":[],"LoadStatus":["StatusTypes.WebStatus"],"UrlChange":["Navigation.Location"],"AccountMsg":["Account.Msg"],"PairMsg":["Pair.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"ConfigTypes.Machine":{"args":[],"tags":{"MachineId":["String"],"GlobalMachine":[]}},"Machine.Msg":{"args":[],"tags":{"Action":[],"Load":["Machine.Model"],"InputCassette":["MachineTypes.Machine","Machine.Position","String"],"SubmitResetBills":["MachineTypes.Machine"]}},"Machine.Position":{"args":[],"tags":{"Bottom":[],"Top":[]}},"Config.Msg":{"args":[],"tags":{"Focus":["ConfigTypes.FieldLocator"],"BlurSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"Remove":["ConfigTypes.FieldLocator","Selectize.State"],"Load":["Config.WebConfigGroup"],"Input":["ConfigTypes.FieldLocator","String"],"Blur":["ConfigTypes.FieldLocator"],"Add":["ConfigTypes.FieldLocator","String","Selectize.State"],"Submit":[],"SelectizeMsg":["ConfigTypes.FieldLocator","Selectize.State"],"FocusSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"HideSaveIndication":[],"CryptoSwitch":["ConfigTypes.Crypto"]}},"ConfigTypes.FieldValidator":{"args":[],"tags":{"FieldRequired":[],"FieldMin":["Int"],"FieldMax":["Int"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String"],"NetworkError":[],"Timeout":[],"BadStatus":["Http.Response String"],"BadPayload":["String","Http.Response String"]}},"ConfigTypes.FieldValue":{"args":[],"tags":{"FieldIntegerValue":["Int"],"FieldCryptoCurrencyValue":["List String"],"FieldFiatCurrencyValue":["String"],"FieldStringValue":["String"],"FieldOnOffValue":["Bool"],"FieldAccountValue":["String"],"FieldLanguageValue":["List String"],"FieldPercentageValue":["Float"]}}},"aliases":{"ConfigTypes.ConfigSchema":{"args":[],"type":"{ code : String , display : String , cryptoScope : ConfigTypes.ConfigScope , machineScope : ConfigTypes.ConfigScope , entries : List ConfigTypes.FieldDescriptor }"},"Machine.Model":{"args":[],"type":"RemoteData.WebData MachineTypes.Machines"},"Selectize.State":{"args":[],"type":"{ boxPosition : Int, status : Selectize.Status, string : String }"},"RemoteData.WebData":{"args":["a"],"type":"RemoteData.RemoteData Http.Error a"},"ConfigTypes.FieldLocator":{"args":[],"type":"{ fieldScope : ConfigTypes.FieldScope , code : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"AccountTypes.Account":{"args":[],"type":"{ code : String , display : String , fields : List FieldSetTypes.Field }"},"Http.Response":{"args":["body"],"type":"{ url : String , status : { code : Int, message : String } , headers : Dict.Dict String String , body : body }"},"MachineTypes.Machine":{"args":[],"type":"{ deviceId : String , name : String , cashbox : Int , cassette1 : Int , cassette2 : Int , paired : Bool }"},"StatusTypes.WebStatus":{"args":[],"type":"RemoteData.WebData StatusTypes.StatusRec"},"ConfigTypes.ConfigData":{"args":[],"type":"{ cryptoCurrencies : List ConfigTypes.CryptoDisplay , currencies : List ConfigTypes.DisplayRec , languages : List ConfigTypes.DisplayRec , accounts : List ConfigTypes.AccountRec , machines : List ConfigTypes.MachineDisplay }"},"Account.Model":{"args":[],"type":"RemoteData.WebData AccountTypes.Account"},"ConfigTypes.CryptoDisplay":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, display : String }"},"Config.WebConfigGroup":{"args":[],"type":"RemoteData.WebData ConfigTypes.ConfigGroup"},"ConfigTypes.DisplayRec":{"args":[],"type":"{ code : String, display : String }"},"ConfigTypes.FieldScope":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, machine : ConfigTypes.Machine }"},"FieldSetTypes.Field":{"args":[],"type":"{ code : String , display : String , secret : Bool , required : Bool , value : FieldSetTypes.FieldValue , loadedValue : FieldSetTypes.FieldValue }"},"ConfigTypes.ConfigGroup":{"args":[],"type":"{ schema : ConfigTypes.ConfigSchema , values : List ConfigTypes.Field , selectedCryptos : List String , data : ConfigTypes.ConfigData }"},"ConfigTypes.AccountRec":{"args":[],"type":"{ code : String , display : String , class : String , cryptos : Maybe.Maybe (List ConfigTypes.Crypto) }"},"ConfigTypes.Field":{"args":[],"type":"{ fieldLocator : ConfigTypes.FieldLocator , fieldValue : ConfigTypes.FieldValue }"},"ConfigTypes.MachineDisplay":{"args":[],"type":"{ machine : ConfigTypes.Machine, display : String }"},"StatusTypes.ServerRec":{"args":[],"type":"{ up : Bool, lastPing : Maybe.Maybe String }"},"MachineTypes.Machines":{"args":[],"type":"List MachineTypes.Machine"},"ConfigTypes.FieldDescriptor":{"args":[],"type":"{ code : String , display : String , fieldType : ConfigTypes.FieldType , fieldValidation : List ConfigTypes.FieldValidator , fieldClass : Maybe.Maybe String , fieldEnabledIf : List String }"},"StatusTypes.StatusRec":{"args":[],"type":"{ server : StatusTypes.ServerRec, invalidConfigGroups : List String }"},"Navigation.Location":{"args":[],"type":"{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"}},"message":"CoreTypes.Msg"},"versions":{"elm":"0.18.0"}});
+    _user$project$Main$main(Elm['Main'], 'Main', {"types":{"unions":{"FieldSetTypes.FieldValue":{"args":[],"tags":{"FieldString":["String"],"FieldPassword":["Maybe.Maybe String"]}},"Selectize.Status":{"args":[],"tags":{"Editing":[],"Idle":[],"Blurred":[],"Cleared":[],"Initial":[]}},"Dict.LeafColor":{"args":[],"tags":{"LBBlack":[],"LBlack":[]}},"ConfigTypes.ConfigScope":{"args":[],"tags":{"Specific":[],"Both":[],"Global":[]}},"ConfigTypes.FieldType":{"args":[],"tags":{"FieldOnOffType":[],"FieldPercentageType":[],"FieldLanguageType":[],"FieldCryptoCurrencyType":[],"FieldIntegerType":[],"FieldFiatCurrencyType":[],"FieldStringType":[],"FieldAccountType":[]}},"Pair.Msg":{"args":[],"tags":{"SubmitName":[],"Load":["RemoteData.WebData String"],"InputName":["String"]}},"Transaction.Msg":{"args":[],"tags":{"Load":["Transaction.Model"]}},"Dict.Dict":{"args":["k","v"],"tags":{"RBNode_elm_builtin":["Dict.NColor","k","v","Dict.Dict k v","Dict.Dict k v"],"RBEmpty_elm_builtin":["Dict.LeafColor"]}},"Date.Date":{"args":[],"tags":{"Date":[]}},"Account.Msg":{"args":[],"tags":{"Load":["Account.Model"],"FieldSetMsg":["FieldSet.Msg"],"Submit":[]}},"Maybe.Maybe":{"args":["a"],"tags":{"Just":["a"],"Nothing":[]}},"RemoteData.RemoteData":{"args":["e","a"],"tags":{"NotAsked":[],"Success":["a"],"Loading":[],"Failure":["e"]}},"ConfigTypes.Crypto":{"args":[],"tags":{"GlobalCrypto":[],"CryptoCode":["String"]}},"FieldSet.Msg":{"args":[],"tags":{"Input":["String","String"]}},"CoreTypes.Msg":{"args":[],"tags":{"ConfigMsg":["Config.Msg"],"LoadAccounts":["List ( String, String )"],"MachineMsg":["Machine.Msg"],"NewUrl":["String"],"Interval":[],"LoadStatus":["StatusTypes.WebStatus"],"UrlChange":["Navigation.Location"],"TransactionMsg":["Transaction.Msg"],"AccountMsg":["Account.Msg"],"PairMsg":["Pair.Msg"]}},"Dict.NColor":{"args":[],"tags":{"BBlack":[],"Red":[],"NBlack":[],"Black":[]}},"ConfigTypes.Machine":{"args":[],"tags":{"MachineId":["String"],"GlobalMachine":[]}},"Machine.Msg":{"args":[],"tags":{"Action":[],"Load":["Machine.Model"],"InputCassette":["MachineTypes.Machine","Machine.Position","String"],"SubmitResetBills":["MachineTypes.Machine"]}},"Machine.Position":{"args":[],"tags":{"Bottom":[],"Top":[]}},"Config.Msg":{"args":[],"tags":{"Focus":["ConfigTypes.FieldLocator"],"BlurSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"Remove":["ConfigTypes.FieldLocator","Selectize.State"],"Load":["Config.WebConfigGroup"],"Input":["ConfigTypes.FieldLocator","String"],"Blur":["ConfigTypes.FieldLocator"],"Add":["ConfigTypes.FieldLocator","String","Selectize.State"],"Submit":[],"SelectizeMsg":["ConfigTypes.FieldLocator","Selectize.State"],"FocusSelectize":["ConfigTypes.FieldLocator","Selectize.State"],"HideSaveIndication":[],"CryptoSwitch":["ConfigTypes.Crypto"]}},"TransactionTypes.Tx":{"args":[],"tags":{"CashInTx":["TransactionTypes.CashInTxRec"],"CashOutTx":["TransactionTypes.CashOutTxRec"]}},"ConfigTypes.FieldValidator":{"args":[],"tags":{"FieldRequired":[],"FieldMin":["Int"],"FieldMax":["Int"]}},"Http.Error":{"args":[],"tags":{"BadUrl":["String"],"NetworkError":[],"Timeout":[],"BadStatus":["Http.Response String"],"BadPayload":["String","Http.Response String"]}},"ConfigTypes.FieldValue":{"args":[],"tags":{"FieldIntegerValue":["Int"],"FieldCryptoCurrencyValue":["List String"],"FieldFiatCurrencyValue":["String"],"FieldStringValue":["String"],"FieldOnOffValue":["Bool"],"FieldAccountValue":["String"],"FieldLanguageValue":["List String"],"FieldPercentageValue":["Float"]}}},"aliases":{"ConfigTypes.ConfigSchema":{"args":[],"type":"{ code : String , display : String , cryptoScope : ConfigTypes.ConfigScope , machineScope : ConfigTypes.ConfigScope , entries : List ConfigTypes.FieldDescriptor }"},"Machine.Model":{"args":[],"type":"RemoteData.WebData MachineTypes.Machines"},"Selectize.State":{"args":[],"type":"{ boxPosition : Int, status : Selectize.Status, string : String }"},"TransactionTypes.CashInTxRec":{"args":[],"type":"{ id : String , machineName : String , toAddress : String , cryptoAtoms : Int , cryptoCode : String , fiat : Float , currencyCode : String , txHash : Maybe.Maybe String , phone : Maybe.Maybe String , error : Maybe.Maybe String , created : Date.Date }"},"RemoteData.WebData":{"args":["a"],"type":"RemoteData.RemoteData Http.Error a"},"ConfigTypes.FieldLocator":{"args":[],"type":"{ fieldScope : ConfigTypes.FieldScope , code : String , fieldType : ConfigTypes.FieldType , fieldClass : Maybe.Maybe String }"},"AccountTypes.Account":{"args":[],"type":"{ code : String , display : String , fields : List FieldSetTypes.Field }"},"Http.Response":{"args":["body"],"type":"{ url : String , status : { code : Int, message : String } , headers : Dict.Dict String String , body : body }"},"MachineTypes.Machine":{"args":[],"type":"{ deviceId : String , name : String , cashbox : Int , cassette1 : Int , cassette2 : Int , paired : Bool }"},"StatusTypes.WebStatus":{"args":[],"type":"RemoteData.WebData StatusTypes.StatusRec"},"ConfigTypes.ConfigData":{"args":[],"type":"{ cryptoCurrencies : List ConfigTypes.CryptoDisplay , currencies : List ConfigTypes.DisplayRec , languages : List ConfigTypes.DisplayRec , accounts : List ConfigTypes.AccountRec , machines : List ConfigTypes.MachineDisplay }"},"Account.Model":{"args":[],"type":"RemoteData.WebData AccountTypes.Account"},"ConfigTypes.CryptoDisplay":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, display : String }"},"Config.WebConfigGroup":{"args":[],"type":"RemoteData.WebData ConfigTypes.ConfigGroup"},"ConfigTypes.DisplayRec":{"args":[],"type":"{ code : String, display : String }"},"ConfigTypes.FieldScope":{"args":[],"type":"{ crypto : ConfigTypes.Crypto, machine : ConfigTypes.Machine }"},"FieldSetTypes.Field":{"args":[],"type":"{ code : String , display : String , secret : Bool , required : Bool , value : FieldSetTypes.FieldValue , loadedValue : FieldSetTypes.FieldValue }"},"ConfigTypes.ConfigGroup":{"args":[],"type":"{ schema : ConfigTypes.ConfigSchema , values : List ConfigTypes.Field , selectedCryptos : List String , data : ConfigTypes.ConfigData }"},"ConfigTypes.AccountRec":{"args":[],"type":"{ code : String , display : String , class : String , cryptos : Maybe.Maybe (List ConfigTypes.Crypto) }"},"Transaction.Model":{"args":[],"type":"RemoteData.WebData Transaction.Txs"},"ConfigTypes.Field":{"args":[],"type":"{ fieldLocator : ConfigTypes.FieldLocator , fieldValue : ConfigTypes.FieldValue }"},"Transaction.Txs":{"args":[],"type":"List TransactionTypes.Tx"},"ConfigTypes.MachineDisplay":{"args":[],"type":"{ machine : ConfigTypes.Machine, display : String }"},"StatusTypes.ServerRec":{"args":[],"type":"{ up : Bool, lastPing : Maybe.Maybe String }"},"TransactionTypes.CashOutTxRec":{"args":[],"type":"{ id : String , machineName : String , toAddress : String , cryptoAtoms : Int , cryptoCode : String , fiat : Float , currencyCode : String , txHash : Maybe.Maybe String , status : String , dispensed : Bool , notified : Bool , redeemed : Bool , phone : Maybe.Maybe String , error : Maybe.Maybe String , created : Date.Date , confirmed : Bool }"},"MachineTypes.Machines":{"args":[],"type":"List MachineTypes.Machine"},"ConfigTypes.FieldDescriptor":{"args":[],"type":"{ code : String , display : String , fieldType : ConfigTypes.FieldType , fieldValidation : List ConfigTypes.FieldValidator , fieldClass : Maybe.Maybe String , fieldEnabledIf : List String }"},"StatusTypes.StatusRec":{"args":[],"type":"{ server : StatusTypes.ServerRec, invalidConfigGroups : List String }"},"Navigation.Location":{"args":[],"type":"{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"}},"message":"CoreTypes.Msg"},"versions":{"elm":"0.18.0"}});
 }
 
 if (typeof define === "function" && define['amd'])
